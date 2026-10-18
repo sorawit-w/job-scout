@@ -1,0 +1,1 @@
+At session start, invoke the `kerby` skill (args: load) to load kerby guardrails into context. After a context compaction the kerby SessionStart hook re-injects the rules; if that block is missing, invoke `kerby` (args: reload).
