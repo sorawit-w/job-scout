@@ -1,0 +1,8 @@
+[2026-10-18T14:59:36Z]
+Task: commit kerby setup files
+Action: confirmed docs/m0-handoff already merged into main (9d156fd); branched chore/kerby-setup from main; committed CLAUDE.md and .gitignore
+Files: CLAUDE.md, .gitignore
+Commit: 10d9b18
+Status: DONE
+Notes: protect-git blocked a chained "checkout && commit" because it checks the branch before the command runs; split into two commands, no override used. Branch not pushed.
+Observations: .claude/settings.local.json is hidden by the global git ignore. git pre-commit hook ran on the commit with no block.
