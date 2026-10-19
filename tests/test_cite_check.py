@@ -121,9 +121,14 @@ class StyleCheckTest(unittest.TestCase):
     WHY = [("knows React", "years building   React applications")]
 
     def check(self, *style):
+        """A shown row whose saved work_style has exactly these topics, so only item checks can fail."""
+        home = make_home()
+        topics = {i["topic"]: "none" for i in style if isinstance(i, dict) and isinstance(i.get("topic"), str)}
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": topics}, f)
         payload = results(why=self.WHY)
-        payload["rows"][0]["style"] = list(style)
-        return run(payload)
+        payload["rows"][0].update(show=True, style=list(style))
+        return run(payload, home)
 
     def test_quoted_match_and_conflict_and_unquoted_not_stated_pass(self):
         code, out = self.check(
@@ -144,7 +149,7 @@ class StyleCheckTest(unittest.TestCase):
         for item, reason in cases:
             code, out = self.check(item)
             self.assertEqual(code, 1, item)
-            self.assertIn(reason, out["failed"][0]["why"], item)
+            self.assertIn(reason, " | ".join(f["why"] for f in out["failed"]), item)
 
     def test_shown_rows_cover_every_saved_topic_exactly_once(self):
         home = make_home()
@@ -163,9 +168,12 @@ class StyleCheckTest(unittest.TestCase):
             else:
                 self.assertEqual(code, 1, style)
                 self.assertIn(problem, out["failed"][0]["why"])
-        payload = results(why=self.WHY)  # excluded rows need no style
+        payload = results(why=self.WHY)  # excluded rows need no style, and may not carry any
         payload["rows"][0]["show"] = False
         self.assertEqual(run(payload, home)[0], 0)
+        payload["rows"][0]["style"] = [meet, travel]
+        code, out = run(payload, home)
+        self.assertEqual((code, out["failed"][0]["why"]), (1, "excluded row has style items (rubric §4: shown rows only)"))
 
     def test_the_run_copy_of_the_brief_wins_over_a_later_profile(self):
         home = make_home()

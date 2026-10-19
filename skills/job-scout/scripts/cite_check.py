@@ -143,7 +143,8 @@ def main(argv=None):
             continue
         if row.get("show") is True and not row.get("why"):
             failed.append({"key": key, "quote": None, "why": "shown row has no quoted reason"})
-        gap = style_coverage(style, wanted) if row.get("show") is True else None
+        gap = style_coverage(style, wanted) if row.get("show") is True else (
+            "excluded row has style items (rubric §4: shown rows only)" if style else None)
         if gap:
             failed.append({"key": key, "quote": None, "why": gap})
         for item, check in [(i, problem) for i in items] + [(i, style_problem) for i in style]:
