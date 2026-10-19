@@ -23,6 +23,7 @@ the only record), no job-description text beyond the quotes the rubric already c
 import argparse
 import base64
 import collections
+import datetime
 import hashlib
 import html
 import json
@@ -116,8 +117,12 @@ def _pay_short(comp):
 
 
 def _valid(m):
-    """Month 1–12 and day 1–31 in a (year, month, day) match: ATS dates can be malformed."""
-    return 1 <= int(m.group(2)) <= 12 and 1 <= int(m.group(3)) <= 31
+    """A real calendar date in a (year, month, day) match: ATS dates can be malformed (2026-02-31)."""
+    try:
+        datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    except ValueError:
+        return False
+    return True
 
 
 def _short_date(iso, run_year):
@@ -174,6 +179,8 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
         gates = row.get("gates") if isinstance(row.get("gates"), dict) else {}
         comp = entry["comp"] if "comp" in entry else job.get("comp")  # the live check wins, even "none"
         comp = comp if isinstance(comp, dict) else {}
+        pub = str(job.get("first_published") or "")[:10]
+        since_short = _short_date(pub, (run_id or "")[:4])
         pay_sort = comp.get("min") if comp.get("min") is not None else comp.get("max")
         per_year = YEARLY.get(comp.get("interval"))  # an unknown or unstated interval sorts last
         pay_sort = pay_sort * per_year if isinstance(pay_sort, (int, float)) and per_year else None
@@ -182,8 +189,8 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             pay=jfilter.pay_text(comp), pay_short=_pay_short(comp),
             pay_sort=pay_sort if isinstance(pay_sort, (int, float)) else None,
             pay_cur=str(comp.get("currency") or "").upper(),
-            since=str(job.get("first_published") or "")[:10], total=_fit(row),
-            since_short=_short_date(str(job.get("first_published") or "")[:10], (run_id or "")[:4]),
+            since=pub if since_short and re.match(r"\d{4}-\d{2}-\d{2}$", pub) else "", total=_fit(row),
+            since_short=since_short,
             scores={s: scores.get(s) for s in SCORES}, gates={g: gates.get(g) or "unknown" for g in GATES},
             why=_items(row.get("why")), risk=_items(row.get("risk")),
             state=cand.get("state") if rerun and cand.get("state") in ("new", "changed") else None,  # all new on a first run

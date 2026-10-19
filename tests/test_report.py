@@ -256,6 +256,14 @@ class ReportTest(unittest.TestCase):
         for rank in (3, 4, 5):  # another currency, no currency, no pay period: no sort key, so they sort last
             self.assertIn('data-rank="%d" data-fit="7" data-top="1" data-flags="0" data-pay=""' % rank, html)
 
+    def test_impossible_date_is_unknown_and_unsorted(self):
+        make_run(self.home, [job("gh:a:1", first_published="2026-02-31")], [row("gh:a:1")])
+        code, _ = run([], self.home)
+        html = page(self.home)
+        self.assertEqual(code, 0)
+        self.assertIn('data-since=""', html)
+        self.assertIn('<td class="c-since">–</td>', html)
+
     def test_empty_history_still_counts_as_a_rerun(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
@@ -332,4 +340,7 @@ class ShortFormsTest(unittest.TestCase):
         self.assertEqual(report._short_date("2025-12-10", "2026"), "Dec 10, 2025")
         self.assertEqual(report._short_date("2026-99-01", "2026"), "")  # malformed ATS date: unknown, no crash
         self.assertEqual(report._short_date("2026-02-40", "2026"), "")
+        self.assertEqual(report._short_date("2026-02-31", "2026"), "")
+        self.assertEqual(report._short_date("2025-02-29", "2026"), "")
+        self.assertEqual(report._short_date("2024-02-29", "2026"), "Feb 29, 2024")
         self.assertEqual(report._run_date("20269901T120000Z"), "")
