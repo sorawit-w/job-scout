@@ -157,7 +157,7 @@ requires them. There is no telemetry. Details: [PRIVACY.md](PRIVACY.md).
 
 | Skill | How it fits |
 |---|---|
-| ghostwriter (if installed) | Drafts the outreach or recruiter message after job-scout finds the role. |
+| [ghostwriter](https://github.com/sorawit-w/agent-skills/tree/main/skills/ghostwriter) (if installed) | Drafts the outreach or recruiter message after job-scout finds the role. |
 
 ## Status
 
