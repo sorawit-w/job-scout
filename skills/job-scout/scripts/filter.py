@@ -87,7 +87,7 @@ def _place_check(job, p, ctx):
             want = set(p["remote_scope"])
             if not scope:
                 return None, [SCOPE_NOT_STATED], "remote"
-            if not want or "ANY" in scope or want & scope:
+            if not want or "ANY" in want or "ANY" in scope or want & scope or ("AMER" in want and scope & _AMER):
                 return None, [], "remote"
             if "AMER" in scope and want & _AMER:
                 return None, [AMER_FLAG], "remote"

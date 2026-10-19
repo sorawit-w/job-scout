@@ -193,6 +193,17 @@ class RelocationTest(unittest.TestCase):
         self.assertEqual(jfilter._relocation_countries(anywhere), frozenset())
 
 
+class RequestedScopeTest(unittest.TestCase):
+    def test_any_in_the_profile_accepts_every_country(self):
+        res, _ = outcome(job(locations=("Remote - UK",), scope=("GB",)), remote_scope=["ANY"])
+        self.assertIn(res, ("strong", "borderline"))
+
+    def test_amer_in_the_profile_accepts_a_us_role(self):
+        res, cand = outcome(job(), remote_scope=["AMER"])
+        self.assertIn(res, ("strong", "borderline"))
+        self.assertEqual(cand["flags"], [])
+
+
 class DisplayVariantTest(unittest.TestCase):
     def test_us_remote_variant_applied_with_its_pay(self):
         eur = {"min": 80000, "max": 100000, "currency": "EUR", "interval": "year", "source": "ats_field"}

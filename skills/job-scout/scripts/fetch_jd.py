@@ -18,6 +18,8 @@ Usage (paths relative to the skill folder):
     unverified: [{key, error}], requests: n}.
     Exit codes: 0 ok · 2 usage (no run / no candidates.json / neither --keys nor --top) ·
     4 request budget hit (what was checked is still written).
+    Open jobs carry the live title, location and mode, re-run through the saved brief's hard filters;
+    one the live data now rules out is listed under unverified ("changed since the search").
 
 What it does NOT do:
     * No judging or scoring — that is the LLM step in SKILL.md; cite_check.py verifies its quotes.
@@ -35,6 +37,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import adapters  # noqa: E402
+import filter as jfilter  # noqa: E402
 import net  # noqa: E402
 import state  # noqa: E402
 
@@ -89,34 +92,52 @@ def trim_jd(text, limit=2500):
 
 
 def check(row, budget):
-    """One live check -> jds.json entry. Raises net.BudgetExceeded for the caller to stop on."""
+    """One live check -> (jds.json entry, freshly normalized job or None).
+    Raises net.BudgetExceeded for the caller to stop on."""
     entry = {"status": "unverified", "full": None, "trimmed": None, "comp": None,
              "checked_at": state.now_iso(), "error": None}
     module = adapters.REGISTRY.get(row.get("ats"))
     if module is None or not row.get("slug") or not row.get("job_id"):
         entry["error"] = "bad candidate row (ats, slug or job_id missing or unknown)"
-        return entry
+        return entry, None
     try:
         raw = module.fetch_job(row["slug"], row["job_id"], budget)
     except net.BudgetExceeded:
         raise
     except net.NetError as e:
         entry["error"] = str(e)
-        return entry
+        return entry, None
     if raw is None:
         entry["status"] = "closed"
-        return entry
+        return entry, None
     try:
         job = module.normalize(raw, row["slug"], row.get("company") or row["slug"])
     except (AttributeError, KeyError, TypeError, ValueError) as e:  # AttributeError: a list or string body
         entry["error"] = "bad job record: %s" % e
-        return entry
+        return entry, None
     full = job.get("description_text")
     if not full or str(job.get("job_id")) != str(row["job_id"]):  # a 200 with {} or an error object
         entry["error"] = "bad job record: no description, or not the requested job"
-        return entry
+        return entry, None
     entry.update(status="open", full=full, trimmed=trim_jd(full), comp=job.get("comp"))
-    return entry
+    return entry, job
+
+
+_LIVE_FIELDS = ("title", "url", "locations", "countries", "remote", "remote_scope", "workplace",
+                "first_published", "comp")
+
+
+def refilter(row, job, profile):
+    """The candidate row with the live job's fields, re-run through the brief's hard filters.
+    Returns (row, None) when it still fits, or (row, removal reason) when the live data rules it out."""
+    live = dict(row, **{k: job.get(k) for k in _LIVE_FIELDS})
+    live.pop("variants", None)
+    if not isinstance(profile, dict):
+        return live, None
+    summary, kept = jfilter.run_filter([live], profile, limit=1)
+    if kept:
+        return kept[0], None
+    return live, next(r for r, n in summary["counts"]["removed"].items() if n)
 
 
 def _fail(message):
@@ -161,20 +182,27 @@ def main(argv=None):
     jds = state.read_json(jds_path, {})
     if not isinstance(jds, dict):
         jds = {}
+    profile = state.read_json(state.profile_path())
     jobs, closed, capped = [], [], False
     # shortcut: sequential, so jobs on one Ashby board share its cached list; use a pool if 60 is too slow.
     for i, row in enumerate(selected):
         try:
-            entry = check(row, budget)
+            entry, live = check(row, budget)
         except net.BudgetExceeded:
             capped = True
             unverified += [{"key": r["key"], "error": "not checked: request budget used up"} for r in selected[i:]]
             break
         jds[row["key"]] = entry
         if entry["status"] == "open":
-            job = {k: row.get(k) for k in ("key", "company", "title", "url", "locations", "workplace",
-                                           "remote_scope", "first_published")}
-            job.update(comp=entry["comp"], status="open", jd=entry["trimmed"])
+            # The posting may have moved or changed since the board was probed: show live fields and
+            # re-apply the brief, so a role now outside it is not shown as a fit.
+            fresh, removed_by = refilter(row, live, profile)
+            if removed_by:
+                unverified.append({"key": row["key"], "error": "changed since the search: now removed by %s" % removed_by})
+                continue
+            job = {k: fresh.get(k) for k in ("key", "company", "title", "url", "locations", "workplace",
+                                             "remote_scope", "first_published")}
+            job.update(comp=entry["comp"], status="open", jd=entry["trimmed"], flags=fresh.get("flags") or [])
             jobs.append(job)
         elif entry["status"] == "closed":
             closed.append({"key": row["key"], "company": row.get("company"), "title": row.get("title")})

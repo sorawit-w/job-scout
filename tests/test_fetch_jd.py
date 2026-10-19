@@ -62,6 +62,16 @@ def make_home(rows, jds=None):
     return home
 
 
+def save_profile(home, **over):
+    """A saved brief the Figma fixture job matches: "Account Executive, Enterprise" in San Francisco."""
+    p = {"schema": 1, "target_roles": ["Account Executive"], "work_modes": ["remote", "hybrid", "onsite"],
+         "commute_cities": ["San Francisco"], "remote_scope": ["US"], "needs_sponsorship": "no",
+         "base_pay_floor": None}
+    p.update(over)
+    with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+        json.dump(p, f)
+
+
 def run(argv, home):
     env = {"JOB_SCOUT_REPLAY_DIR": FIXTURES, "JOB_SCOUT_HOME": home}
     out = io.StringIO()
@@ -126,7 +136,30 @@ class LiveCheckTest(unittest.TestCase):
         self.assertEqual(out["unverified"], [])
         self.assertEqual(out["requests"], 2)
         self.assertEqual(set(job), {"key", "company", "title", "url", "locations", "workplace", "remote_scope",
-                                    "first_published", "comp", "status", "jd"})
+                                    "first_published", "comp", "status", "jd", "flags"})
+
+    def test_live_fields_replace_the_stale_candidate_row(self):
+        home = make_home([FIGMA])
+        _, out = run(["--top", "1"], home)
+        job = out["jobs"][0]
+        self.assertNotEqual(job["title"], FIGMA["title"])  # the row's placeholder title is stale
+        self.assertIn("figma", job["url"])
+        self.assertEqual(job["key"], FIGMA["key"])
+
+    def test_job_that_no_longer_fits_the_brief_is_not_shown(self):
+        home = make_home([FIGMA])
+        save_profile(home, work_modes=["remote"], remote_scope=["GB"])
+        _, out = run(["--top", "1"], home)
+        self.assertEqual(out["jobs"], [])
+        self.assertEqual(out["unverified"][0]["key"], FIGMA["key"])
+        self.assertIn("changed since the search", out["unverified"][0]["error"])
+
+    def test_job_that_still_fits_keeps_live_flags(self):
+        home = make_home([FIGMA])
+        save_profile(home)
+        _, out = run(["--top", "1"], home)
+        self.assertEqual([j["key"] for j in out["jobs"]], [FIGMA["key"]])
+        self.assertIsInstance(out["jobs"][0]["flags"], list)
 
     def test_jds_file_written(self):
         home = make_home([FIGMA, VERCEL])
