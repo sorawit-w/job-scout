@@ -4,7 +4,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 1: v0 (M1–M6)
 
-- [!] M6 — Launch 0.1.0: docs, release zip, version and offline zip smoke test done (in review); blocked on the maintainer: make the repo public, publish the release, run the four install smoke tests (DEVELOPER_TODO)
+All shipped; see Shipped below.
 
 ## Follow-ups
 
@@ -25,6 +25,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ## Shipped
 
+- [x] M6 — Launch 0.1.0: README, PRIVACY, CONTRIBUTING, release zip; repo public and v0.1.0 released (2026-10-19). Install smoke tests on the four surfaces are in DEVELOPER_TODO
 - [x] M5b — More hiring tools: SmartRecruiters, Workday (verified company list), opt-in USAJOBS; board order by the brief's field; nurse live run 19/19 open (2026-10-19)
 - [x] M5 — Evals: E1–E11, consensus ground truth (Codex + Gemini), scorecard vs jobscope (top 15: 13/33 vs 2/33), filter fixes from the fix loop (2026-10-19)
 - [x] M4 — State and reruns: seen/diff, closed detection, rerun view, add-a-company (2026-10-19)

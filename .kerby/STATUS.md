@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Deployment — launch docs and release zip in review |
-| **Milestone** | deploy-launch (M6) |
-| **Milestone Goal** | First public release: docs, release zip, install smoke tests; going public is the maintainer's call |
+| **Phase** | Released — v0 launched; follow-ups next |
+| **Milestone** | none open (all of M1–M6 shipped) |
+| **Milestone Goal** | Next: the maintainer's install smoke tests, then the ROADMAP follow-ups |
 
 ---
 
@@ -23,15 +23,15 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M6 PR — review findings fixed, squash-merged | skill-evaluator clean |
-| 2 | Maintainer: make the repo public, publish the release zip, run the four install smoke tests (DEVELOPER_TODO) | M6 merged |
-| 3 | Follow-ups in ROADMAP (iCIMS, Taleo, Phenom first) | release published |
+| 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | release published |
+| 2 | Follow-ups in ROADMAP: iCIMS, Taleo, Phenom adapters first | — |
+| 3 | Follow-up: read up to 60 descriptions when many candidates are strong | — |
 
 ---
 
 ## Blockers
 
-- Going public, the GitHub release and the install smoke tests are maintainer actions (DEVELOPER_TODO).
+- The install smoke tests are maintainer actions (DEVELOPER_TODO).
 
 ---
 
