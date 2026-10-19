@@ -200,6 +200,17 @@ class ReportTest(unittest.TestCase):
         self.assertNotIn("Saved or applied, still open", html)
         self.assertIn("<h2>Closed since last time</h2>", html)
 
+    def test_pay_sorts_on_a_yearly_basis(self):
+        hourly = job("gh:a:1", comp={"min": 60, "max": 70, "currency": "USD", "interval": "hour"})
+        yearly = job("gh:b:2", comp={"min": 50000, "max": None, "currency": "USD", "interval": "year"})
+        odd = job("gh:c:3", comp={"min": 9, "max": None, "currency": "USD", "interval": "fortnight"})
+        make_run(self.home, [hourly, yearly, odd], [row("gh:a:1"), row("gh:b:2"), row("gh:c:3")])
+        run([], self.home)
+        html = page(self.home)
+        self.assertIn('data-rank="1" data-fit="7" data-top="1" data-flags="0" data-pay="124800"', html)
+        self.assertIn('data-pay="50000"', html)
+        self.assertIn('data-rank="3" data-fit="7" data-top="1" data-flags="0" data-pay=""', html)  # unknown interval: last
+
     def test_empty_history_still_counts_as_a_rerun(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):

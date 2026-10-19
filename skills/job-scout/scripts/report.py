@@ -46,6 +46,7 @@ REASON_TEXT = {"work_mode": "work mode", "location": "location", "remote_scope":
 SPONSOR_TEXT = {"yes": "Needs visa sponsorship", "no": "No sponsorship needed",
                 "undisclosed": "Sponsorship not said"}
 RERUN_REASONS = ("already_seen", "dismissed_or_applied")
+YEARLY = {"year": 1, "month": 12, "week": 52, "day": 260, "hour": 2080}  # full-time, for sorting only
 MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 
@@ -166,6 +167,8 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
         comp = entry["comp"] if "comp" in entry else job.get("comp")  # the live check wins, even "none"
         comp = comp if isinstance(comp, dict) else {}
         pay_sort = comp.get("min") if comp.get("min") is not None else comp.get("max")
+        per_year = YEARLY.get(comp.get("interval") or "year")  # an unknown interval sorts last
+        pay_sort = pay_sort * per_year if isinstance(pay_sort, (int, float)) and per_year else None
         roles.append(dict(
             base, rank=len(roles) + 1, url=_safe_url(job.get("url")), where=_where(job),
             pay=jfilter.pay_text(comp), pay_short=_pay_short(comp),
@@ -397,7 +400,7 @@ if(!r||e.target.closest('tr.det'))return;toggle(r);if(!e.target.closest('.toggle
 table.addEventListener('keydown',function(e){var b=e.target.closest('.toggle');if(!b||(e.key!=='ArrowDown'&&e.key!=='ArrowUp'))return;
 var v=visible(),i=v.indexOf(b.closest('tbody.role')),n=v[i+(e.key==='ArrowDown'?1:-1)];if(!n)return;e.preventDefault();
 btn(n).focus();if(split)select(n,true);});
-var dir={};d.querySelectorAll('th[data-sort] button').forEach(function(h){h.addEventListener('click',function(){
+var dir={rank:true};d.querySelectorAll('th[data-sort] button').forEach(function(h){h.addEventListener('click',function(){
 var th=h.parentNode,k=th.dataset.sort,asc=dir[k]===undefined?(k==='rank'||k==='title'):!dir[k];dir={};dir[k]=asc;
 d.querySelectorAll('th[data-sort]').forEach(function(x){x.removeAttribute('aria-sort');var u=x.querySelector('use');if(u)u.setAttribute('href','#i-up');});
 th.setAttribute('aria-sort',asc?'ascending':'descending');th.querySelector('use').setAttribute('href',asc?'#i-up':'#i-down');
