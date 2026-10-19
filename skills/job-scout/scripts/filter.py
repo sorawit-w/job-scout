@@ -11,7 +11,8 @@ state, ranked, at most --limit) and prints one compact JSON object:
    "candidates": [{key, company, title, where, mode, since, pay, match, flags, state}],
    "near_misses": [{key, company, title, reason}]}
 state is new | changed | saved | applied | seen | dismissed (no seen.json: all new).
-Exit codes: 0 ok · 2 no profile, no run, no jobs.json, or bad arguments.
+Exit codes: 0 ok · 2 no profile, no run, no jobs.json, unreadable seen.json (left unchanged,
+nothing written), or bad arguments.
 
 Rules, in order (the first rule a job fails is its removal reason): company exclude ->
 display-variant pick -> work mode / location / remote scope (open_to_relocation keeps a wanted-mode
@@ -348,7 +349,12 @@ def main(argv=None):
     if not isinstance(jobs, list):
         print(json.dumps({"error": "run %s has no jobs.json — run probe.py first" % run.name}))
         return 2
-    summary, candidates = run_filter(jobs, profile, args.limit, seen=state.load_seen(), show_all=args.all)
+    try:
+        seen = state.load_seen()
+    except ValueError as e:  # never fall back to a first run: that would show every seen role as new
+        print(json.dumps({"error": str(e)}, ensure_ascii=False))
+        return 2
+    summary, candidates = run_filter(jobs, profile, args.limit, seen=seen, show_all=args.all)
     state.write_json_atomic(run / "candidates.json", candidates)
     print(json.dumps(summary, separators=(",", ":")))
     return 0

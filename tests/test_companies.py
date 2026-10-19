@@ -13,6 +13,7 @@ import net
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Own subfolder: test_record_fixtures checks that every top-level fixture is in record_fixtures.urls().
 FIXTURES = os.path.join(ROOT, "tests", "fixtures", "http", "companies")
+BOARD_FIXTURES = os.path.dirname(FIXTURES)  # greenhouse:airtable (3 jobs), greenhouse:webflow (empty)
 DATA = os.path.join(ROOT, "skills", "job-scout", "data")
 
 
@@ -61,6 +62,7 @@ class AddTest(unittest.TestCase):
         self.assertEqual([(h["ats"], h["slug"], h["from"]) for h in res["hits"]], [("ashby", "linear", "seed")])
         self.assertTrue(res["saved"])
         self.assertIsNone(res["suggest_row"])
+        self.assertNotIn("sample_titles", res["hits"][0])  # seed boards need no confirming
         rows = user_rows(home)
         self.assertEqual([(r["ats"], r["slug"], r["source"], r["status"]) for r in rows],
                          [("ashby", "linear", "user", "live")])
@@ -101,6 +103,10 @@ class AddTest(unittest.TestCase):
         self.assertIn(res["suggest_row"], text)
         self.assertEqual(text.count("http"), 1)
         self.assertIn("https://api.ashbyhq.com/posting-api/job-board/snyk", text)
+        self.assertIn("looks like", text)  # same-name companies exist: the user confirms the board
+        self.assertEqual(hit["sample_titles"], ["Senior Product Security Engineer", "Senior Revenue Accountant",
+                                                "Technical Success Manager"])
+        self.assertTrue(hit["sample_url"].startswith("https://jobs.ashbyhq.com/snyk/"))
         rows = user_rows(home)
         self.assertEqual([(r["company"], r["ats"], r["slug"], r["source"], r["jobs"]) for r in rows],
                          [("Snyk", "ashby", "snyk", "user", "3")])
@@ -142,6 +148,14 @@ class AddTest(unittest.TestCase):
         self.assertEqual(code, 3)
         self.assertFalse(out["results"][0]["saved"])
 
+    def test_blocked_network_stops_guessing_after_3_in_a_row(self):
+        code, out = run(["add", "Qqzz", "Wwxx"], replay_dir=tempfile.mkdtemp())  # every request: replay_miss
+        self.assertEqual(code, 3)
+        self.assertEqual(out["requests"], 6)
+        for res in out["results"]:
+            self.assertEqual(len(res["tried"]), 3)
+            self.assertIn("blocked", res["note"])
+
     def test_nothing_is_written_under_the_repo(self):
         before = {n: os.stat(os.path.join(DATA, n)).st_mtime for n in os.listdir(DATA)}
         home = tempfile.mkdtemp()
@@ -150,6 +164,40 @@ class AddTest(unittest.TestCase):
         after = {n: os.stat(os.path.join(DATA, n)).st_mtime for n in os.listdir(DATA)}
         self.assertEqual(before, after)
         self.assertEqual([r["slug"] for r in user_rows(home)], ["snyk"])
+
+
+class BoardTest(unittest.TestCase):
+    def test_known_board_is_fetched_and_saved(self):
+        home = tempfile.mkdtemp()
+        code, out = run(["add", "Airtable", "--board", "greenhouse:airtable"], home=home, replay_dir=BOARD_FIXTURES)
+        self.assertEqual((code, out["requests"]), (0, 1))
+        res = out["results"][0]
+        self.assertEqual(res["tried"], ["greenhouse:airtable"])
+        hit = res["hits"][0]
+        self.assertEqual((hit["ats"], hit["slug"], hit["company"], hit["jobs"], hit["from"]),
+                         ("greenhouse", "airtable", "Airtable", 3, "board"))
+        self.assertEqual(len(hit["sample_titles"]), 3)
+        self.assertTrue(hit["sample_url"].startswith("https://job-boards.greenhouse.io/airtable/jobs/"))
+        self.assertTrue(res["saved"])
+        self.assertEqual([(r["company"], r["ats"], r["slug"], r["source"], r["jobs"]) for r in user_rows(home)],
+                         [("Airtable", "greenhouse", "airtable", "user", "3")])
+
+    def test_board_with_no_jobs_saves_nothing(self):
+        home = tempfile.mkdtemp()
+        code, out = run(["add", "Webflow", "--board", "greenhouse:webflow"], home=home, replay_dir=BOARD_FIXTURES)
+        self.assertEqual(code, 0)
+        res = out["results"][0]
+        self.assertEqual((res["hits"], res["saved"]), ([], False))
+        self.assertIn("not found", res["note"])
+        self.assertEqual(user_rows(home), [])
+
+    def test_bad_board_input_exits_2(self):
+        for argv in (["add", "A", "B", "--board", "greenhouse:a"], ["add", "A", "--board", "workday:a"],
+                     ["add", "A", "--board", "greenhouse:../a"], ["add", "A", "--board", "greenhouse:"],
+                     ["add", "A", "--board", "greenhouse"], ["add", "A", "--board", "greenhouse:.a"]):
+            code, out = run(argv, replay_dir=BOARD_FIXTURES)
+            self.assertEqual(code, 2, argv)
+            self.assertIn("error", out)
 
 
 class UsageTest(unittest.TestCase):

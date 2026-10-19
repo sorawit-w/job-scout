@@ -519,6 +519,20 @@ class SeenStateTest(unittest.TestCase):
         self.assertEqual(cands[0]["state"], "seen")
 
 
+    def test_regrouped_job_takes_the_strongest_status_of_its_entries(self):
+        # two roles recorded separately now collapse into one job
+        j = job(key="ashby:acme:r1")
+        j["variants"].append(dict(j["variants"][0], key="ashby:acme:r2"))
+        for statuses, want_state, want_removed in ((("seen", "saved"), "saved", None),
+                                                   (("seen", "applied"), None, "dismissed_or_applied"),
+                                                   (("dismissed", "seen"), None, "dismissed_or_applied")):
+            seen = {"ashby:acme:r1": seen_entry(j, statuses[0]), "ashby:acme:r2": seen_entry(j, statuses[1])}
+            out, cands = jfilter.run_filter([j], profile(), today=TODAY, seen=seen)
+            self.assertEqual([c["state"] for c in cands], [want_state] if want_state else [], statuses)
+            if want_removed:
+                self.assertEqual(out["counts"]["removed"][want_removed], 1, statuses)
+
+
 class CliTest(unittest.TestCase):
     def setUp(self):
         self.home = tempfile.mkdtemp()
@@ -596,6 +610,18 @@ class CliTest(unittest.TestCase):
         self.make_run([local(workplace=None)])
         code, out = self.main([])
         self.assertEqual(out["candidates"][0]["mode"], "unknown")
+
+    def test_unreadable_seen_json_exits_2_and_writes_nothing(self):
+        state.write_json_atomic(state.profile_path(), profile())
+        run_dir = self.make_run([job()])
+        for raw in (b"[]", b'{"ashby:acme:1": {"sta'):
+            state.seen_path().write_bytes(raw)
+            code, out = self.main([])
+            self.assertEqual(code, 2)
+            self.assertIn("seen.json", out["error"])
+            self.assertIn("not changed", out["error"])
+            self.assertFalse((run_dir / "candidates.json").exists())  # never treated as a first run
+            self.assertEqual(state.seen_path().read_bytes(), raw)
 
     def test_rerun_uses_seen_json_and_all_flag(self):
         state.write_json_atomic(state.profile_path(), profile())
