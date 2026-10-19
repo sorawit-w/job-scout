@@ -9,13 +9,16 @@ All notable changes to `job-scout` are documented here. Format follows
 
 ### Added
 - `scripts/report.py` writes `report.html` in the run folder: the brief, the coverage line, and
-  a full-width master–detail table — one row per shown role (fixed rank, fit bar, short pay,
-  open since), with details that open inline or, on screens 1200px and wider, in a sticky side
-  pane you move through with ↑/↓ (quoted reasons and risks, score meters, the four gates with
-  icons, flags, the employer link and copy-a-reply buttons). Then saved/applied and closed roles
-  on a rerun, and the close-but-excluded lines. Columns sort, a filter narrows the rows, phones
-  keep the table with fewer columns, and the page reads fully with JavaScript off and prints as
-  a document. The "Signal refined" theme has light and dark modes.
+  a full-width master–detail table — one row per shown role (fixed rank, a tiered fit meter
+  where only 7–8/8 fits are colored, short pay, open since, a "1 flag" note), with details that
+  open inline or, on screens 1200px and wider, in a sticky side pane you move through with ↑/↓.
+  Each detail leads with a "Check first" box (gates that did not pass, and flags), then quoted
+  reasons and risks, score meters, the four gates, an "Open posting" button and "Copy reply to
+  chat" buttons. Then saved/applied and closed roles on a rerun, and the close-but-excluded
+  lines. "Top fit" and "No flags" quick filters, a text filter and column sorting narrow the
+  rows; phones keep the table with fewer columns; the page reads fully with JavaScript off and
+  prints as a document. Fit is the sum of the four scores. The "Signal refined" theme (neutral
+  gray, one teal accent) has light and dark modes.
 - The page loads nothing: inline CSS and JS under a Content-Security-Policy that allows only its
   own script, every value HTML-escaped, `http(s)` links only.
 - SKILL.md runs the report after the chat results and before `seen record`, and opens it when a

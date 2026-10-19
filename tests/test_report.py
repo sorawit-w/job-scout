@@ -28,7 +28,8 @@ def job(key, title="Design Engineer", company="Vercel", url=None, state_="new", 
 def row(key, total=7, show=True, gates=None, why=None, risk=None):
     return {"key": key, "gates": gates or {"location": "pass", "sponsorship": "unknown", "pay": "pass",
                                            "exclusions": "pass"},
-            "scores": {"role": 2, "skills": 2, "level": 1, "domain": 2}, "total": total, "show": show,
+            "scores": dict(zip(report.SCORES, (min(2, max(0, total - 2 * i)) for i in range(4)))),  # sums to total
+            "total": total, "show": show,
             "why": why or [{"text": "Design systems at the core", "quote": "own and evolve our design system"}],
             "risk": risk or [{"text": "sponsorship not stated", "quote": None}]}
 
@@ -85,7 +86,15 @@ class ReportTest(unittest.TestCase):
         self.assertNotIn(">CHANGED<", html)  # first run (no seen.json): tags would be noise
         self.assertIn('<td dir="auto">UI Engineer</td><td dir="auto">Figma</td><td dir="auto">fit 3/8, below 5</td>', html)
         self.assertIn('<td dir="auto">Web Engineer</td><td dir="auto">Ramp</td><td dir="auto">pay tops out below your floor</td>', html)
-        self.assertIn("Checked 4 of 4 company job boards (3 jobs open today)", html)
+        self.assertIn("Checked 4 of 4 company job boards and read 3 open roles in full.", html)
+        self.assertIn("<h1>2 matching roles</h1>", html)
+        # fit tiers: 7+ is a top fit (and counts for the quick filter); 6 is the middle tier
+        self.assertIn('data-rank="2" data-fit="7" data-top="1"', html)
+        self.assertIn('<span class="fit t-mid">', html)
+        self.assertIn('data-quick="top" aria-pressed="false" title="Fit 7 or 8 of 8">', html)
+        # exceptions come first in the detail; a passed gate shows no ": pass"
+        self.assertIn('<div class="check"><h3>Check first</h3><ul><li class="g-unknown">', html)
+        self.assertIn("<span>location<span class=\"sr\"> passed</span></span>", html)
         self.assertIn("$190,000–$230,000/yr", html)  # full pay in the detail
         self.assertIn('<td class="c-pay">$190k–$230k</td>', html)  # short pay in the table
         self.assertIn('<td class="c-since">Oct 1</td>', html)
@@ -191,7 +200,9 @@ class ReportTest(unittest.TestCase):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         run([], self.home)
         html = page(self.home)
-        self.assertIn('role="group" aria-label="Copy a reply"', html)
+        self.assertIn('<div class="copy" role="group" aria-labelledby="c1"><span class="copy-label" id="c1">'
+                      'Copy reply to chat</span><button type="button" data-copy="save 1 (Vercel, Design Engineer)">'
+                      'Save</button>', html)
         self.assertIn('class="copy-help"', html)
         empty = tempfile.mkdtemp()
         make_run(empty, [job("gh:a:1")], rows=None)

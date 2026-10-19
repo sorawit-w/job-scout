@@ -113,3 +113,8 @@ Action: team-composer discussion → expandable rows at every width plus a split
 Status: DONE
 Notes: skill-evaluator: E12 re-run 5/5 on the reworded output-format §7 (SKILL.md unchanged since 7ab9dcb).
 
+
+Task: M7 design pass v2 (user: "layout is good, design not there yet")
+Action: Codex + Antigravity critiques (scratchpad design-review/); user chose quick-filter chips and tiered fit segments, then replaced indigo with teal (#0f766e / dark #5eead4). report.py: fit = sum of the four scores (_fit, also for excluded rows); h1 "N matching roles" + muted meta line; "Top fit"/"No flags" aria-pressed chips combined with the text filter; tiered 8-segment fit (7–8 teal + pill, 6 gray, ≤5 faint); "1 flag" note; detail leads with an amber "Check first" box; quotes on their own line; passed gates muted; "Open posting" primary button; "Copy reply to chat" Save/Applied/Dismiss; summary-row-only selection tint; no chevron in split; print resets to light tokens; light warn darkened to #a14a07 (5.4:1 on the selected row). docs/report-design.md rewritten.
+Status: DONE (pending Codex review)
+Notes: axe 0 violations in 24 runs (4 pages × 1440/1024/375 × light/dark, flagged row selected); 320px reflow clean; impeccable detect: only the light/dark mixing low-contrast false positive. N6 re-run 5/5 after the Phase 5 zero-candidates change.

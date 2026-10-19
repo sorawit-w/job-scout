@@ -122,11 +122,18 @@ def _short_date(iso, run_year):
     return day if m.group(1) == run_year else "%s, %s" % (day, m.group(1))
 
 
+def _fit(row):
+    """Fit N/8: the sum of the four scores when all are there (one source of truth), else the row's total."""
+    scores = row.get("scores") if isinstance(row.get("scores"), dict) else {}
+    parts = [scores.get(k) for k in SCORES]
+    return sum(parts) if all(isinstance(v, int) for v in parts) else row.get("total")
+
+
 def _excluded_reason(row):
     failed = [g for g in GATES if (row.get("gates") or {}).get(g) == "fail"]
     if failed:
         return "%s gate failed" % failed[0]
-    return "fit %s/8, below 5" % row.get("total") if row.get("total") is not None else "not a fit"
+    return "fit %s/8, below 5" % _fit(row) if _fit(row) is not None else "not a fit"
 
 
 def build_view(files, profile, seen, run_id, probed_ok=()):
@@ -161,7 +168,7 @@ def build_view(files, profile, seen, run_id, probed_ok=()):
             base, rank=len(roles) + 1, url=_safe_url(job.get("url")), where=_where(job),
             pay=jfilter.pay_text(comp), pay_short=_pay_short(comp),
             pay_sort=pay_sort if isinstance(pay_sort, (int, float)) else None,
-            since=str(job.get("first_published") or "")[:10], total=row.get("total"),
+            since=str(job.get("first_published") or "")[:10], total=_fit(row),
             since_short=_short_date(str(job.get("first_published") or "")[:10], (run_id or "")[:4]),
             scores={s: scores.get(s) for s in SCORES}, gates={g: gates.get(g) or "unknown" for g in GATES},
             why=_items(row.get("why")), risk=_items(row.get("risk")),
@@ -208,109 +215,135 @@ def build_view(files, profile, seen, run_id, probed_ok=()):
 
 
 # ---------- render: view -> one HTML string ----------
-# Design spec: docs/report-design.md ("Signal refined"). One table, master–detail: details expand
+# Design spec: docs/report-design.md ("Signal refined", teal accent). One table, master–detail: details expand
 # inline under their row; at >= 1200px (JS on) a sticky side pane shows the selected role instead.
 
 CSS = """
-:root{--canvas:#f6f6f7;--table:#fff;--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#e4e4e7;
---line-strong:#d4d4d8;--hover:#f4f4f5;--accent:#4f46e5;--accent-soft:#eef2ff;--accent-ink:#3730a3;
---ok:#15803d;--warn:#a16207;--bad:#b91c1c;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--canvas:#0f0f11;--table:#17171a;--ink:#ececef;--muted:#a1a1aa;
---faint:#8b8b94;--line:#27272a;--line-strong:#3f3f46;--hover:#1f1f23;--accent:#818cf8;--accent-soft:#1f1d3d;
---accent-ink:#c7d2fe;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;color-scheme:dark}}
+:root{--canvas:#f7f7f8;--table:#fff;--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#e4e4e7;
+--line-strong:#d4d4d8;--hover:#f4f4f5;--accent:#0f766e;--accent-soft:#e6f6f4;--accent-ink:#134e4a;--on-accent:#fff;
+--ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--canvas:#0e0e10;--table:#161619;--ink:#f4f4f5;--muted:#a1a1aa;
+--faint:#8b8b94;--line:#26262b;--line-strong:#34343a;--hover:#1d1d21;--accent:#5eead4;--accent-soft:#12302e;
+--accent-ink:#ccfbf1;--on-accent:#042f2e;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--warn-bg:#2e1f05;
+--warn-ink:#fbbf24;--warn-line:#a16207;color-scheme:dark}}
+@media print{:root{--canvas:#fff;--table:#fff;--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#e4e4e7;
+--line-strong:#a1a1aa;--hover:#fff;--accent:#0f766e;--accent-soft:#e6f6f4;--accent-ink:#134e4a;--on-accent:#fff;
+--ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;color-scheme:light}}
 *{box-sizing:border-box}
 html{accent-color:var(--accent);scrollbar-color:var(--line-strong) transparent}
 ::selection{background:var(--accent-soft);color:var(--ink)}
-body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
-main{padding:24px}
-a{color:var(--accent-ink);text-underline-offset:2px}
-@media (prefers-color-scheme:dark){a{color:var(--accent)}}
+body{margin:0;background:var(--canvas);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+main{padding:28px 24px 24px;max-width:1760px;margin:0 auto}
+a{color:var(--accent);text-underline-offset:2px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-h1{font-size:18px;font-weight:600;margin:0 0 10px;letter-spacing:-.01em}
-h2{font-size:15px;font-weight:600;margin:32px 0 8px}
+h1{font-size:20px;font-weight:650;margin:0 0 6px;letter-spacing:-.015em}
+h2{font-size:14px;font-weight:600;margin:32px 0 8px}
 .i{width:16px;height:16px;flex:none;vertical-align:-3px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;padding:0;list-style:none}
-.chips li{border:1px solid var(--line-strong);border-radius:999px;padding:1px 10px;font-size:13px;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:2px 0;margin:0 0 4px;color:var(--muted);font-size:13px}
+.meta span+span{border-left:1px solid var(--line-strong);margin-left:10px;padding-left:10px}
 .coverage{margin:0;color:var(--muted);font-size:13px}
-.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:20px 0 10px}
-.toolbar label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:20px 0 10px}
+.quick{display:flex;flex-wrap:wrap;gap:6px}
 input,button{font:inherit;font-size:13px;color:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line-strong);background:var(--table);border-radius:999px;padding:3px 12px;cursor:pointer;min-height:30px}
+.chip .n{color:var(--muted)}.chip .i{display:none;width:14px;height:14px}
+.chip:hover{border-color:var(--faint)}
+.chip[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-pressed=true] .n{color:var(--accent-ink)}.chip[aria-pressed=true] .i{display:inline}
+.toolbar label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-left:auto}
 input{background:var(--table);border:1px solid var(--line-strong);border-radius:6px;padding:5px 9px;min-width:14em}
 .count{font-size:13px;color:var(--muted)}
 .layout{display:block}
 table{width:100%;border-collapse:collapse;background:var(--table);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-th{font-size:12px;font-weight:600;color:var(--faint);text-align:left;padding:8px 12px;border-bottom:1px solid var(--line-strong);white-space:nowrap}
+th{font-size:12px;font-weight:500;color:var(--faint);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 th button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:2px;border-radius:4px}
 th button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-th[aria-sort] .sort{color:var(--accent)}
 th .sort{width:12px;height:12px;visibility:hidden}
-th[aria-sort] .sort{visibility:visible}
-td{padding:10px 12px;vertical-align:top}
+th[aria-sort] .sort{visibility:visible;color:var(--accent)}
+th.c-pay{text-align:right}
+td{padding:11px 12px;vertical-align:top}
 tbody.role{border-top:1px solid var(--line)}
 tbody.role:first-of-type{border-top:0}
 tr.sum{cursor:pointer}
 tr.sum:hover{background:var(--hover)}
-tbody.role.is-open tr.sum,tbody.role.is-open tr.det{background:var(--accent-soft)}
-.c-rank{width:36px;color:var(--muted);text-align:right;padding-right:4px}
-.c-fit{width:120px}.c-since{width:96px;color:var(--muted);white-space:nowrap}.c-pay{width:15%;color:var(--muted);white-space:nowrap}.c-where{width:20%;color:var(--muted)}
+tbody.role.is-open tr.sum{background:var(--accent-soft)}
+.c-rank{width:40px;color:var(--muted);text-align:right;padding-right:4px}
+.c-fit{width:132px}.c-since{width:96px;color:var(--muted);white-space:nowrap}
+.c-pay{width:14%;text-align:right;white-space:nowrap}.c-where{width:20%;color:var(--muted)}
 .toggle{all:unset;cursor:pointer;display:inline-flex;align-items:flex-start;gap:6px;font-weight:600;border-radius:4px;overflow-wrap:anywhere}
-.toggle .chev{color:var(--muted);margin-top:2px}
+.toggle .chev{color:var(--faint);margin-top:2px}
 .toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .is-open .toggle{color:var(--accent-ink)}
 .is-open .chev{transform:rotate(90deg)}
 @media (prefers-reduced-motion:no-preference){.chev{transition:transform 120ms cubic-bezier(.23,1,.32,1)}}
-.tag{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);border-radius:4px;padding:0 5px;vertical-align:1px}
-.flagcount{display:inline-flex;align-items:center;gap:2px;margin-left:6px;font-size:12px;color:var(--warn);vertical-align:-1px}
+.tag{margin-left:8px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--muted);vertical-align:1px}
+.flagnote{display:inline-flex;align-items:center;gap:3px;margin-left:8px;font-size:12px;font-weight:500;color:var(--warn);vertical-align:-1px}
+.flagnote .i{width:14px;height:14px}
 .sub{margin:2px 0 0 22px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .s-where::before,.s-pay::before{content:" · "}
-.fit{display:flex;align-items:center;gap:8px}
-.bar{width:56px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;flex:none}
-.bar span{display:block;height:100%;background:var(--accent)}
-.fit b{font-weight:600}
+.fit{display:inline-flex;align-items:center;gap:8px}
+.segs{display:inline-flex;gap:2px;flex:none}
+.segs span{width:5px;height:12px;border-radius:1.5px;background:var(--line)}
+.t-top .on{background:var(--accent)}.t-mid .on{background:var(--muted)}.t-low .on{background:var(--line-strong)}
+.fit b{font-size:13px;font-weight:600;padding:1px 6px;border-radius:4px}
+.t-top b{background:var(--accent-soft);color:var(--accent-ink)}.is-open .t-top b{background:var(--table)}
+.t-low b{color:var(--muted);font-weight:500}
 td.det-cell{padding:0}
-.detail{padding:4px 16px 18px 70px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:16px 32px}
-.detail h3{font-size:12px;font-weight:600;color:var(--muted);margin:10px 0 6px}
+.detail{padding:4px 20px 20px 74px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:4px 40px}
+.detail h3{font-size:12px;font-weight:600;color:var(--muted);margin:14px 0 6px}
 .dhead{display:none}
+.check{margin:10px 0 2px;padding:8px 12px 10px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;color:var(--warn-ink)}
+.check h3{color:var(--warn-ink);margin:0 0 4px}
+.check ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.check li{display:flex;gap:6px;font-size:13px;overflow-wrap:anywhere}.check .g-fail{color:var(--bad);font-weight:600}
 .quotes{list-style:none;margin:0;padding:0}
-.quotes li{display:flex;gap:8px;margin:0 0 6px;overflow-wrap:anywhere}
-.quotes .i{margin-top:1px}
+.quotes li{display:flex;gap:8px;margin:0 0 10px;overflow-wrap:anywhere}
+.quotes .i{margin-top:2px}
 .why .i{color:var(--ok)}.risk .i{color:var(--warn)}
-q{font-style:italic;color:var(--muted)}
-.meters{list-style:none;margin:0;padding:0;display:grid;gap:4px;max-width:260px}
-.meters li{display:grid;grid-template-columns:5.5em auto auto;justify-content:start;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.seg{display:inline-flex;gap:3px}.seg span{width:14px;height:6px;border-radius:2px;background:var(--line)}.seg span.on{background:var(--accent)}
+.quotes q{display:block;margin-top:3px;padding-left:10px;border-left:1px solid var(--line-strong);color:var(--muted);font-style:normal}
+.facts{display:flex;flex-direction:column}
+.meters,.gates{list-style:none;margin:0;padding:0;display:grid;gap:5px}.gates{gap:0}
+.meters li{display:grid;grid-template-columns:4.5em auto auto;justify-content:start;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.seg{display:inline-flex;gap:2px}.seg span{width:14px;height:6px;border-radius:2px;background:var(--line)}.seg span.on{background:var(--accent)}
 .meters b{font-weight:600;color:var(--ink)}
-.gates{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
-.gates li{display:inline-flex;align-items:center;gap:4px;font-size:12px;border:1px solid var(--line-strong);border-radius:999px;padding:1px 8px 1px 5px;color:var(--muted)}
-.g-pass .i{color:var(--ok)}.g-fail{color:var(--bad)!important;border-color:var(--bad)!important}.g-fail .i{color:var(--bad)}.g-unknown .i{color:var(--muted)}
-.flags{list-style:none;margin:10px 0 0;padding:0}.flags li{display:flex;gap:6px;font-size:13px;color:var(--warn);margin:0 0 4px}
-.actions{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-top:4px}
-.actions a,.actions button{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line-strong);background:var(--table);border-radius:6px;padding:4px 10px;font-size:13px;text-decoration:none;color:var(--ink);cursor:pointer;min-height:28px}
-.actions a{color:var(--accent-ink);font-weight:600}
-@media (prefers-color-scheme:dark){.actions a{color:var(--accent)}}
-.actions a:hover,.actions button:hover{border-color:var(--accent)}
+.gates li{display:flex;align-items:center;gap:6px;width:fit-content;margin-left:-9px;padding:4px 8px;border:1px solid transparent;border-radius:4px;font-size:13px;color:var(--muted)}
+.g-pass .i{color:var(--ok)}
+.gates .g-unknown{background:var(--warn-bg);border-color:var(--warn-line);color:var(--warn-ink)}
+.gates .g-fail{border-color:var(--bad);color:var(--bad);font-weight:600}
+.actions{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;margin-top:10px;padding-top:14px;border-top:1px solid var(--line)}
+.btn-primary{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--on-accent);border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;text-decoration:none;min-height:32px}
+.btn-primary:hover{background:var(--accent-ink)}
+.copy{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.copy-label{font-size:12px;color:var(--muted);margin-right:2px}
+.copy button{border:1px solid var(--line-strong);background:var(--table);border-radius:6px;padding:4px 10px;cursor:pointer;min-height:32px}
+.copy button:hover{border-color:var(--faint);background:var(--hover)}
 .pane{display:none}.pane-empty{display:none;margin:0;padding:16px 20px;color:var(--muted)}.pane.is-empty .pane-empty{display:block}
 .mini{width:100%;table-layout:fixed;border-collapse:collapse;background:var(--table);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .mini td{border-top:1px solid var(--line);color:var(--muted);overflow-wrap:anywhere}.mini tr:first-child td{border-top:0}.mini td:first-child{color:var(--ink);font-weight:600}
 .empty{background:var(--table);border:1px solid var(--line);border-radius:10px;padding:16px;margin:20px 0 0}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--canvas);border-radius:6px;padding:6px 12px;font-size:13px}
 footer{margin-top:32px;font-size:13px;color:var(--muted)}footer p{margin:0 0 4px}
-@media (max-width:767px){main{padding:16px}.c-where,.c-pay,.c-since{display:none}.c-fit{width:92px}.c-fit .bar{width:36px}
-.s-where{display:none}.detail{grid-template-columns:minmax(0,1fr);padding:4px 12px 16px 12px}.c-rank{width:24px}}
+@media (max-width:767px){main{padding:16px}.c-where,.c-pay,.c-since{display:none}td{padding:10px 8px}.c-rank{width:28px}
+.c-fit{width:96px}.segs span{width:3px}.detail{grid-template-columns:minmax(0,1fr);padding:4px 12px 16px}
+.toolbar label{margin-left:0}.chip,.btn-primary,.copy button{min-height:44px}}
 @media (min-width:768px){.s-pay,.s-where{display:none}}
 @media (min-width:1200px){
 .split .layout{display:grid;grid-template-columns:minmax(0,58fr) minmax(380px,42fr);gap:20px;align-items:start}
 .split .c-where{display:none}.split .s-where{display:inline}.split tr.det{display:none}
-.split .pane{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--table);border:1px solid var(--line-strong);border-radius:10px;max-width:560px}
-.split .pane .detail{grid-template-columns:minmax(0,1fr);padding:16px 20px 20px}
-.split .pane .dhead{display:block}.split .pane .dhead h2{margin:0 0 4px;font-size:16px}.split .pane .dhead p{margin:0;color:var(--muted);font-size:13px}}
+.split .chev{display:none}.split .sub{margin-left:0}
+.split .pane{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--table);border:1px solid var(--line);border-radius:10px;max-width:560px}
+.split .pane .detail{grid-template-columns:minmax(0,1fr);padding:18px 20px 0;gap:0}
+.split .pane .facts{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.split .pane .dhead{display:block}.dhead h2{margin:0 0 4px;font-size:16px;font-weight:650;letter-spacing:-.01em}.dhead p{margin:0;color:var(--muted);font-size:13px}
+.split .pane .actions{position:sticky;bottom:0;background:var(--table);margin:16px -20px 0;padding:12px 20px}}
 @media (min-width:1600px){.split .layout{grid-template-columns:minmax(0,60fr) minmax(380px,40fr)}.split .c-where{display:table-cell}.split .s-where{display:none}.split .pane{max-width:640px}}
-@media print{body{background:#fff;color:#000;font-size:12px}main{padding:0}.toolbar,.copy,.pane,.toast,.copy-help{display:none!important}
-tr.det{display:table-row!important}tbody.role{break-inside:avoid}tr.sum:hover,tbody.role.is-open tr.sum,tbody.role.is-open tr.det{background:none}
-table,.mini,.empty{border-color:#999}.c-where,.c-pay,.c-since{display:table-cell!important}
-.layout{display:block!important}.s-where,.s-pay{display:none!important}
-.detail .actions a::after{content:" " attr(href);font-weight:400;word-break:break-all}}
+@media print{body{font-size:12px}main{padding:0;max-width:none}.toolbar,.copy,.pane,.toast,.copy-help{display:none!important}
+tr.det{display:table-row!important}tbody.role{break-inside:avoid}tr.sum:hover,tbody.role.is-open tr.sum{background:none}
+.c-where,.c-pay,.c-since{display:table-cell!important}.layout{display:block!important}.s-where,.s-pay{display:none!important}
+.chev{display:none}.actions{border:0;padding-top:4px}
+.btn-primary{background:none;color:var(--ink);padding:0;min-height:0;font-weight:400}.btn-primary .i{display:none}
+.btn-primary::after{content:": " attr(href);word-break:break-all}}
 """
 
 ICONS = (
@@ -367,12 +400,16 @@ rows.slice().sort(function(a,b){var x=a.dataset[k],y=b.dataset[k],c;
 if(k==='title')c=x.localeCompare(y);else{var nx=x===''?null:+x,ny=y===''?null:+y;
 if(nx===null&&ny===null)c=0;else if(nx===null)return 1;else if(ny===null)return -1;else c=nx-ny;}
 return (asc?c:-c)||a.dataset.rank-b.dataset.rank;}).forEach(function(r){table.appendChild(r);});});});
-var f=d.getElementById('filter'),count=d.getElementById('count');
-if(f)f.addEventListener('input',function(){var q=f.value.trim().toLowerCase(),n=0;
-rows.forEach(function(r){var hit=!q||r.dataset.text.indexOf(q)>=0;r.hidden=!hit;if(hit)n++;});
-count.textContent=n+' of '+rows.length+' shown';if(!split)return;var v=visible();
+var f=d.getElementById('filter'),count=d.getElementById('count'),quick={};
+function apply(){var q=f.value.trim().toLowerCase(),n=0;
+rows.forEach(function(r){var hit=(!q||r.dataset.text.indexOf(q)>=0)&&(!quick.top||r.dataset.top==='1')&&(!quick.clean||r.dataset.flags==='0');
+r.hidden=!hit;if(hit)n++;});
+count.textContent=q||quick.top||quick.clean?n+' of '+rows.length+' shown':'';if(!split)return;var v=visible();
 if(!v.length){if(sel){var det=pane.querySelector('.detail');if(det)home[det.id].appendChild(det);setOpen(sel,false);sel=null;}pane.classList.add('is-empty');}
-else{pane.classList.remove('is-empty');if(!sel||sel.hidden)select(v[0],true);}});
+else{pane.classList.remove('is-empty');if(!sel||sel.hidden)select(v[0],true);}}
+f.addEventListener('input',apply);
+d.querySelectorAll('button[data-quick]').forEach(function(b){b.addEventListener('click',function(){
+var on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on?'true':'false');quick[b.dataset.quick]=on;apply();});});
 function toast(msg){var t=d.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;
 d.body.appendChild(t);setTimeout(function(){t.remove();},1800);}
 function fallback(text){var a=d.createElement('textarea');a.value=text;a.setAttribute('readonly','');a.style.position='fixed';a.style.opacity='0';
@@ -414,8 +451,8 @@ def _clip(quote):
 def _quotes(items, cls, icon, label):
     if not items:
         return ""
-    lis = "".join('<li>%s<span><span class="sr">%s: </span>%s%s</span></li>' % (
-        _icon(icon), label, _e(i["text"]), ': <q dir="auto">%s</q>' % _e(_clip(i["quote"])) if i.get("quote") else "")
+    lis = "".join('<li>%s<div><span class="sr">%s: </span>%s%s</div></li>' % (
+        _icon(icon), label, _e(i["text"]), '<q dir="auto">%s</q>' % _e(_clip(i["quote"])) if i.get("quote") else "")
         for i in items)
     return '<ul class="quotes %s">%s</ul>' % (cls, lis)
 
@@ -423,49 +460,63 @@ def _quotes(items, cls, icon, label):
 GATE_ICON = {"pass": "check", "fail": "x", "unknown": "question"}
 
 
+def _gate_label(gate, value):
+    return {"pass": gate, "fail": "%s: failed" % gate}.get(value, "%s: %s" % (gate, value))
+
+
 def _detail(r):
-    """The detail block: one copy, moved into the side pane in split mode."""
+    """The detail block: one copy, moved into the side pane in split mode. Exceptions first, then reasons."""
     name = "%s, %s" % (r["company"], r["title"]) if r["company"] else r["title"]
     meters = "".join(
         '<li><span>%s</span><span class="seg" aria-hidden="true">%s</span><b>%s/2</b></li>' % (
             s, "".join('<span class="%s"></span>' % ("on" if isinstance(r["scores"][s], int) and r["scores"][s] > k else "")
                        for k in range(2)), _e(r["scores"][s]) if r["scores"][s] is not None else "–")
         for s in SCORES)
-    gates = "".join('<li class="g-%s">%s%s: %s</li>' % (
-        _e(r["gates"][g]), _icon(GATE_ICON.get(r["gates"][g], "question")), g, _e(r["gates"][g])) for g in GATES)
-    flags = '<ul class="flags">%s</ul>' % "".join(
-        "<li>%s<span>%s</span></li>" % (_icon("alert"), _e(f)) for f in r["flags"]) if r["flags"] else ""
-    link = ('<a href="%s" target="_blank" rel="noopener noreferrer">Open posting%s</a>' % (_e(r["url"]), _icon("out"))
-            if r["url"] else "")
-    copies = "".join('<button type="button" data-copy="%s">%s %d</button>' % (
-        _e("%s %d (%s)%s" % (verb, r["rank"], name, ": " if verb == "dismiss" else "")), verb, r["rank"])
+    gates = "".join('<li class="g-%s">%s<span>%s%s</span></li>' % (
+        _e(v), _icon(GATE_ICON.get(v, "question")), _e(_gate_label(g, v)),
+        '<span class="sr"> passed</span>' if v == "pass" else "") for g, v in ((g, r["gates"][g]) for g in GATES))
+    checks = ['<li class="g-%s">%s<span>%s</span></li>' % (_e(v), _icon(GATE_ICON.get(v, "question")), _e(_gate_label(g, v)))
+              for g, v in ((g, r["gates"][g]) for g in GATES) if v != "pass"]
+    checks += ["<li>%s<span>%s</span></li>" % (_icon("alert"), _e(f)) for f in r["flags"]]
+    check = '<div class="check"><h3>Check first</h3><ul>%s</ul></div>' % "".join(checks) if checks else ""
+    link = ('<a class="btn-primary" href="%s" target="_blank" rel="noopener noreferrer">Open posting%s</a>' % (
+        _e(r["url"]), _icon("out")) if r["url"] else "")
+    copies = "".join('<button type="button" data-copy="%s">%s</button>' % (
+        _e("%s %d (%s)%s" % (verb, r["rank"], name, ": " if verb == "dismiss" else "")), verb.capitalize())
         for verb in ("save", "applied", "dismiss"))
     meta = " · ".join(_e(p) for p in (r["company"], r["where"], r["pay"],
-                                       "open since %s" % r["since"] if r["since"] else "") if p)
+                                       "open since %s" % r["since_short"] if r["since_short"] else "") if p)
     return (
         '<div class="detail" id="d%d" role="region" aria-labelledby="b%d">'
         '<div class="dhead"><h2 dir="auto">%s</h2><p dir="auto">%s</p></div>'
-        '<div><h3>Why it fits</h3>%s%s%s</div>'
-        '<div><h3>Scores</h3><ul class="meters">%s</ul><ul class="gates" aria-label="Gates">%s</ul>%s</div>'
-        '<div class="actions"><span class="sr">Actions:</span>%s<span class="copy" role="group" aria-label="Copy a reply">%s</span></div>'
+        '<div class="main">%s<h3>Why it fits</h3>%s%s%s</div>'
+        '<div class="facts"><div><h3>Scores</h3><ul class="meters">%s</ul></div>'
+        '<div><h3>Gates</h3><ul class="gates">%s</ul></div></div>'
+        '<div class="actions">%s<div class="copy" role="group" aria-labelledby="c%d">'
+        '<span class="copy-label" id="c%d">Copy reply to chat</span>%s</div></div>'
         '</div>'
-    ) % (r["rank"], r["rank"], _e(r["title"]), meta,
+    ) % (r["rank"], r["rank"], _e(r["title"]), meta, check,
          _quotes(r["why"], "why", "check", "Why"),
          '<h3>Watch for</h3>' if r["risk"] else "", _quotes(r["risk"], "risk", "alert", "Risk"),
-         meters, gates, flags, link, copies)
+         meters, gates, link, r["rank"], r["rank"], copies)
+
+
+def _tier(total):
+    return "top" if total >= 7 else "mid" if total == 6 else "low"
 
 
 def _row(r):
     total = r["total"] if isinstance(r["total"], int) else None
-    fit = ('<span class="fit"><span class="bar" aria-hidden="true"><span style="width:%d%%"></span></span>'
-           '<b>%d/8</b></span>' % (total * 100 // 8, total)) if total is not None else '<span class="fit">–</span>'
+    fit = ('<span class="fit t-%s"><span class="segs" aria-hidden="true">%s</span><b>%d/8</b></span>' % (
+        _tier(total), "".join('<span%s></span>' % (' class="on"' if k < total else "") for k in range(8)), total)
+        if total is not None else '<span class="fit">–</span>')
     tag = {"new": "NEW", "changed": "CHANGED"}.get(r["state"], "")
-    flagcount = ('<span class="flagcount" title="%d flag%s">%s%d<span class="sr"> flags</span></span>' % (
-        len(r["flags"]), "" if len(r["flags"]) == 1 else "s", _icon("alert"), len(r["flags"])) if r["flags"] else "")
+    n = len(r["flags"])
+    flagnote = '<span class="flagnote">%s%d flag%s</span>' % (_icon("alert"), n, "" if n == 1 else "s") if n else ""
     text = " ".join((r["title"], r["company"], r["where"], r["pay"])).lower()
     return (
-        '<tbody class="role" data-rank="%d" data-fit="%s" data-pay="%s" data-since="%s" data-title="%s" '
-        'data-company="%s" data-text="%s">'
+        '<tbody class="role" data-rank="%d" data-fit="%s" data-top="%d" data-flags="%d" data-pay="%s" data-since="%s" '
+        'data-title="%s" data-company="%s" data-text="%s">'
         '<tr class="sum"><td class="c-rank">%d</td>'
         '<td class="c-role"><button type="button" class="toggle" id="b%d" aria-expanded="true" aria-controls="d%d">'
         '%s<span dir="auto">%s</span></button>%s%s'
@@ -474,10 +525,11 @@ def _row(r):
         '<td class="c-where" dir="auto">%s</td><td class="c-pay">%s</td><td class="c-fit">%s</td>'
         '<td class="c-since">%s</td></tr>'
         '<tr class="det"><td class="det-cell" colspan="6">%s</td></tr></tbody>'
-    ) % (r["rank"], "" if total is None else total, "" if r["pay_sort"] is None else r["pay_sort"],
+    ) % (r["rank"], "" if total is None else total, 1 if total is not None and total >= 7 else 0, n,
+         "" if r["pay_sort"] is None else r["pay_sort"],
          _e(r["since"].replace("-", "")), _e(r["title"].lower()), _e(r["company"]), _e(text),
          r["rank"], r["rank"], r["rank"], _icon("chev", "i chev"), _e(r["title"]),
-         '<span class="tag">%s</span>' % tag if tag else "", flagcount,
+         '<span class="tag">%s</span>' % tag if tag else "", flagnote,
          _e(r["company"]) or "company not listed", _e(r["where"]), _e(r["pay_short"]),
          _e(r["where"]), _e(r["pay_short"]), fit, _e(r["since_short"]) or "–", _detail(r))
 
@@ -501,13 +553,14 @@ def render(view):
         coverage = "Checked %s of %s company job boards — %d new or changed since last time." % (
             _num(cov["probed"]), _num(cov["available"]), cov["moved"])
     else:
-        coverage = "Checked %s of %s company job boards (%d job%s open today). Best for tech and startup roles." % (
-            _num(cov["probed"]), _num(cov["available"]), cov["open"], "" if cov["open"] == 1 else "s")
-    parts = ['<header><h1>job-scout · %d role%s%s</h1>' % (
-        len(roles), "" if len(roles) == 1 else "s", " · %s" % _e(view["date"]) if view["date"] else "")]
-    if view["brief"]:
-        parts.append('<ul class="chips" aria-label="Search brief">%s</ul>' % "".join(
-            "<li>%s</li>" % _e(c) for c in view["brief"]))
+        coverage = ("Checked %s of %s company job boards and read %d open role%s in full. "
+                    "Best for tech and startup roles." % (_num(cov["probed"]), _num(cov["available"]), cov["open"],
+                                                          "" if cov["open"] == 1 else "s"))
+    n = len(roles)
+    parts = ["<header><h1>%s</h1>" % ("%d matching role%s" % (n, "" if n == 1 else "s") if n else "No matching roles")]
+    meta = ([view["date"]] if view["date"] else []) + view["brief"]
+    if meta:
+        parts.append('<p class="meta">%s</p>' % "".join("<span>%s</span>" % _e(m) for m in meta))
     parts.append('<p class="coverage">%s</p></header>' % coverage)
     if roles:
         def th(key, label, cls, sort=True, current=False):
@@ -515,10 +568,17 @@ def render(view):
                 return '<th scope="col" class="%s">%s</th>' % (cls, label)
             return ('<th scope="col" class="%s" data-sort="%s"%s><button type="button">%s%s</button></th>' % (
                 cls, key, ' aria-sort="ascending"' if current else "", label, _icon("up", "i sort")))
+        chips = "".join(
+            '<button type="button" class="chip" data-quick="%s" aria-pressed="false" title="%s">%s%s '
+            '<span class="n">%d</span></button>' % (k, hint, _icon("check"), label, c)
+            for k, label, hint, c in (
+                ("top", "Top fit", "Fit 7 or 8 of 8", sum(1 for r in roles if isinstance(r["total"], int) and r["total"] >= 7)),
+                ("clean", "No flags", "Roles with no flags", sum(1 for r in roles if not r["flags"]))) if c)
         parts.append(
-            '<div class="toolbar" hidden><label>Filter <input id="filter" type="search" '
+            '<div class="toolbar" hidden>%s<label>Filter <input id="filter" type="search" '
             'placeholder="title, company, place" aria-describedby="count"></label>'
-            '<span class="count" id="count" aria-live="polite"></span></div>')
+            '<span class="count" id="count" aria-live="polite"></span></div>' % (
+                '<div class="quick" role="group" aria-label="Quick filters">%s</div>' % chips if chips else ""))
         parts.append(
             '<div class="layout"><table class="roles"><caption class="sr">Roles that fit your brief, in rank order. '
             'Open a role to see why it fits.</caption><thead><tr>%s%s%s%s%s%s</tr></thead>%s</table>'
