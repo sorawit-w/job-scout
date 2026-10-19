@@ -161,6 +161,13 @@ class WorkdayCheckTest(unittest.TestCase):
         self.assertEqual(len(set(gone)), len(gone))
         self.assertIn("seed-check: 4 boards · live 2 · unverified 1 · dead 1 · errors 0 (0%) · moved 1", out)
 
+    def test_moved_board_tries_every_host_the_seed_uses(self):
+        # wd108 is not in the fixed list, but another row uses it, so a board moved there is found
+        path = make_csv([("Moved", "workday", "moved.wd1.jobs", "live"), ("Other", "workday", "other.wd108.jobs", "live")])
+        code, out = run_workday(path, {"moved.wd108.jobs": [POSTING], "other.wd108.jobs": [POSTING]})
+        self.assertEqual(code, 0)
+        self.assertEqual(read(path)[("workday", "moved.wd108.jobs")]["status"], "live")
+
     def test_network_error_keeps_previous_status(self):
         rows = [("A%d" % i, "workday", "a%d.wd1.jobs" % i, "unverified") for i in range(9)]
         path = make_csv(rows + [("Err", "workday", "err.wd1.jobs", "live")])
