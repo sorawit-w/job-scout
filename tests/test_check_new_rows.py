@@ -60,3 +60,13 @@ class CheckNewRowsTest(unittest.TestCase):
         code, out = run(self.base, self.base, {})
         self.assertEqual(code, 0)
         self.assertIn("no new boards", out)
+
+
+class CapTest(unittest.TestCase):
+    def test_boards_over_the_cap_fail_the_run(self):
+        base = csv_file([("Old", "greenhouse", "old")])
+        head = csv_file([("Old", "greenhouse", "old"), ("A", "ashby", "a"), ("B", "ashby", "b")])
+        with mock.patch.object(check_new_rows, "MAX_CHECKS", 1):
+            code, out = run(base, head, {"a": "live", "b": "live"})
+        self.assertEqual(code, 1)
+        self.assertIn("ashby:b not checked", out)

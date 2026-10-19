@@ -8,8 +8,8 @@ Usage (CI, from the repo root):
 A board is new when its (ats, slug) is not in the base file; a status or count change on an
 existing board is not checked again. Each new board is checked once with seed_check.check_board
 (the weekly seed check's own rule) and must come back "live". At most MAX_CHECKS new boards are
-checked; the rest are listed as not checked and do not fail the run.
-Exit codes: 0 every checked board is live (or nothing new) · 1 a new board is not live or uses a
+checked; any beyond that fail the run unchecked (split the PR).
+Exit codes: 0 every new board is live (or nothing new) · 1 a new board is not live, unchecked, or uses a
 hiring tool job-scout can't read.
 """
 import argparse
@@ -50,7 +50,8 @@ def main(argv=None):
     for i, row in enumerate(new):
         board = "%s:%s" % (row.get("ats"), row.get("slug"))
         if i >= MAX_CHECKS:
-            print("%s not checked (over %d new boards)" % (board, MAX_CHECKS))
+            print("%s not checked (over %d new boards: split the PR) FAIL" % (board, MAX_CHECKS))
+            failed += 1
             continue
         if row.get("ats") not in BOARD_ATS or not row.get("slug") or not row.get("company"):
             print("%s FAIL: needs company, slug and one of %s" % (board, ", ".join(sorted(BOARD_ATS))))

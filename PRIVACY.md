@@ -6,7 +6,8 @@ telemetry. This page lists everything it sends and everything it stores.
 ## What leaves your machine
 
 Only requests to public job-board APIs. Each request carries the User-Agent
-`job-scout/<version> (+https://github.com/sorawit-w/job-scout)`.
+`job-scout/<version> (+https://github.com/sorawit-w/job-scout)`, except USAJOBS: its API
+requires your registered email as the User-Agent, so USAJOBS requests send that instead.
 
 | Host | What is requested | Anything from you in it? |
 |---|---|---|
