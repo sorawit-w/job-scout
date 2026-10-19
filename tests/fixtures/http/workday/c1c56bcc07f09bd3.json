@@ -1,0 +1,11 @@
+{
+ "url": "https://sharp.wd1.myworkdayjobs.com/wday/cxs/sharp/ZzqxNoSuchSite/jobs",
+ "status": 404,
+ "body": "{\"errorCode\":\"S21\",\"errorCaseId\":\"2BCFE7MVF1WTOS\",\"httpStatus\":404,\"message\":\"not found: Job_Posting_Site_ID\\u003dZzqxNoSuchSite\",\"messageParams\":{}}",
+ "post": {
+  "appliedFacets": {},
+  "limit": 20,
+  "offset": 0,
+  "searchText": ""
+ }
+}

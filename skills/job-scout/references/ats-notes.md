@@ -92,6 +92,27 @@ judgment step may *quote* pay from the description, with a citation.
 | Cost | one request per 100 postings per board, plus one per shortlisted job for `fetch_jd.py` |
 | Seed | 6,282 tenants from corpHuntingMCP `src/tenants/smartrecruiters_*.rs` at the pinned SHA |
 
+## Workday (verified 2026-10-19)
+
+Undocumented public "CXS" JSON behind each employer's `myworkdayjobs.com` careers site; Workday can change it without notice.
+
+| | |
+|---|---|
+| Slug | `<tenant>.<wdN>.<site>` with dots (a key is `ats:slug:job_id`, so no `:`), e.g. `sharp.wd1.External`. Validated (`tenant` `[a-z0-9-]+`, `wdN` = `wd` + digits, `site` `[A-Za-z0-9_-]+`); anything else raises `ValueError`, since the slug becomes part of a URL |
+| List (search) | `POST https://<tenant>.<wdN>.myworkdayjobs.com/wday/cxs/<tenant>/<site>/jobs` with `{"appliedFacets":{}, "limit":20, "offset":N, "searchText":term}` → `{total, jobPostings:[…], facets, userAuthenticated}`. **`limit` ≤ 20** (21 → HTTP 400). **`total` is only reliable on page 1**, and an offset past the end repeats page 1 — so paging stops at a short page or at page 1's `total` |
+| Caps | up to **3 search terms × 3 pages** (60 postings per term, ≤ 9 requests per board); de-duplicated by `externalPath`. No terms → one blank search, first page only. A board list is a **search, never the whole board**: a job missing from it is unseen, not closed |
+| Single job | `GET …/wday/cxs/<tenant>/<site>/job/<jobPostingId>` → `{jobPostingInfo, hiringOrganization, similarJobs?}`, or **404 when it does not exist**. Workday finds the posting by the whole last path part; the location part is ignored (so `/job/<id>` works), but the requisition id alone (`JR209985-1`) 404s. A 200 without `jobPostingInfo` is an error (unverified), never open; a 422 here (board moved) stays unverified |
+| Job id | `jobPostingId` = last part of `externalPath` (`/job/San-Diego-CA/Clinical-Nurse-RN-…_JR209985-1` → `Clinical-Nurse-RN-…_JR209985-1`); the detail carries the same value as `jobPostingInfo.jobPostingId`. Long, and it changes if the employer renames the title (the old one then 404s) |
+| Unknown board | unknown tenant → **422**; board on the wrong `wdN` host (moved) → **422**; unknown site on a real tenant → **404**. All three → `None` (board gone) |
+| Title / URL | `title`. URL = `https://<tenant>.<wdN>.myworkdayjobs.com/<site><externalPath>` at list time; detail `externalUrl` (same page) |
+| Location | list `locationsText` ("San Diego, CA", or just "3 Locations" — dropped, the detail has them); detail `location` + `additionalLocations[]`; country from `jobRequisitionLocation.country.alpha2Code` ("US"), else `country.descriptor` |
+| Remote / workplace | detail `remoteType`, only on some tenants, free text: "On-site" / "Onsite" / "In-Office" → onsite, "Hybrid", "Remote"; "Not Remote" says nothing about hybrid, so it maps to no hint. Otherwise parsed from location text |
+| Date | list `postedOn` is **text** ("Posted Yesterday", "Posted 30+ Days Ago") → `first_published: null` at list time; detail `startDate` (ISO date) |
+| Description | detail `jobDescription` (HTML → `html_to_text`); none in the list |
+| Pay | **no field.** `$` amounts appear inside some descriptions (bonuses as well as wages) — never parsed; `comp` is always `null` |
+| Not available | pay; an ISO date or description at list time; full location list at list time; department |
+| Cost | ≤ 9 POSTs per board per run, plus one GET per shortlisted job for `fetch_jd.py` |
+
 ## Politeness (all adapters)
 
 User-Agent `job-scout/<version> (+https://github.com/sorawit-w/job-scout)`; 20 s timeout; ≤8
