@@ -178,6 +178,16 @@ class StyleCheckTest(unittest.TestCase):
             {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}])
         self.assertEqual(run(payload, home)[0], 0)
 
+    def test_wrong_shapes_fail_without_crashing(self):
+        for field, value, reason in (("style", 1, "style must be a list"), ("why", "x", "why must be a list"),
+                                     ("style", [{"topic": [], "verdict": "match", "quote": "x"}], "style item must be"),
+                                     ("style", [{"topic": "travel", "verdict": ["match"]}], "style item must be")):
+            payload = results(why=self.WHY)
+            payload["rows"][0].update(show=True, **{field: value})
+            code, out = run(payload)
+            self.assertEqual(code, 1, value)
+            self.assertIn(reason, " | ".join(f["why"] for f in out["failed"]), value)
+
     def test_style_never_counts_as_the_reason_a_role_is_shown(self):
         payload = results()
         payload["rows"][0].update(show=True, style=[

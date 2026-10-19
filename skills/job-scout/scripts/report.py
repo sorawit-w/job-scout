@@ -98,7 +98,8 @@ def _style(items, wants):
     """One work-style item per known topic, in WORK_STYLE order, with what the user picked."""
     by = {}
     for i in items or []:
-        if isinstance(i, dict) and i.get("topic") in state.WORK_STYLE and i.get("verdict") in STYLE_WORD:
+        if (isinstance(i, dict) and isinstance(i.get("topic"), str) and i["topic"] in state.WORK_STYLE
+                and isinstance(i.get("verdict"), str) and i["verdict"] in STYLE_WORD):
             by.setdefault(i["topic"], {"topic": i["topic"], "verdict": i["verdict"], "text": str(i.get("text") or ""),
                                        "quote": i["quote"] if isinstance(i.get("quote"), str) else None,
                                        "want": wants.get(i["topic"], "")})

@@ -80,7 +80,8 @@ def style_problem(item, jd):
     """Why this work-style item fails, or None: match/conflict need a verified quote, not_stated none."""
     if not live(jd):
         return NO_JD
-    if not (isinstance(item, dict) and item.get("topic") in state.WORK_STYLE and item.get("verdict") in VERDICTS):
+    if not (isinstance(item, dict) and isinstance(item.get("topic"), str) and item["topic"] in state.WORK_STYLE
+            and item.get("verdict") in VERDICTS):
         return "style item must be {topic: %s, verdict: %s, text, quote}" % ("/".join(state.WORK_STYLE), "/".join(VERDICTS))
     if item["verdict"] == "not_stated":
         return None if item.get("quote") is None else "a not_stated item has no quote"
@@ -91,9 +92,9 @@ def style_problem(item, jd):
 
 def style_coverage(style, wanted):
     """Why a shown row's style items don't cover the saved work_style topics exactly once, or None."""
-    got = [i.get("topic") for i in style if isinstance(i, dict)]
+    got = [i["topic"] for i in style if isinstance(i, dict) and isinstance(i.get("topic"), str)]
     gaps = [("missing for", sorted(wanted - set(got))),
-            ("given for topics the user did not set", sorted(set(got) - wanted - {None})),
+            ("given for topics the user did not set", sorted(set(got) - wanted)),
             ("given more than once for", sorted({t for t in got if t and got.count(t) > 1}))]
     gaps = ["style %s: %s" % (what, ", ".join(map(str, topics))) for what, topics in gaps if topics]
     return "; ".join(gaps) or None
@@ -131,8 +132,11 @@ def main(argv=None):
     for row in rows:
         key = row.get("key")
         jd = jds.get(key) if isinstance(key, str) else None
-        items = list(row.get("why") or []) + list(row.get("risk") or [])
-        style = list(row.get("style") or [])
+        lists = {f: row.get(f) if isinstance(row.get(f), list) else [] for f in ("why", "risk", "style")}
+        bad = [f for f in lists if row.get(f) not in (None, []) and not isinstance(row.get(f), list)]
+        if bad:  # valid JSON of the wrong shape: report it, never crash
+            failed.append({"key": key, "quote": None, "why": "%s must be a list" % " and ".join(bad)})
+        items, style = lists["why"] + lists["risk"], lists["style"]
         checked += len(items) + len(style)
         if not live(jd):  # one failure per row, even with no items to check
             failed.append({"key": key, "quote": None, "why": NO_JD})

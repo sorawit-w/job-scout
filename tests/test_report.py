@@ -297,7 +297,8 @@ class ReportTest(unittest.TestCase):
         style = [{"topic": "travel", "verdict": "conflict", "text": "<b>Some</b> travel", "quote": "Travel up to 25%"},
                  {"topic": "meetings", "verdict": "match", "text": "Async team", "quote": "we work async-first"},
                  {"topic": "stage", "verdict": "not_stated", "text": "not stated", "quote": None},
-                 {"topic": "family", "verdict": "match", "text": "x", "quote": "y"}, "junk"]  # dropped
+                 {"topic": "family", "verdict": "match", "text": "x", "quote": "y"}, "junk",
+                 {"topic": ["travel"], "verdict": "match"}, {"topic": "travel", "verdict": ["match"]}]  # dropped
         make_run(self.home, [job("gh:a:1", "Staff Frontend"), job("gh:b:2")], [row("gh:a:1", 6, style=style), row("gh:b:2", 7)])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.profile_path(), {"work_style": {"travel": "none", "meetings": "async",
