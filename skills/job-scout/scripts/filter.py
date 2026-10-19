@@ -61,6 +61,7 @@ _ALIASES = {"sr": "senior", "jr": "junior", "swe": "software engineer", "eng": "
 _LEVEL_WORDS = {"senior", "staff", "lead", "principal"}  # ignored when matching a target role
 _GENERIC = {"engineer", "engineering", "software", "developer", "senior", "staff", "lead", "principal",
             "manager", "the", "and", "of", "for", "a", "an", "in", "at", "to", "with"}
+_WEAK = {"systems", "system", "platform", "product", "data", "infrastructure", "technical", "solutions"}  # too common to match alone
 _LEVELS = {"intern": 0, "internship": 0, "junior": 1, "entry": 1, "associate": 1, "mid": 2,
            "senior": 3, "staff": 4, "lead": 4, "principal": 5, "distinguished": 6}
 _JUNIOR = ("intern", "internship", "junior", "new grad", "new graduate", "entry level")
@@ -177,7 +178,7 @@ def title_match(ws, p):
             return "strong"
     if any(has_phrase(ws, k) for k in p["title_keywords"]):
         return "borderline"
-    distinct = {w for role in p["target_roles"] for w in words(role)} - _GENERIC
+    distinct = {w for role in p["target_roles"] for w in words(role)} - _GENERIC - _WEAK
     return "borderline" if distinct & set(ws) else None
 
 

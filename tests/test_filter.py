@@ -295,6 +295,14 @@ class SeniorityTrackTest(unittest.TestCase):
 
 
 class TitleTest(unittest.TestCase):
+    def test_a_weak_word_alone_is_not_a_match(self):
+        # Live 49 boards, 2026-10-19: "systems" from "Design Systems Engineer" pulled in IT roles.
+        p = jfilter.state.with_profile_defaults(profile())
+        for title in ("IT Systems Engineer", "Financial Systems Engineer", "Platform Engineer, Data"):
+            self.assertIsNone(jfilter.title_match(jfilter.words(title), p), title)
+        for title in ("Frontend Developer", "Design Systems Lead"):
+            self.assertEqual(jfilter.title_match(jfilter.words(title), p), "borderline", title)
+
     def test_handoff_false_positives_excluded(self):
         for title, phrase in (("Data Center Design Engineer, Electrical", "electrical"),
                               ("RTL Design Engineer", "rtl"),
@@ -314,7 +322,8 @@ class TitleTest(unittest.TestCase):
 
     def test_borderline_matches(self):
         self.assertEqual(outcome(job("React Native Developer"))[0], "borderline")  # title keyword
-        self.assertEqual(outcome(job("Senior Platform Engineer"))[0], "borderline")  # shares "platform"
+        self.assertEqual(outcome(job("Senior Platform Engineer"))[0], "title")  # "platform" alone is too weak
+        self.assertEqual(outcome(job("Senior Frontend Platform Engineer"))[0], "strong")  # still a fit
 
     def test_unrelated_title_removed(self):
         self.assertEqual(outcome(job("Senior Accountant"))[0], "title")
