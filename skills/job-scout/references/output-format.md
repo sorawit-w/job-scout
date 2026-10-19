@@ -79,9 +79,10 @@ roles (title, company, link) as one code block the user can paste next time.
 ## 7. The HTML report
 
 After the chat output, run `python3 scripts/report.py --open` (SKILL.md Phase 7, and at the end
-of every rerun). It writes `report.html` in the run folder: the brief, the coverage line, one
-card per shown role (the same ranks as the chat table, quotes, score grid, gates), the
-saved/applied and closed lists on a rerun, and the close-but-excluded lines. It reads the run
+of every rerun). It writes `report.html` in the run folder: the brief, the coverage line, a
+table with one row per shown role (the same ranks as the chat table) whose details open on
+click (quotes, score meters, gates, copy buttons) — inline, or in a side pane on wide screens —
+the saved/applied and closed lists on a rerun, and the close-but-excluded lines. It reads the run
 files, so it needs `results.json` from Phase 6 when roles were judged; with none (nothing new,
 or zero candidates) it still writes the "nothing new" or zero-results page.
 

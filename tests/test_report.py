@@ -77,17 +77,24 @@ class ReportTest(unittest.TestCase):
         # results.json order, fixed ranks, the changed tag on Linear
         self.assertLess(html.index("Design Engineer"), html.index("Staff Frontend"))
         self.assertIn('data-rank="1" data-fit="6"', html)
-        self.assertIn(">CHANGED<", html)
-        self.assertIn("UI Engineer, Figma — fit 3/8, below 5", html)
-        self.assertIn("Web Engineer, Ramp — pay tops out below your floor", html)
+        self.assertIn('<th scope="col" class="c-rank" data-sort="rank" aria-sort="ascending">', html)
+        # no-JS default: every detail sits open under its row; the script collapses them
+        self.assertIn('aria-expanded="true" aria-controls="d1"', html)
+        self.assertIn('<tr class="det"><td class="det-cell" colspan="6"><div class="detail" id="d1"', html)
+        self.assertIn('<aside class="pane" id="pane" aria-label="Role details" hidden></aside>', html)
+        self.assertNotIn(">CHANGED<", html)  # first run (no seen.json): tags would be noise
+        self.assertIn('<td dir="auto">UI Engineer</td><td dir="auto">Figma</td><td dir="auto">fit 3/8, below 5</td>', html)
+        self.assertIn('<td dir="auto">Web Engineer</td><td dir="auto">Ramp</td><td dir="auto">pay tops out below your floor</td>', html)
         self.assertIn("Checked 4 of 4 company job boards (3 jobs open today)", html)
-        self.assertIn("$190,000–$230,000/yr", html)
+        self.assertIn("$190,000–$230,000/yr", html)  # full pay in the detail
+        self.assertIn('<td class="c-pay">$190k–$230k</td>', html)  # short pay in the table
+        self.assertIn('<td class="c-since">Oct 1</td>', html)
 
     def test_failed_gate_is_the_excluded_reason(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1", 7, show=False, gates={
             "location": "fail", "sponsorship": "pass", "pay": "pass", "exclusions": "pass"})])
         run([], self.home)
-        self.assertIn("location gate failed", page(self.home))
+        self.assertIn('<td dir="auto">location gate failed</td>', page(self.home))
 
     def test_escaping_and_unsafe_links(self):
         evil = job("gh:x:1", '<script>alert(1)</script> Engineer', 'Acme "Labs"', url="javascript:alert(1)")
@@ -114,7 +121,9 @@ class ReportTest(unittest.TestCase):
         for bad in ("<link", "<img", "<iframe", "fetch(", "XMLHttpRequest", "localStorage", "src="):
             self.assertNotIn(bad, html)
         hrefs = re.findall(r'href="([^"]+)"', html)
-        self.assertEqual(hrefs, ["https://jobs.example.com/gh:a:1"])
+        self.assertEqual([h for h in hrefs if not h.startswith("#i-")], ["https://jobs.example.com/gh:a:1"])
+        self.assertTrue(all(h[3:] in ("up", "down", "check", "x", "question", "alert", "chev", "out")
+                            for h in hrefs if h.startswith("#i-")))  # only the inline icon sprite
 
     def test_copy_text_names_the_role_and_rtl_is_safe(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
@@ -182,6 +191,13 @@ class ReportTest(unittest.TestCase):
         run([], empty)
         self.assertNotIn("copy-help", page(empty).split("<style>")[0] + page(empty).split("</style>")[1])
 
+    def test_new_tag_only_on_reruns(self):
+        make_run(self.home, [job("gh:a:1", state_="new")], [row("gh:a:1")])
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {"gh:old:1": {"status": "seen", "title": "Old", "sig": ""}})
+        run([], self.home)
+        self.assertIn('<span class="tag">NEW</span>', page(self.home))
+
     def test_same_run_gives_the_same_bytes(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         run([], self.home)
@@ -209,3 +225,15 @@ class ReportTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ShortFormsTest(unittest.TestCase):
+    def test_short_pay_and_dates(self):
+        usd = {"currency": "USD", "interval": "year"}
+        self.assertEqual(report._pay_short(dict(usd, min=190000, max=230000)), "$190k–$230k")
+        self.assertEqual(report._pay_short(dict(usd, min=210000, max=None)), "$210k+")
+        self.assertEqual(report._pay_short(dict(usd, min=None, max=200000)), "up to $200k")
+        self.assertEqual(report._pay_short({"min": 45, "max": 60, "currency": "USD", "interval": "hour"}), "$45–$60/hr")
+        self.assertEqual(report._pay_short({}), "pay not listed")
+        self.assertEqual(report._short_date("2026-10-01", "2026"), "Oct 1")
+        self.assertEqual(report._short_date("2025-12-10", "2026"), "Dec 10, 2025")

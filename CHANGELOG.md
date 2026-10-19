@@ -8,11 +8,14 @@ All notable changes to `job-scout` are documented here. Format follows
 **HTML report (M7).** Every search can now be opened as one self-contained page.
 
 ### Added
-- `scripts/report.py` writes `report.html` in the run folder: the brief, the coverage line, one
-  card per shown role (fixed rank, employer link, quoted reasons and risks, a score grid and the
-  four gates), saved/applied and closed roles on a rerun, and the close-but-excluded lines.
-  Sort, filter and copy-a-reply buttons work in the page; it reads fully with JavaScript off and
-  prints cleanly. The "Signal" theme has light and dark modes and a phone layout.
+- `scripts/report.py` writes `report.html` in the run folder: the brief, the coverage line, and
+  a full-width master–detail table — one row per shown role (fixed rank, fit bar, short pay,
+  open since), with details that open inline or, on screens 1200px and wider, in a sticky side
+  pane you move through with ↑/↓ (quoted reasons and risks, score meters, the four gates with
+  icons, flags, the employer link and copy-a-reply buttons). Then saved/applied and closed roles
+  on a rerun, and the close-but-excluded lines. Columns sort, a filter narrows the rows, phones
+  keep the table with fewer columns, and the page reads fully with JavaScript off and prints as
+  a document. The "Signal refined" theme has light and dark modes.
 - The page loads nothing: inline CSS and JS under a Content-Security-Policy that allows only its
   own script, every value HTML-escaped, `http(s)` links only.
 - SKILL.md runs the report after the chat results and before `seen record`, and opens it when a
