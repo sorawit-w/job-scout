@@ -268,7 +268,7 @@ def profile_path():
 # any alias equals the job's key or any variant key.
 
 SEEN_STATUSES = ("seen", "saved", "applied", "dismissed")
-_OPEN_STATUSES = ("seen", "saved", "applied")  # dismissed roles are never reported closed
+_OPEN_STATUSES = ("saved", "applied")  # only roles the user cared about are reported closed
 _KEY_RE = re.compile(r"^[a-z_]+:[^:/\\\s]+:\S+$")  # ats:slug:job_id
 MAX_REASON = 200
 
@@ -290,6 +290,12 @@ def load_seen():
         raise ValueError("%s is unreadable (%s); it was not changed — fix or move it, then rerun" % (path, e))
     if not isinstance(seen, dict):
         raise ValueError("%s is unreadable (not a JSON object); it was not changed — fix or move it, then rerun" % path)
+    for key, e in seen.items():
+        aliases = e.get("aliases", []) if isinstance(e, dict) else None
+        if not (isinstance(e, dict) and e.get("status") in SEEN_STATUSES and isinstance(aliases, list)
+                and all(isinstance(a, str) for a in aliases)):
+            raise ValueError("%s is unreadable (bad entry %r); it was not changed — fix or move it, then rerun"
+                             % (path, key))
     return seen
 
 
@@ -409,12 +415,14 @@ def record(run_dir, now=None):
     """Mark results.json rows with show true as seen (sig, title and url refreshed on every matching
     entry); for every job in jobs.json that matches an entry, refresh aliases and last_seen but not
     sig, so an unshown job can still read "changed"; set or clear closed_at; return counts.
-    Raises FileNotFoundError when the run has no results.json or jobs.json, ValueError (nothing
-    written) when seen.json is unreadable."""
+    A run with no results.json (a rerun with nothing new) records closures only.
+    Raises FileNotFoundError when the run has no jobs.json or an unreadable results.json,
+    ValueError (nothing written) when seen.json is unreadable."""
     run_dir = Path(run_dir)
-    results, jobs = read_json(run_dir / "results.json"), read_json(run_dir / "jobs.json")
+    jobs = read_json(run_dir / "jobs.json")
+    results = read_json(run_dir / "results.json") if (run_dir / "results.json").exists() else {"rows": []}
     if not isinstance(results, dict) or not isinstance(jobs, list):
-        raise FileNotFoundError("run %s has no results.json or jobs.json" % run_dir.name)
+        raise FileNotFoundError("run %s has no jobs.json, or results.json is unreadable" % run_dir.name)
     stamp = now_iso(now)
     seen = load_seen()
     by_key = {k: j for j in jobs for k in job_keys(j)}

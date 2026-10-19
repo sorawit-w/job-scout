@@ -121,6 +121,10 @@ class DiffTest(unittest.TestCase):
         out = self.diff([], seen, ok={"ashby:acme"})  # lever:down errored, lever:skipped not probed
         self.assertEqual(out["closed"], ["ashby:acme:1"])
 
+    def test_seen_only_role_is_never_reported_closed(self):
+        # The closed list is for roles the user cared about; an expired search result is just gone.
+        self.assertEqual(self.diff([], {"ashby:acme:1": entry()})["closed"], [])
+
     def test_dismissed_and_already_closed_never_reported_closed(self):
         seen = {"ashby:acme:1": entry(status="dismissed"), "ashby:acme:2": entry(closed_at="2026-10-10T00:00:00Z")}
         self.assertEqual(self.diff([], seen)["closed"], [])
@@ -231,6 +235,14 @@ class RecordTest(HomeCase):
         self.assertEqual(state.record(run, now=LATER)["reopened"], 1)
         self.assertIsNone(state.load_seen()["ashby:acme:1"]["closed_at"])
 
+    def test_record_without_results_json_still_saves_closures(self):
+        # A rerun with nothing new writes no results.json; closures must still be recorded once.
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
+        run = self.make_run([], [])
+        (run / "results.json").unlink()
+        self.assertEqual(state.record(run, now=NOW)["closed"], 1)
+        self.assertEqual(state.load_seen()["ashby:acme:1"]["closed_at"], state.now_iso(NOW))
+
     def test_empty_board_never_closes_a_role(self):
         state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
         run = self.make_run([], [], live=(), empty=("ashby:acme",))  # board briefly returned {"jobs": []}
@@ -295,6 +307,14 @@ class MarkTest(HomeCase):
 class CorruptSeenTest(HomeCase):
     BAD = (b'{"ashby:acme:1": {"status": "sa', b"[]", b'"text"', b"\xff\xfe{}")
 
+    def test_malformed_entries_raise(self):
+        for bad in ({"ashby:acme:1": None}, {"ashby:acme:1": {"status": "maybe"}},
+                    {"ashby:acme:1": {"status": "seen", "aliases": "ashby:acme:2"}},
+                    {"ashby:acme:1": {"status": "seen", "aliases": [3]}}):
+            state.write_json_atomic(state.seen_path(), bad)
+            with self.assertRaises(ValueError):
+                state.load_seen()
+
     def test_missing_file_is_a_first_run(self):
         self.assertEqual(state.load_seen(), {})
 
@@ -342,8 +362,8 @@ class SeenCliTest(HomeCase):
         state.write_json_atomic(state.seen_path(), {"ashby:acme:9": entry()})
         run = self.make_run([job()], [{"key": "ashby:acme:1", "show": True}])
         code, out = self.cli(["seen", "diff", "--run", run.name])
-        self.assertEqual(code, 0)
-        self.assertEqual(out["counts"], {"new": 1, "changed": 0, "saved_open": 0, "applied_open": 0, "closed": 1})
+        self.assertEqual(code, 0)  # acme:9 was only seen, so its closing is not reported
+        self.assertEqual(out["counts"], {"new": 1, "changed": 0, "saved_open": 0, "applied_open": 0, "closed": 0})
         self.assertEqual(out["new"], ["ashby:acme:1"])
         code, out = self.cli(["seen", "record"])
         self.assertEqual(code, 0)
