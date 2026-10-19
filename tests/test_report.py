@@ -211,6 +211,28 @@ class ReportTest(unittest.TestCase):
         self.assertIn('data-pay="50000"', html)
         self.assertIn('data-rank="3" data-fit="7" data-top="1" data-flags="0" data-pay=""', html)  # unknown interval: last
 
+    def test_live_closed_variant_closes_its_saved_job(self):
+        grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
+        make_run(self.home, [grouped], rows=None, jds={"gh:a:2": {"status": "closed"}})  # jds keys the display variant
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {
+                "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
+        run([], self.home)
+        html = page(self.home)
+        self.assertNotIn("Saved or applied, still open", html)
+        self.assertIn("<h2>Closed since last time</h2>", html)
+
+    def test_regrouped_saved_and_applied_roles_list_once(self):
+        grouped = job("gh:a:1", state_="saved", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
+        make_run(self.home, [grouped], rows=None)
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {
+                "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""},
+                "gh:a:2": {"status": "applied", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
+        run([], self.home)
+        html = page(self.home)
+        self.assertEqual((html.count('<td dir="auto">saved</td>'), html.count('<td dir="auto">applied</td>')), (1, 0))
+
     def test_empty_history_still_counts_as_a_rerun(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):

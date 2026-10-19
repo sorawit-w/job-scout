@@ -192,8 +192,12 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     boards = files.get("boards") if isinstance(files.get("boards"), dict) else {}
     jobs = [j for j in files.get("jobs") or [] if isinstance(j, dict)]
     lists = state.diff(jobs, set(probed_ok), seen) if seen else {}
-    live_closed = {k for k, e in jds.items() if isinstance(e, dict) and e.get("status") == "closed"}
-    gone = [k for k in lists.get("saved_open", []) + lists.get("applied_open", []) if k in live_closed]
+    closed_keys = {k for k, e in jds.items() if isinstance(e, dict) and e.get("status") == "closed"}
+    # jds.json is keyed by the display variant; diff() returns the collapsed job's own key
+    live_closed = {j.get("key") for j in jobs if closed_keys.intersection(state.job_keys(j))}
+    saved = [k for k in lists.get("saved_open", []) if k not in live_closed]
+    applied = [k for k in lists.get("applied_open", []) if k not in live_closed and k not in saved]  # saved wins, as in job_state
+    gone = list(dict.fromkeys(k for k in lists.get("saved_open", []) + lists.get("applied_open", []) if k in live_closed))
 
     by_key = {j.get("key"): j for j in jobs}
 
@@ -216,8 +220,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
                      "open": sum(1 for e in jds.values()
                                  if isinstance(e, dict) and e.get("status") == "open" and not e.get("dropped"))},
         "top_removed": {"reason": REASON_TEXT.get(top, top), "n": removed[top], "of": counts.get("input")} if top else None,
-        "still_open": listed([k for k in lists.get("saved_open", []) if k not in live_closed], "saved")
-        + listed([k for k in lists.get("applied_open", []) if k not in live_closed], "applied"),
+        "still_open": listed(saved, "saved") + listed(applied, "applied"),
         "closed": listed(lists.get("closed", []) + gone),  # the live check found these closed
     }
 
