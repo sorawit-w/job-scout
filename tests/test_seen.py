@@ -251,6 +251,16 @@ class RecordTest(HomeCase):
         self.assertEqual((counts["closed"], counts["reopened"]), (1, 0))
         self.assertEqual(state.load_seen()["ashby:acme:1"]["closed_at"], state.now_iso(NOW))
 
+    def test_live_check_closes_a_role_on_a_partially_searched_board(self):
+        # A Workday list is a keyword search, so its board never counts as probed whole; the live check
+        # finding the posting gone is direct evidence all the same.
+        key = "workday:acme.wd1.External:Nurse_JR1-1"
+        state.write_json_atomic(state.seen_path(), {key: entry(job(key), status="saved")})
+        run = self.make_run([job(key)], [], live=())
+        state.write_json_atomic(run / "jds.json", {key: {"status": "closed"}})
+        self.assertEqual(state.record(run, now=NOW)["closed"], 1)
+        self.assertEqual(state.load_seen()[key]["closed_at"], state.now_iso(NOW))
+
     def test_empty_board_never_closes_a_role(self):
         state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
         run = self.make_run([], [], live=(), empty=("ashby:acme",))  # board briefly returned {"jobs": []}

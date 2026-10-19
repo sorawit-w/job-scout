@@ -285,8 +285,8 @@ shows everything). Lead with what moved:
   they cared about is lost.
 - **Closed since last time** — the saved or applied roles in `closed_details` that are gone (from
   the board, or found gone by the live check).
-  Only boards checked successfully this run can close a role; never call a role closed
-  because a board failed.
+  A role closes only when a board checked successfully this run no longer lists it, or its
+  live check found the posting gone; never call a role closed because a board failed.
 
 With nothing new, say so in one line and show the saved-or-applied list. End every rerun with
 `python3 scripts/report.py --open` (as in Phase 7), then `python3 scripts/state.py seen record` —

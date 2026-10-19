@@ -191,7 +191,8 @@ class ReportTest(unittest.TestCase):
         self.assertIn("Gone Role", html)
 
     def test_live_closed_saved_role_is_not_still_open(self):
-        make_run(self.home, [job("gh:a:1", state_="changed")], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]}, jds={"gh:a:1": {"status": "closed"}})
+        make_run(self.home, [job("gh:a:1", state_="changed")], rows=None,  # no board probed whole: direct evidence
+                 jds={"gh:a:1": {"status": "closed"}})
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {
                 "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})

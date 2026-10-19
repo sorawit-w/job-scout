@@ -212,7 +212,8 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     top = max(removed, key=removed.get) if removed else None
     boards = files.get("boards") if isinstance(files.get("boards"), dict) else {}
     jobs = [j for j in files.get("jobs") or [] if isinstance(j, dict)]
-    lists = state.diff(state.live_open(jobs, jds), set(probed_ok), seen) if seen else {}  # as seen record does
+    open_jobs, gone = state.live_split(jobs, jds)
+    lists = state.diff(open_jobs, set(probed_ok), seen, gone) if seen else {}  # as seen record does
     saved = lists.get("saved_open", [])
     applied = [k for k in lists.get("applied_open", []) if k not in saved]  # saved wins, as in job_state
 

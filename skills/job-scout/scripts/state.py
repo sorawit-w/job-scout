@@ -386,17 +386,21 @@ def probed_ok_boards(run_dir):
     return set(b.get("live_boards") or []) - bad
 
 
-def live_open(jobs, jds):
-    """jobs minus those whose live check (jds.json) found the posting gone: the board list can lag."""
-    gone = {k for k, e in (jds if isinstance(jds, dict) else {}).items()
-            if isinstance(e, dict) and e.get("status") == "closed"}
-    return [j for j in jobs if not gone.intersection(job_keys(j))]
+def live_split(jobs, jds):
+    """(open, gone): jobs split by their live check in jds.json. A gone job's posting no longer
+    exists, even while the board list (which can lag) still shows it."""
+    closed = {k for k, e in (jds if isinstance(jds, dict) else {}).items()
+              if isinstance(e, dict) and e.get("status") == "closed"}
+    flags = [bool(closed.intersection(job_keys(j))) for j in jobs]
+    return [j for j, f in zip(jobs, flags) if not f], [j for j, f in zip(jobs, flags) if f]
 
 
-def diff(jobs, probed_ok, seen):
+def diff(jobs, probed_ok, seen, gone=()):
     """Lists of keys: new / changed / saved_open / applied_open (current job keys) and closed
-    (seen.json keys whose boards were all probed ok this run but no current job matches)."""
+    (seen.json keys whose boards were all probed ok this run but no current job matches, or that
+    match a job in `gone`: a live check is direct evidence, even on a partially searched board)."""
     index = seen_index(seen)
+    direct = {k for job in gone for k in _matches(job, index)}
     out = {"new": [], "changed": [], "saved_open": [], "applied_open": [], "closed": []}
     matched = set()
     for job in jobs:
@@ -413,7 +417,7 @@ def diff(jobs, probed_ok, seen):
                 out[status + "_open"].append(job.get("key"))
     for key, e in seen.items():
         if (key not in matched and e.get("status") in _OPEN_STATUSES and not e.get("closed_at")
-                and all(_board(k) in probed_ok for k in [key] + list(e.get("aliases") or []))):
+                and (key in direct or all(_board(k) in probed_ok for k in [key] + list(e.get("aliases") or [])))):
             out["closed"].append(key)
     return out
 
@@ -466,7 +470,7 @@ def record(run_dir, now=None):
             seen[key].update(last_seen=stamp, sig=job_sig(job), snap=job_snap(job), title=job.get("title"),
                              company=job.get("company"), url=_shown_url(job, row.get("key")))
     index = seen_index(seen)
-    jobs = live_open(jobs, read_json(run_dir / "jds.json", {}))  # a live-closed role closes here, not reopens
+    jobs, gone = live_split(jobs, read_json(run_dir / "jds.json", {}))  # a live-closed role closes, not reopens
     for job in jobs:  # unshown too: filter drops unchanged roles, and their variants keep moving
         keys = job_keys(job)
         for key in _matches(job, index):
@@ -476,7 +480,7 @@ def record(run_dir, now=None):
             if e.get("closed_at"):
                 e["closed_at"] = None
                 counts["reopened"] += 1
-    for key in diff(jobs, probed_ok_boards(run_dir), seen)["closed"]:
+    for key in diff(jobs, probed_ok_boards(run_dir), seen, gone)["closed"]:
         seen[key]["closed_at"] = stamp
         counts["closed"] += 1
     write_json_atomic(seen_path(), seen)
@@ -535,7 +539,8 @@ def _seen_cli(args):
                     print(json.dumps({"error": "run %s has no jobs.json — run probe.py first" % run.name}))
                     return 2
                 seen = load_seen()
-                out = diff(live_open(jobs, read_json(run / "jds.json", {})), probed_ok_boards(run), seen)
+                open_jobs, gone = live_split(jobs, read_json(run / "jds.json", {}))
+                out = diff(open_jobs, probed_ok_boards(run), seen, gone)
                 index, by_key = seen_index(seen), {j.get("key"): j for j in jobs}
                 out = dict(out, counts={k: len(v) for k, v in out.items()},
                            changed_details=[{"key": k, "before": _deciding_entry(by_key[k], seen, index).get("snap"),
