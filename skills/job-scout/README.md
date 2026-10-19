@@ -78,7 +78,7 @@ nothing else from your brief. No telemetry.
 
 | Skill | Relationship |
 |---|---|
-| ghostwriter (if installed) | Drafts outreach or recruiter messages; job-scout hands those requests to it. |
+| [ghostwriter](https://github.com/sorawit-w/agent-skills/tree/main/skills/ghostwriter) (if installed) | Drafts outreach or recruiter messages; job-scout hands those requests to it. |
 
 ## Status and scope
 
