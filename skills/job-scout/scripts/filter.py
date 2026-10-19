@@ -105,10 +105,9 @@ def _place_check(job, p, ctx):
             remote_fail = "remote_scope"
         else:
             remote_fail = "work_mode"
-    home = ctx["home_states"]
     if ("hybrid" in modes or "onsite" in modes) and any(
-            has_phrase(words(loc), c) and not (home and home.isdisjoint(normalize.us_states(loc) or home))  # "Lincoln, NE"
-            for loc in job.get("locations") or [] for c in cities):
+            has_phrase(words(loc), city) and not (states and states.isdisjoint(normalize.us_states(loc) or states))
+            for loc in job.get("locations") or [] for city, states in cities):  # "Lincoln, NE" for a CA home
         wp = job.get("workplace")
         if wp is None:
             return None, [MODE_NOT_STATED], "local"
@@ -312,11 +311,12 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_a
     seen is seen.json's content; empty or None is a first run (nothing dropped, all "new")."""
     p = state.with_profile_defaults(profile)
     limit = max(1, min(int(limit), MAX_LIMIT))
-    home_city = (p.get("home_base") or "").split(",")[0].strip()
+    home_states = normalize.us_states(p.get("home_base") or "")
     ctx = {"excluded": {normalize.company_norm(c) for c in p["companies_exclude"]},
-           "cities": [c for c in p["commute_cities"] + [home_city] if c.strip()],
-           # States a local job may name: the home base's, plus any written on a commute city ("Jersey City, NJ").
-           "home_states": set().union(*(normalize.us_states(c) for c in [p.get("home_base") or ""] + p["commute_cities"])),
+           # (city, states a job there may name): a commute city's own state ("Jersey City, NJ"),
+           # else the home base's; an empty set means no state check.
+           "cities": [(c.split(",")[0].strip(), normalize.us_states(c) if "," in c else home_states)
+                      for c in p["commute_cities"] + [p.get("home_base") or ""] if c.split(",")[0].strip()],
            "senior_only": _senior_only(p["seniority"]),
            "relocate": _relocation_countries(p),
            # A "Product Manager" target keeps "manager" titles: only phrases not in their own roles count.

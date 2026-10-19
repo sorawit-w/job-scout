@@ -121,6 +121,12 @@ class WorkModeLocationTest(unittest.TestCase):
         pa = local(city="Washington, PA")
         self.assertEqual(outcome(pa, home_base="Washington, DC", commute_cities=["Washington"])[0], "location")
 
+    def test_each_commute_city_keeps_its_own_state(self):
+        pa = local(city="Pasadena, OR")
+        self.assertEqual(outcome(pa, home_base="Pasadena, CA", commute_cities=["Portland, OR"])[0], "location")
+        self.assertEqual(outcome(local(city="Portland, OR"), home_base="Pasadena, CA",
+                                 commute_cities=["Portland, OR"])[0], "strong")
+
     def test_commute_city_written_with_its_state_allows_that_state(self):
         md = local(city="Bethesda, MD")
         self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda"])[0], "location")

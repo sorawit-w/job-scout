@@ -225,8 +225,9 @@ class FieldSelectionTest(unittest.TestCase):
 
     def test_general_rest_tier_prefers_workday_then_smartrecruiters(self):
         # the tech eval boards (seed49) get no head start for a general brief
+        # Workday and SmartRecruiters alternate, so neither fills the cap alone
         self.assertEqual(self.slugs({"target_roles": ["Registered Nurse"]}),
-                         ["mine", "acme.wd1.External", "seed.wd5.Careers", "sr", "gh", "ash", "lev"])
+                         ["mine", "acme.wd1.External", "sr", "seed.wd5.Careers", "gh", "ash", "lev"])
 
     def test_usajobs_follows_user_companies_for_a_general_brief(self):
         self.assertEqual(self.slugs({"target_roles": ["Registered Nurse"]}, max_boards=3, usajobs=True),

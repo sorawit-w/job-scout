@@ -44,10 +44,10 @@ TECH_WORDS = re.compile(r"\b(?:software|engineer|engineering|developer|programme
                         r"front[\s-]?end|back[\s-]?end|full[\s-]?stack|devops|ml|machine learning|"
                         r"security engineer(?:ing)?)\b", re.I)
 # Last-tier order by hiring tool, per field; tools not named sort after the named ones.
-# General puts Workday before SmartRecruiters: a Workday board answers with roles matching the
-# brief's titles, while a SmartRecruiters board returns its whole list whatever the field.
+# General ranks Workday and SmartRecruiters together and alternates them (Workday first), so
+# 2,500+ Workday boards never fill the cap alone.
 FAMILY_RANK = {"tech": {"greenhouse": 0, "ashby": 0, "lever": 0, "smartrecruiters": 1, "workday": 2},
-               "general": {"workday": 0, "smartrecruiters": 1}}
+               "general": {"workday": 0, "smartrecruiters": 0}}
 # Words in industries_prefer too generic to pick an employer by name ("health systems" -> "health").
 INDUSTRY_STOP = {"and", "the", "for", "with", "other", "system", "service", "company", "companies", "industry",
                  "industries", "group", "organization", "sector", "business", "firm"}
@@ -147,8 +147,14 @@ def select_boards(rows, profile=None, user_rows=(), max_boards=DEFAULT_MAX_BOARD
             if row.get("source") == "seed49":
                 add(row)
     rank = FAMILY_RANK[field]
-    rest = sorted(eligible, key=lambda r: (rank.get(r.get("ats"), len(FAMILY_RANK["tech"])),
-                                           -(_num(r.get("us_share")) + _num(r.get("remote_share"))), -_num(r.get("jobs"))))
+    best = sorted(eligible, key=lambda r: (-(_num(r.get("us_share")) + _num(r.get("remote_share"))), -_num(r.get("jobs"))))
+    turn, nth = {}, {}  # general briefs: each board's place within its own hiring tool, to alternate tools
+    for r in best:
+        nth[id(r)] = turn[r.get("ats")] = turn.get(r.get("ats"), -1) + 1
+    alternate = field == "general"
+    rest = sorted(best, key=lambda r: (rank.get(r.get("ats"), len(FAMILY_RANK["tech"])),
+                                       nth[id(r)] if alternate and r.get("ats") in rank else 0,
+                                       r.get("ats") != "workday"))
     for row in rest:
         if row.get("sector", "").lower() in sectors or (names and names.search(row.get("company", ""))):
             add(row)
