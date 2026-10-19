@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.9 = macOS's built-in /usr/bin/python3 (the floor); 3.13 = current.
+        python: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: build (compile everything)
+        run: python -m compileall -q skills scripts tests
+      - name: lint (SKILL.md frontmatter + version parity)
+        run: python scripts/check-skill-compat.py
+      - name: test (offline)
+        run: python -m unittest discover -s tests -t . -v
