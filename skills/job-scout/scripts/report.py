@@ -182,9 +182,9 @@ def build_view(files, profile, seen, run_id, probed_ok=()):
 CSS = """
 :root{--bg:#f4f6f9;--card:#fff;--ink:#0f172a;--muted:#475569;--line:#e2e8f0;--accent:#4338ca;
 --accent-soft:#eef2ff;--ok:#047857;--bad:#b91c1c;--warn:#a16207;--chip:#e2e8f0;
---mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color-scheme:light}
+--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--indent:32px;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--bg:#0b1120;--card:#111a2e;--ink:#e2e8f0;--muted:#94a3b8;
---line:#1e293b;--accent:#a5b4fc;--accent-soft:#1e1b4b;--ok:#34d399;--bad:#f87171;--warn:#fbbf24;
+--line:#334155;--accent:#a5b4fc;--accent-soft:#1e1b4b;--ok:#34d399;--bad:#f87171;--warn:#fbbf24;
 --chip:#1e293b;color-scheme:dark}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -202,14 +202,14 @@ button{cursor:pointer}button:hover{border-color:var(--accent)}
 ol.roles{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .head{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
-.rank{font-family:var(--mono);color:var(--muted);min-width:1.5em}
+.rank{font-family:var(--mono);color:var(--muted);min-width:22px}
 .title{flex:1 1 12em;min-width:0;font-weight:600;font-size:16px;overflow-wrap:anywhere}
 .fit{margin-left:auto;white-space:nowrap;font-size:13px;color:var(--muted)}
 .bar{display:inline-block;width:64px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;margin-left:6px;overflow:hidden}
 .bar span{display:block;height:100%;background:var(--accent)}
-.meta{color:var(--muted);font-size:14px;margin:2px 0 8px 2.1em;overflow-wrap:anywhere}
+.meta{color:var(--muted);font-size:14px;margin:2px 0 8px var(--indent);overflow-wrap:anywhere}
 .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:4px;padding:1px 6px;background:var(--accent-soft);color:var(--accent);margin-left:6px;vertical-align:middle}
-.body{margin-left:2.1em}
+.body{margin-left:var(--indent)}
 .flags{margin:0 0 8px;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
 .flags li{font-size:12px;border:1px solid var(--line);border-radius:4px;padding:0 6px;color:var(--warn)}
 .quotes{margin:0 0 10px;padding:0;list-style:none}
@@ -218,17 +218,17 @@ ol.roles{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .why .mark{color:var(--ok)}.risk .mark{color:var(--warn)}
 q{font-style:italic}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 10px}
-.grid div{border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;color:var(--muted)}
-.grid b{display:block;color:var(--ink);font-family:var(--mono);font-size:13px}
+.grid div{display:flex;justify-content:space-between;align-items:baseline;gap:6px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;font-size:12px;color:var(--muted)}
+.grid b{color:var(--ink);font-family:var(--mono);font-size:13px}
 .gate-pass b{color:var(--ok)}.gate-fail b{color:var(--bad)}
 .copy{display:flex;flex-wrap:wrap;gap:6px}.copy button{font-size:13px;padding:3px 8px}
 .list{margin:0;padding-left:1.2em}.list li{margin:3px 0;overflow-wrap:anywhere}
 .empty{background:var(--card);border:1px dashed var(--line);border-radius:10px;padding:16px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:6px;padding:6px 12px;font-size:14px}
-footer{margin-top:32px;font-size:13px;color:var(--muted)}
+footer{margin-top:32px;font-size:13px;color:var(--muted)}footer p{margin:0 0 4px}
 @media (max-width:560px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.meta,.body{margin-left:0}.fit{display:block}}
-@media print{body{background:#fff;color:#000}.controls,.copy,.toast{display:none!important}
+@media print{body{background:#fff;color:#000}.controls,.copy,.toast,.copy-help{display:none!important}
 .card{break-inside:avoid;border-color:#999}a{color:#000}a[href^="http"]::after{content:" (" attr(href) ")";font-size:11px;word-break:break-all}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 """
@@ -265,11 +265,19 @@ def _link(text, url):
     return '<a href="%s" target="_blank" rel="noopener noreferrer">%s</a>' % (_e(url), text) if url else text
 
 
+def _clip(quote):
+    """The verbatim quote, with "…" where it starts or ends mid-sentence (display only)."""
+    q = quote.strip()
+    head = "" if q[:1].isupper() or q[:1] in "\"'(“‘" or q[:1].isdigit() else "…"
+    tail = "" if q[-1:] in ".!?\"'”’)" else "…"
+    return head + q + tail
+
+
 def _quotes(items, cls, mark, label):
     if not items:
         return ""
     lis = "".join('<li><span class="mark" aria-hidden="true">%s</span><span class="sr">%s: </span>%s%s</li>' % (
-        mark, label, _e(i["text"]), ' — <q dir="auto">%s</q>' % _e(i["quote"]) if i.get("quote") else "")
+        mark, label, _e(i["text"]), ' — <q dir="auto">%s</q>' % _e(_clip(i["quote"])) if i.get("quote") else "")
         for i in items)
     return '<ul class="quotes %s">%s</ul>' % (cls, lis)
 
@@ -294,7 +302,7 @@ def _card(r):
         '<div class="head"><span class="rank">%d</span><span class="title" dir="auto">%s</span>%s'
         '<span class="fit">%s</span></div>'
         '<div class="meta" dir="auto">%s · %s · %s%s</div>'
-        '<div class="body">%s%s%s<div class="grid">%s</div><div class="copy" aria-label="Copy a reply">%s</div></div></li>'
+        '<div class="body">%s%s%s<div class="grid">%s</div><div class="copy" role="group" aria-label="Copy a reply">%s</div></div></li>'
     ) % (r["rank"], "" if total is None else total, _e(r["since"]), _e(r["company"].lower()), _e(text),
          r["rank"], _link(_e(r["title"]), r["url"]), '<span class="tag">%s</span>' % tag if tag else "", fit,
          _e(r["company"]) or "company not listed", _e(r["where"]), _e(r["pay"]),
@@ -318,7 +326,7 @@ def render(view):
     coverage = ("Checked %s of %s company job boards (%d job%s open today). Best for tech and startup roles."
                 % (_e(cov["probed"]), _e(cov["available"]), cov["open"], "" if cov["open"] == 1 else "s")
                 ) if cov.get("probed") is not None else ""
-    parts = ['<header><h1>job-scout · <span class="num">%d</span> role%s%s</h1>' % (
+    parts = ['<header><h1>job-scout · %d role%s%s</h1>' % (
         len(roles), "" if len(roles) == 1 else "s", " · %s" % _e(view["date"]) if view["date"] else "")]
     if view["brief"]:
         parts.append('<ul class="chips" aria-label="Search brief">%s</ul>' % "".join(
@@ -350,8 +358,9 @@ def render(view):
         parts.append('<h2>Close but excluded</h2><ul class="list">%s</ul>' % "".join(
             '<li dir="auto">%s%s — %s</li>' % (_e(x["title"]), ", %s" % _e(x["company"]) if x["company"] else "",
                                                _e(x["reason"])) for x in view["excluded"]))
-    parts.append("<footer>Copy a line with the buttons and paste it into the chat to save, mark applied, or "
-                 "dismiss a role. This page makes no network requests; links open only when you click.</footer>")
+    parts.append("<footer>%s<p>This page makes no network requests; links open only when you click.</p></footer>" % (
+        '<p class="copy-help">Copy a line with the buttons and paste it into the chat to save, mark applied, '
+        "or dismiss a role.</p>" if roles else ""))
     return ('<!doctype html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="%s">'
             '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             '<meta name="referrer" content="no-referrer"><title>job-scout report%s</title><style>%s</style></head>'

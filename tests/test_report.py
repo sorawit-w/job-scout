@@ -163,6 +163,23 @@ class ReportTest(unittest.TestCase):
         self.assertIn("Closed since last time", html)
         self.assertIn("Gone Role", html)
 
+    def test_quotes_show_where_they_are_cut_but_stay_verbatim(self):
+        self.assertEqual(report._clip("gap between design intent and the experience we"),
+                         "…gap between design intent and the experience we…")
+        self.assertEqual(report._clip("Own the design system."), "Own the design system.")
+        self.assertEqual(report._clip("“Ship weekly” is our motto"), "“Ship weekly” is our motto…")
+
+    def test_copy_help_only_with_role_cards(self):
+        make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
+        run([], self.home)
+        html = page(self.home)
+        self.assertIn('role="group" aria-label="Copy a reply"', html)
+        self.assertIn('class="copy-help"', html)
+        empty = tempfile.mkdtemp()
+        make_run(empty, [job("gh:a:1")], rows=None)
+        run([], empty)
+        self.assertNotIn("copy-help", page(empty).split("<style>")[0] + page(empty).split("</style>")[1])
+
     def test_same_run_gives_the_same_bytes(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         run([], self.home)
