@@ -37,4 +37,4 @@ None.
 
 ## Notes for Human Review
 
-- GitHub settings the weekly seed check will need before M1b's last task are listed in `DEVELOPER_TODO.md`.
+- None.
