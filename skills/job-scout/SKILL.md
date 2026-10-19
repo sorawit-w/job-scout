@@ -172,6 +172,8 @@ JSON
 ```
 
 - `needs_sponsorship` is `yes`, `no`, or `undisclosed`; `base_pay_floor` is `null` for "no floor".
+- `remote_scope` uses two-letter country codes (`"US"`, `"CA"`) or a region (`"AMER"`, `"EU"`,
+  `"ANY"`), never country names.
 - `commute_cities`: if they accept hybrid or onsite, list the cities within a reasonable commute
   of their home base and include them in the brief so they can correct it.
 - If `save` prints `errors`, fix the JSON and save again — never drop the user's answer to make
@@ -221,6 +223,8 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
 3. Run `python3 scripts/fetch_jd.py --keys <key1>,<key2>,...`. It re-checks each job on the
    employer's board (the live check) and returns `jobs` (open, with a trimmed `jd`), `closed`,
    and `unverified`. **Show only `open` jobs**; never present a closed or unverified job as open.
+   Exit 4 → the request cap stopped the checks: show the open ones and say the rest couldn't be
+   checked.
 
 ## Phase 6 — Judge fit, with quotes
 

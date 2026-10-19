@@ -4,6 +4,9 @@ Write for anyone, not just engineers: no "ATS", "slug", "JSON" or "API".
 
 ## 1. One line of coverage first
 
+Open the results with this line — no summary sentence before it. (On a "just go" run the brief
+comes first in the same reply, then this line.)
+
 `Checked N of M company job boards (K jobs open today). Best for tech and startup roles.`
 Use `boards.probed` and `boards.available` from probe.py and the number of open jobs from
 fetch_jd.py. If the user's field is mostly outside tech, say coverage was thin here too.
@@ -18,7 +21,9 @@ fetch_jd.py. If the user's field is mostly outside tech, say coverage was thin h
 
 - **Link** is the employer's own job page (`url` from the data) — never an aggregator, never a
   search page.
-- **Pay** from structured pay or a quoted range; otherwise `pay not listed`. Never estimate.
+- **Pay** from the structured `comp`. A range found only in the description may be shown if it is
+  also a quoted `why` or `risk` item in results.json (so cite_check verifies it); otherwise
+  `pay not listed`. Never estimate.
 - **Fit** is the rubric `total` out of 8.
 
 Under the table, one notes line per row, keyed by `#`:

@@ -16,7 +16,7 @@ An unknown gate keeps the job and shows the unknown label.
 |---|---|---|
 | **Location / mode** | The description clearly rules the user out: onsite-only in another city, remote limited to countries outside the user's remote scope, required relocation they didn't accept. Quote it. | `location unclear` |
 | **Sponsorship** | The user needs sponsorship (`needs_sponsorship: "yes"`) and the description says it won't sponsor, or requires citizenship / permanent residency. Quote it. (If the user said `no` or `undisclosed`, this gate always passes.) | `sponsorship not stated` |
-| **Pay floor** | Listed pay (structured `comp`, or a pay range quoted from the description) tops out below the user's floor, in the same currency and interval. Quote it, or cite the structured range. | `pay not listed` |
+| **Pay floor** | Listed pay (structured `comp`, or a pay range quoted from the description) tops out below the user's floor, in the same currency and interval. Quote it, or cite the structured range. Also fail when the user chose `hide_no_pay` and the job has neither. | `pay not listed` |
 
 Never infer a gate from the company's reputation, size, or what "usually" happens.
 
