@@ -2,10 +2,12 @@
 name: job-scout
 description: >-
   Finds open jobs that fit the user's resume by reading employer job boards directly
-  (Greenhouse, Ashby, Lever), after the user confirms a short search brief. Returns about
+  (Greenhouse, Ashby, Lever, SmartRecruiters, Workday; USAJOBS with the user's own free key),
+  after the user confirms a short search brief. Returns about
   15 roles checked open today, each linked straight to the employer, with fit reasons quoted
   from the job description and honest unknowns ("pay not listed"). Remembers seen, saved,
-  applied and dismissed roles so reruns show what's new. Best for tech and startup roles.
+  applied and dismissed roles so reruns show what's new. Best for tech and startup roles;
+  partial coverage of large employers and hospitals.
   Triggers when the user wants to find or match jobs: "find me jobs", "match my resume to
   roles", "what should I apply to", "here's my CV, what's out there", "any new roles since
   last time", "check Linear and Figma for openings". Does NOT trigger for: cover letters or
@@ -37,7 +39,8 @@ Run them with `python3`; they use only the standard library. State lives in `~/.
   `ghostwriter` if installed; for cover letters, say drafting is out of scope for job-scout.
 - **Not an applicant.** It never applies, emails, or messages anyone. The user applies.
 - **Not a scraper.** No LinkedIn, no sites behind a login, no aggregators. It reads the public
-  job-board APIs employers publish (Greenhouse, Ashby, Lever) and nothing else.
+  job-board APIs employers publish (Greenhouse, Ashby, Lever, SmartRecruiters, Workday) and,
+  when the user sets their own key, USAJOBS — nothing else.
 - **Not a guesser.** It never invents pay, sponsorship, remote status, or that a role is open.
   Unknowns stay visible: "pay not listed", "sponsorship not stated".
 
@@ -148,11 +151,13 @@ conversation), or **`needs you`**. Anything the user stated earlier in the conve
 
 ### Be honest about coverage before searching
 
-job-scout reads Greenhouse, Ashby and Lever boards — mostly tech and startup employers. If the
-target roles are mostly outside that world (nursing, retail, trades, teaching, government,
-large non-tech enterprises), say so **in the brief**: "Most employers in your field don't use
-the job boards I can read, so results will be thin." Offer to search anyway; never pad the
-results with weak matches to compensate.
+job-scout is strongest for tech and startup roles (Greenhouse, Ashby, Lever). It also reads
+SmartRecruiters and the Workday sites of a few thousand large employers and hospital systems —
+only the companies on its list, so coverage there is partial. US federal jobs need the user's own
+USAJOBS key (Phase 4). Trades, teaching, small local employers and most state or city jobs are
+still thin. When the target roles sit mostly in those areas, say so **in the brief**: "Many
+employers in your field use hiring tools I can't read, so results may be thin." Offer to search
+anyway; never pad the results with weak matches to compensate.
 
 ### Save the confirmed brief
 
@@ -193,7 +198,8 @@ Run `python3 scripts/probe.py --health`.
     (or set the same in `~/.codex/config.toml`).
   - **claude.ai:** Settings → Capabilities → Code execution → domain allowlist. "All domains"
     works; a Team or Enterprise admin may need to add `boards-api.greenhouse.io`,
-    `api.ashbyhq.com` and `api.lever.co`.
+    `api.ashbyhq.com` and `api.lever.co` (plus `api.smartrecruiters.com`, `*.myworkdayjobs.com`
+    and, for USAJOBS, `data.usajobs.gov` — without them those boards are skipped as errors).
   - **`hint: "tls"`:** a corporate proxy is intercepting HTTPS; the user's IT setup must trust it.
 
   **Do not fall back to web search.** A web-search list is exactly what job-scout exists to
@@ -208,6 +214,15 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
 
 - Exit 3 → the network is blocked: give the Phase 3 stop message.
 - Exit 4 → the request cap was hit: continue with the partial results and say so.
+- It picks boards by the brief's field: tech briefs get the tech boards first, other briefs get
+  Workday and SmartRecruiters first, so neither crowds the other out of the cap.
+- **Search words leave the machine.** Workday and USAJOBS are searched with the brief's target
+  job titles; nothing else from the brief is sent anywhere.
+- **USAJOBS (US federal jobs) is opt-in.** If `boards.skipped` says `usajobs: no key` and the
+  user's field includes government work, say once: "Federal jobs need your own free USAJOBS
+  key: request one at https://developer.usajobs.gov/apirequest/, then set
+  JOB_SCOUT_USAJOBS_KEY and JOB_SCOUT_USAJOBS_EMAIL in your environment." Never ask the user to
+  paste the key into the chat; continue without it.
 
 ## Phase 5 — Narrow, then read the job descriptions
 
@@ -271,7 +286,8 @@ it found:
   name. Show its `sample_titles` and ask "is this the right company?"; if not, run
   `python3 scripts/companies.py remove "<name>"`.
 - No hits → nothing is saved; say so. If the user knows the company's board address (a
-  Greenhouse, Ashby or Lever jobs page), run `companies.py add "<name>" --board ats:slug`.
+  Greenhouse, Ashby or Lever jobs page), run `companies.py add "<name>" --board ats:slug`; for a
+  Workday careers site, pass its URL: `--board https://<tenant>.wd5.myworkdayjobs.com/<site>`.
 - Exit 4 → the request cap stopped it; what was found is saved — say the rest wasn't checked.
   Exit 3 → the job boards can't be reached (Phase 3).
 - If it prints a `suggest_row`, mention that the user can share it with the project so
