@@ -41,6 +41,7 @@ UNKNOWN_LABELS = ("pay not listed", "sponsorship not stated", "location unclear"
 NO_JD = "no live job description for this key"
 MIN_QUOTE = 12
 VERDICTS = ("match", "conflict", "not_stated")
+PERMISSIVE = {("meetings", "meetings_ok"), ("on_call", "ok"), ("travel", "lots")}  # allow it: never a conflict
 _TRANS = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', " ": " ",
                         "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "―": "-"})
 
@@ -76,7 +77,7 @@ def problem(item, jd):
     return None
 
 
-def style_problem(item, jd):
+def style_problem(item, jd, choices=None):
     """Why this work-style item fails, or None: match/conflict need a verified quote, not_stated none."""
     if not live(jd):
         return NO_JD
@@ -85,6 +86,9 @@ def style_problem(item, jd):
         return "style item must be {topic: %s, verdict: %s, text, quote}" % ("/".join(state.WORK_STYLE), "/".join(VERDICTS))
     if item["verdict"] == "not_stated":
         return None if item.get("quote") is None else "a not_stated item has no quote"
+    if item["verdict"] == "conflict" and (item["topic"], (choices or {}).get(item["topic"])) in PERMISSIVE:
+        return "%s: %s allows it, so it never conflicts (rubric §4)" % (
+            item["topic"], choices[item["topic"]])
     if not item.get("quote"):
         return "a %s item needs a quote from the job description" % item["verdict"]
     return problem(item, jd)
@@ -126,7 +130,9 @@ def main(argv=None):
         jds = {}
     profile = state.run_profile(run)  # the work_style this run was judged against
     saved = profile.get("work_style") if isinstance(profile, dict) else None
-    wanted = {t for t in saved if t in state.WORK_STYLE} if isinstance(saved, dict) else set()
+    choices = {t: v for t, v in (saved.items() if isinstance(saved, dict) else ())
+               if t in state.WORK_STYLE and isinstance(v, str)}
+    wanted = set(choices)
 
     checked, failed = 0, []
     for row in rows:
@@ -148,7 +154,7 @@ def main(argv=None):
         if gap:
             failed.append({"key": key, "quote": None, "why": gap})
         for item, check in [(i, problem) for i in items] + [(i, style_problem) for i in style]:
-            why = check(item, jd)
+            why = check(item, jd, choices) if check is style_problem else check(item, jd)
             if why:
                 failed.append({"key": key, "quote": item.get("quote") if isinstance(item, dict) else None, "why": why})
     print(json.dumps({"ok": not failed, "checked": checked, "failed": failed}, ensure_ascii=False))

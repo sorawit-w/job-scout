@@ -196,6 +196,18 @@ class StyleCheckTest(unittest.TestCase):
             self.assertEqual(code, 1, value)
             self.assertIn(reason, " | ".join(f["why"] for f in out["failed"]), value)
 
+    def test_a_permissive_choice_never_conflicts(self):
+        home = make_home()
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "meetings_ok"}}, f)
+        payload = results(why=self.WHY)
+        item = {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}
+        payload["rows"][0].update(show=True, style=[item])
+        code, out = run(payload, home)
+        self.assertEqual((code, out["failed"][0]["why"]), (1, "meetings: meetings_ok allows it, so it never conflicts (rubric §4)"))
+        item["verdict"] = "match"
+        self.assertEqual(run(payload, home)[0], 0)
+
     def test_style_never_counts_as_the_reason_a_role_is_shown(self):
         payload = results()
         payload["rows"][0].update(show=True, style=[
