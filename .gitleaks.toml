@@ -1,0 +1,11 @@
+# Keep the default rules. Job keys ("ats:slug:job_id") are public posting IDs; the generic-api-key
+# rule mistakes them for secrets when they sit in a "key" field. The allowlist applies to that one
+# rule only, so any other secret on the same line is still caught.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "public job posting keys"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+regexes = ['''(greenhouse|ashby|lever):[a-z0-9_.-]+:[0-9a-f-]{6,}''']

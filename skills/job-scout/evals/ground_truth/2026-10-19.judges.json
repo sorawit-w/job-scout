@@ -1,0 +1,2600 @@
+{
+ "ashby:harvey:01f31ece-f3fe-4991-b6fb-b59f21faa8e9": {
+  "codex": "no",
+  "codex_reason": "Foundational infrastructure and backend product platforms dominate the responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:gitlab:8739391002": {
+  "codex": "maybe",
+  "codex_reason": "Staff purchase UX work fits partly; Ruby backend integrations and frontend allocation remain concerns.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote Staff full-stack role, but uses Ruby/Vue.js and focuses on billing integrations."
+ },
+ "greenhouse:databricks:8285949002": {
+  "codex": "maybe",
+  "codex_reason": "Money team responsibilities are unspecified, and Senior Staff is above requested level.",
+  "gemini": "no",
+  "gemini_reason": "Senior Staff role on billing/money team with no frontend focus."
+ },
+ "ashby:vanta:bbaea4cf-1439-4996-b7b1-c10425413c3f": {
+  "codex": "maybe",
+  "codex_reason": "Senior customer-facing ownership fits, but data systems and AI workflows leave frontend emphasis uncertain.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote Senior full-stack role owning customer experiences and backend data systems."
+ },
+ "greenhouse:affirm:8005408003": {
+  "codex": "no",
+  "codex_reason": "Explicit backend search role, not frontend or UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8209967": {
+  "codex": "no",
+  "codex_reason": "Distributed infrastructure, disaster recovery, and reliability rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7985860003": {
+  "codex": "no",
+  "codex_reason": "Backend identity engineering role below target seniority.",
+  "gemini": "no",
+  "gemini_reason": "Mid-level backend engineering role on identity decisioning, not senior frontend."
+ },
+ "greenhouse:stripe:8274893": {
+  "codex": "no",
+  "codex_reason": "Native Android payment applications in Toronto, outside both specialization and location requirements.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:7807722002": {
+  "codex": "maybe",
+  "codex_reason": "App ecosystem title leaves frontend scope unclear; Senior Staff also exceeds requested level.",
+  "gemini": "maybe",
+  "gemini_reason": "US Senior Staff role, but one level above Staff and description omits technical details."
+ },
+ "ashby:replit:61cfbcb7-cd1e-49ab-82a1-e93c3962e343": {
+  "codex": "no",
+  "codex_reason": "Enterprise deployment, networking, authorization infrastructure, and Terraform dominate the work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:7facc4fa-70f0-4f2b-8b0c-8bb79c3296c1": {
+  "codex": "no",
+  "codex_reason": "Identity architecture, security primitives, and highly available systems rather than frontend ownership.",
+  "gemini": "no",
+  "gemini_reason": "Senior Staff backend infrastructure role focused on enterprise identity, SSO, and SCIM."
+ },
+ "greenhouse:databricks:6544386002": {
+  "codex": "no",
+  "codex_reason": "Database engine internals are outside frontend and design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:8003799003": {
+  "codex": "no",
+  "codex_reason": "Staff backend identity decisioning role, not frontend or design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:resend:73a37f4c-02d9-40e4-a116-70507ed413b9": {
+  "codex": "no",
+  "codex_reason": "Trust and safety engineering focused on email safety, without frontend or design engineering scope.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:ac442f1f-c0d2-4608-a155-bfc89190e01c": {
+  "codex": "no",
+  "codex_reason": "Data-intensive investigative systems emphasize ingestion, pipelines, retrieval, and safety operations over frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8241260": {
+  "codex": "no",
+  "codex_reason": "High school internship, far below target experience and seniority.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:1f7c6071-ad3a-4903-9b05-4684f5c1a7c8": {
+  "codex": "maybe",
+  "codex_reason": "US hybrid full-stack role, but seniority and frontend responsibilities are unstated.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF full-stack role, but truncated description leaves level and frontend scope unclear."
+ },
+ "greenhouse:riotgames:7906062": {
+  "codex": "no",
+  "codex_reason": "Requires Unreal Engine, C++, and shipped game development expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:7934466002": {
+  "codex": "maybe",
+  "codex_reason": "Enzyme responsibilities are absent; frontend relevance and Senior Staff scope cannot be assessed.",
+  "gemini": "no",
+  "gemini_reason": "Senior Staff database query engine role with no frontend focus."
+ },
+ "greenhouse:riotgames:8163299": {
+  "codex": "no",
+  "codex_reason": "Game build infrastructure and CI/CD require Unreal Engine, C++, and Perforce expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ramp:6a7e382f-240a-4952-b9e5-7fe2b3856bc9": {
+  "codex": "strong",
+  "codex_reason": "Owns sophisticated React interfaces, client state, and real-time rendering; senior-scope work with US relocation.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid NYC/SF full-stack AI role with heavy React UI and client-side state focus."
+ },
+ "ashby:hex:996c38fd-0a7a-4df9-a5c3-4234b20b7b71": {
+  "codex": "maybe",
+  "codex_reason": "Relevant React interfaces, but substantial backend scope and unspecified seniority leave fit open.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid full-stack role spanning complex React/TypeScript UI and Python/SQL backend systems."
+ },
+ "ashby:openai:fcb0ed1a-9329-4e8f-8aab-92bb626d8141": {
+  "codex": "maybe",
+  "codex_reason": "User experience development is relevant, but broad full-stack foundations leave frontend emphasis unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "SF founding full-stack role designing intuitive UX across frontend and backend systems."
+ },
+ "greenhouse:anthropic:5369710008": {
+  "codex": "strong",
+  "codex_reason": "Staff frontend architecture, React interfaces, visualizations, and human-agent workflows in US hybrid offices.",
+  "gemini": "strong",
+  "gemini_reason": "Staff+ role owning frontend architecture, React/TypeScript interfaces, and visualizations in SF/NYC."
+ },
+ "greenhouse:datadog:8094111": {
+  "codex": "no",
+  "codex_reason": "Incident response, on-call tooling, and organizational reliability dominate rather than frontend engineering.",
+  "gemini": "no",
+  "gemini_reason": "Focuses on on-call tooling, incident response processes, and post-mortem training."
+ },
+ "ashby:perplexity:375f9fc9-392e-4d0b-9a10-4b2013e05ad4": {
+  "codex": "no",
+  "codex_reason": "Native Android growth engineering requires Kotlin and Jetpack Compose.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:a5dd77a2-9ab1-4165-98aa-c7bb0260985b": {
+  "codex": "no",
+  "codex_reason": "Hardware accelerator CI/CD, benchmarking, and DevOps infrastructure rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8212314": {
+  "codex": "strong",
+  "codex_reason": "Design engineering with web experiences, design systems, performance, and mentoring; US location available.",
+  "gemini": "strong",
+  "gemini_reason": "US Design Engineer role requiring 6+ years in React, CSS, design systems, and animation."
+ },
+ "ashby:openai:1f99d5d3-4512-4247-aaba-3133a3dabf5a": {
+  "codex": "strong",
+  "codex_reason": "Owns frontend architecture, polished interfaces, accessibility, and design collaboration in San Francisco.",
+  "gemini": "strong",
+  "gemini_reason": "Hybrid SF frontend role owning UI architecture, component systems, design polish, and performance."
+ },
+ "greenhouse:riotgames:8275281": {
+  "codex": "no",
+  "codex_reason": "C++ game engine performance and infrastructure, outside web frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:d16ac2b8-a742-4965-8545-75df7981191b": {
+  "codex": "no",
+  "codex_reason": "Event design production and vendor coordination, not software engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:perplexity:63785f62-07ac-4dc5-8f68-57779dddb1f3": {
+  "codex": "no",
+  "codex_reason": "Backend identity, permissions, admin APIs, and cloud infrastructure dominate responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8560783002": {
+  "codex": "strong",
+  "codex_reason": "Staff web platform engineering matches frontend platform specialization, with a viable US location.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff Web Platform role in CA, but missing description leaves UI versus infra unclear."
+ },
+ "ashby:vanta:32babc06-def2-4db3-b153-1c1c44bdcf40": {
+  "codex": "no",
+  "codex_reason": "Visual product designer role collaborates with engineers rather than owning engineering implementation.",
+  "gemini": "no",
+  "gemini_reason": "Non-engineering visual product designer role rather than a frontend or design engineer."
+ },
+ "greenhouse:stripe:8038771": {
+  "codex": "no",
+  "codex_reason": "Deployment orchestration, Kubernetes, and infrastructure reliability rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8142952": {
+  "codex": "no",
+  "codex_reason": "Money-movement architecture and scalable financial backend services dominate despite some consumer interface work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:elevenlabs:6a530871-b6c6-4783-ac6b-69cc3b084192": {
+  "codex": "maybe",
+  "codex_reason": "Global eligibility and flexible product assignments; frontend emphasis and seniority remain unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "Global remote full-stack role covering UX, backend, and infrastructure; frontend share unclear."
+ },
+ "greenhouse:discord:8700605002": {
+  "codex": "no",
+  "codex_reason": "Experimentation platform engineering with no stated frontend or UI responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:discord:8214127002": {
+  "codex": "no",
+  "codex_reason": "Safety processing role offers no evidence of frontend or design engineering work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8555864002": {
+  "codex": "no",
+  "codex_reason": "Managed tables engineering is a data systems specialization, not frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:6567104": {
+  "codex": "maybe",
+  "codex_reason": "Generalist full-stack scope offers possible fit, but frontend responsibilities and location eligibility remain unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack experience platform role with broad level range and unstated location."
+ },
+ "ashby:elevenlabs:a89a7892-3d9d-40ab-a3f1-1c6ed1f7b84f": {
+  "codex": "no",
+  "codex_reason": "Distributed web crawling and machine learning data pipelines rather than web interfaces.",
+  "gemini": "no",
+  "gemini_reason": "Backend distributed systems and web-crawling infrastructure for ML data, not frontend."
+ },
+ "greenhouse:anthropic:5368166008": {
+  "codex": "no",
+  "codex_reason": "GTM systems architecture and engineering pipelines rather than frontend implementation.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:discord:8675185002": {
+  "codex": "no",
+  "codex_reason": "Device fleet, identity automation, and infrastructure provisioning dominate the role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8039548": {
+  "codex": "no",
+  "codex_reason": "Requires native Mandarin fluency, which is not established in the candidate profile.",
+  "gemini": "no",
+  "gemini_reason": "Full-stack support infrastructure and messaging integration role requiring native Mandarin fluency."
+ },
+ "greenhouse:gitlab:8698330002": {
+  "codex": "maybe",
+  "codex_reason": "TypeScript browser components and performance fit, but moderate-scope SDK work appears below senior level.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote TypeScript/Vue UI and client SDK role, but mid-level rather than Senior."
+ },
+ "greenhouse:brex:8829325002": {
+  "codex": "no",
+  "codex_reason": "Cross-team acquisition architecture emphasizes backend systems, platform reliability, and data quality over frontend implementation.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ramp:b68aca53-16c0-4ced-ab1d-e8beb2940b4f": {
+  "codex": "strong",
+  "codex_reason": "Owns React and TypeScript product experiences, design systems, accessibility, and performance in NYC.",
+  "gemini": "strong",
+  "gemini_reason": "NYC hybrid Design Engineer role focused on React, TypeScript, design systems, and accessibility."
+ },
+ "greenhouse:affirm:7981725003": {
+  "codex": "maybe",
+  "codex_reason": "Senior full-stack app role, but generic responsibilities leave web versus mobile and frontend scope unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote senior full-stack role on App Experience, but frontend scope is unclear."
+ },
+ "ashby:openai:52c72cb9-7c44-4cba-b440-e05262a38491": {
+  "codex": "no",
+  "codex_reason": "Investigative tooling emphasizes Python, SQL, and large datasets rather than frontend engineering.",
+  "gemini": "no",
+  "gemini_reason": "Full-stack role focused on Python, SQL, large datasets, and intelligence workflows rather than frontend."
+ },
+ "ashby:openai:4d7145cf-ef4e-4a39-b1ef-b58e4e5c06d2": {
+  "codex": "maybe",
+  "codex_reason": "US location works; title and description do not establish level or frontend scope.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF Shop/Feed Ads role, but description omits frontend vs backend details."
+ },
+ "greenhouse:affirm:8016866003": {
+  "codex": "maybe",
+  "codex_reason": "Engineer II is one level below target; full-stack description leaves frontend responsibilities unclear.",
+  "gemini": "no",
+  "gemini_reason": "Mid-level Software Engineer II full-stack role on ads platform, below Senior level."
+ },
+ "ashby:replit:14b3aef3-f926-4db9-8c31-af8ba848fbd8": {
+  "codex": "maybe",
+  "codex_reason": "Staff level and US location fit; description provides no evidence of frontend responsibilities.",
+  "gemini": "no",
+  "gemini_reason": "General Staff SWE role on Money domain with no frontend or UI focus indicated."
+ },
+ "ashby:sentry:9405b1d7-9a4e-424d-b5b2-4bc3cb2ba5cb": {
+  "codex": "no",
+  "codex_reason": "Explicit people management role, conflicting with individual contributor preference.",
+  "gemini": "no",
+  "gemini_reason": "People manager role requiring management experience; candidate wants an IC role."
+ },
+ "ashby:plaid:127d31ff-3a16-488b-ba01-6e87dbb96957": {
+  "codex": "no",
+  "codex_reason": "Data infrastructure, ETL, streaming, and machine learning platforms rather than frontend work.",
+  "gemini": "no",
+  "gemini_reason": "Data infrastructure role focused on ETL pipelines, data warehouses, Spark, and Python."
+ },
+ "greenhouse:brex:8815462002": {
+  "codex": "strong",
+  "codex_reason": "Senior React and TypeScript frontend product ownership with San Francisco hybrid relocation option.",
+  "gemini": "strong",
+  "gemini_reason": "Senior frontend engineer role (hybrid SF) requiring 7+ years with React and TypeScript."
+ },
+ "ashby:sierra:aadfc0a0-93f6-454b-9767-c24793fa3eff": {
+  "codex": "no",
+  "codex_reason": "Builds and tunes customer AI agents throughout deployment lifecycle, not frontend or design systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:4a82c276-1113-41f6-baf9-a5be27e5c78f": {
+  "codex": "no",
+  "codex_reason": "Core cloud infrastructure, Kubernetes, and distributed systems role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:a6ab3111-7092-4da2-a7a6-71e01351bfda": {
+  "codex": "no",
+  "codex_reason": "Explicit backend agent infrastructure role spanning orchestration, execution, and service reliability.",
+  "gemini": "no",
+  "gemini_reason": "Backend and infrastructure engineering role building agent runtimes and services, not frontend."
+ },
+ "greenhouse:affirm:8005075003": {
+  "codex": "no",
+  "codex_reason": "Backend loan platform services, APIs, and event-driven architecture rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:asana:8227390": {
+  "codex": "maybe",
+  "codex_reason": "Full-stack AI product role; three-year experience baseline and unclear UI responsibilities leave fit uncertain.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF full-stack product role, but frontend depth and exact seniority are unclear."
+ },
+ "ashby:elevenlabs:c7d59014-b918-4c15-ae33-79f5c9f2cf9f": {
+  "codex": "no",
+  "codex_reason": "Explicitly backend-leaning role requiring Python and backend infrastructure expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8257935": {
+  "codex": "no",
+  "codex_reason": "Distributed billing integrations and event-driven pipelines rather than frontend interfaces.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8635182002": {
+  "codex": "maybe",
+  "codex_reason": "Staff level fits; agentic applications title and compensation alone do not establish frontend scope.",
+  "gemini": "no",
+  "gemini_reason": "Staff SWE role in Agentic Applications with no frontend or UI indication."
+ },
+ "ashby:sentry:68b3897c-bbb0-4f90-aa9a-57981323e26b": {
+  "codex": "no",
+  "codex_reason": "Distributed systems, cloud infrastructure, and production reliability rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8639477002": {
+  "codex": "no",
+  "codex_reason": "Lakebase management technical lead concerns database systems rather than stated frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:11571c63-2fc5-41ce-b855-c949ead5efca": {
+  "codex": "no",
+  "codex_reason": "Cloud infrastructure, Kubernetes operations, and production reliability role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:hex:45022740-b0ca-4a54-a98b-b90f9b4a9a30": {
+  "codex": "no",
+  "codex_reason": "Student internship, incompatible with Senior or Staff target.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:cursor:aef8f0e7-37cd-4d6e-96c9-3af72f588bae": {
+  "codex": "no",
+  "codex_reason": "Reinforcement learning data engineering rather than frontend or design systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:19db4c0a-8883-43c3-b667-60463098feb2": {
+  "codex": "strong",
+  "codex_reason": "Experienced frontend platform ownership covers design systems, architecture, performance, and cross-team influence.",
+  "gemini": "strong",
+  "gemini_reason": "SF hybrid senior frontend platform role owning design system, frontend architecture, and web performance."
+ },
+ "ashby:openai:77bc0b3a-35c1-4ecf-99c7-1b3b19d959ca": {
+  "codex": "strong",
+  "codex_reason": "Experienced autonomous engineer building web funnels, purchase flows, and product experiences with design partners.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack growth role in SF combining web funnel UI with backend API development."
+ },
+ "greenhouse:anthropic:5311234008": {
+  "codex": "no",
+  "codex_reason": "Policy enforcement analyst role, not frontend software engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ashby:188cc71b-a625-4022-94dc-7c43fa1a8b06": {
+  "codex": "maybe",
+  "codex_reason": "Design engineering title fits; description provides no concrete responsibilities or seniority.",
+  "gemini": "strong",
+  "gemini_reason": "US remote Design Engineer role, directly matching frontend and design engineering background."
+ },
+ "greenhouse:anthropic:5436293008": {
+  "codex": "no",
+  "codex_reason": "Machine learning models, feature computation, and data pipelines rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8234673": {
+  "codex": "no",
+  "codex_reason": "Cloud infrastructure, containers, Kubernetes, and deployment systems rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:elevenlabs:ce3d5a59-fb8c-482b-bc3f-60e44576c5e0": {
+  "codex": "no",
+  "codex_reason": "Backend-leaning Python platform role emphasizes infrastructure, authentication, and business-critical systems.",
+  "gemini": "no",
+  "gemini_reason": "Backend-leaning platform engineering role focused on Python, infrastructure, and auth."
+ },
+ "greenhouse:brex:8472633002": {
+  "codex": "no",
+  "codex_reason": "Backend-heavy platform role requires distributed systems, databases, and orchestration expertise despite some frontend interfaces.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ashby:6a15668c-3f98-4404-8f1f-927cddfc5af7": {
+  "codex": "maybe",
+  "codex_reason": "Staff level and US remote fit; description omits actual engineering responsibilities.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote Staff Product Engineer role, but description omits frontend vs backend focus."
+ },
+ "ashby:vanta:ad10bda4-f02d-4682-9dc4-b374fa647c99": {
+  "codex": "maybe",
+  "codex_reason": "Senior React fullstack role is plausible; product versus infrastructure allocation is unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote senior full-stack role (TypeScript, React, Node.js) with unclear frontend balance."
+ },
+ "greenhouse:affirm:8003028003": {
+  "codex": "no",
+  "codex_reason": "Backend batch platform engineering rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:a8a421d1-c9bb-4e37-8418-4e4d6b2ba29d": {
+  "codex": "no",
+  "codex_reason": "Mechanical motor design and physical prototyping, not software interface engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:6b47238e-025a-4350-b270-2f3564002fcc": {
+  "codex": "maybe",
+  "codex_reason": "Interactive frontend work fits, but backend orchestration and infrastructure are equally substantial.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF full-stack role spanning interactive image UIs and backend orchestration services."
+ },
+ "greenhouse:databricks:8220902002": {
+  "codex": "maybe",
+  "codex_reason": "Full-stack agentic applications could include UI; responsibilities absent and Senior Staff exceeds target level.",
+  "gemini": "maybe",
+  "gemini_reason": "Mountain View full-stack role at Senior Staff level; description lacks technical details."
+ },
+ "greenhouse:anthropic:5383610008": {
+  "codex": "maybe",
+  "codex_reason": "Staff developer tools role includes UI, but spans infrastructure, research tooling, and containers equally.",
+  "gemini": "maybe",
+  "gemini_reason": "US Staff role on Claude Code spanning frontend UI, backend infrastructure, and IDE plugins."
+ },
+ "greenhouse:figma:6212642004": {
+  "codex": "no",
+  "codex_reason": "UX research role rather than engineering implementation.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:asana:8194522": {
+  "codex": "maybe",
+  "codex_reason": "User experience focus is relevant; two-year experience requirement suggests level below Senior.",
+  "gemini": "no",
+  "gemini_reason": "Mid-level generalist software engineer role (2+ years), below Senior frontend target."
+ },
+ "greenhouse:affirm:7819445003": {
+  "codex": "maybe",
+  "codex_reason": "Engineer II is below target seniority; fullstack app scope could fit but remains unspecified.",
+  "gemini": "no",
+  "gemini_reason": "Mid-level Software Engineer II full-stack role, below target Senior or Staff level."
+ },
+ "greenhouse:datadog:8278850": {
+  "codex": "no",
+  "codex_reason": "Core distributed profiling services dominate; UI is only one consumer of the backend data.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5422684008": {
+  "codex": "no",
+  "codex_reason": "Search platform engineering rather than stated frontend or design systems work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:asana:7964388": {
+  "codex": "no",
+  "codex_reason": "AI developer tooling and workflow infrastructure rather than frontend or design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:replit:790afe73-238a-489c-875e-ac4e15780112": {
+  "codex": "no",
+  "codex_reason": "Identity and authorization systems, token services, and security infrastructure dominate the role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:xai:5227940007": {
+  "codex": "no",
+  "codex_reason": "Design evaluation and dataset annotation role rather than senior software engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:linear:b4a7764e-c680-4bdf-9956-dc78f2ca94d5": {
+  "codex": "no",
+  "codex_reason": "Applied AI work centers on backend services, model behavior, evaluation, and agent infrastructure.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:daad560f-c851-4cb9-89ac-efb2186c4031": {
+  "codex": "strong",
+  "codex_reason": "Staff web interfaces using TypeScript, HTML, and CSS; US hybrid, specialized OfficeJS expertise required.",
+  "gemini": "maybe",
+  "gemini_reason": "SF hybrid Staff frontend/React role, but requires deep production Microsoft OfficeJS add-in experience."
+ },
+ "greenhouse:stripe:8062305": {
+  "codex": "maybe",
+  "codex_reason": "Broad fullstack product role lacks clear frontend emphasis or a specific senior level.",
+  "gemini": "no",
+  "gemini_reason": "Generalist role emphasizing financial tracking systems, gRPC, Kubernetes, and cloud infrastructure."
+ },
+ "greenhouse:discord:8659978002": {
+  "codex": "maybe",
+  "codex_reason": "Senior full-stack role and relocation fit, but frontend responsibilities are absent from description.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack role in SF, but description omits frontend versus backend responsibilities."
+ },
+ "greenhouse:cloudflare:8264687": {
+  "codex": "no",
+  "codex_reason": "Only Lisbon or London hybrid locations offered, with no US option.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:brex:8815512002": {
+  "codex": "no",
+  "codex_reason": "Backend title and Engineer II scope do not match senior frontend specialization.",
+  "gemini": "no",
+  "gemini_reason": "Mid-level (SWE II) backend engineer role rather than Senior/Staff frontend."
+ },
+ "ashby:openai:ce1a4c96-6eed-4167-a5c8-8e692cdc4c2e": {
+  "codex": "no",
+  "codex_reason": "Electrical data center facilities engineering rather than software design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:8243201": {
+  "codex": "no",
+  "codex_reason": "Security infrastructure, secrets management, and distributed identity systems rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:834d9a8b-4f7f-416a-9953-05d93c326a5f": {
+  "codex": "maybe",
+  "codex_reason": "Staff product role in San Francisco; description provides no frontend responsibilities.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff product engineer in SF hybrid, but missing description leaves frontend focus unclear."
+ },
+ "ashby:openai:e7a4ee23-138a-4004-916e-72a452e7d115": {
+  "codex": "no",
+  "codex_reason": "Explicit backend image generation infrastructure, storage, and orchestration role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:figma:6216211004": {
+  "codex": "no",
+  "codex_reason": "Brand and visual web design role partners with engineers rather than owning engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8532682002": {
+  "codex": "no",
+  "codex_reason": "AI research infrastructure rather than frontend or design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5436684008": {
+  "codex": "no",
+  "codex_reason": "Cloud inference backend services, deployment infrastructure, and autoscaling rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7832326003": {
+  "codex": "no",
+  "codex_reason": "Explicitly backend engineering, despite the merchant interface team name.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:6606581": {
+  "codex": "maybe",
+  "codex_reason": "Dashboard experiences are relevant, but location and frontend allocation are unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack role building Connect dashboard UIs and backend services, with location N/A."
+ },
+ "ashby:harvey:04e17f81-d0a7-4f83-8526-ec4c9532ddcc": {
+  "codex": "strong",
+  "codex_reason": "Senior React and TypeScript interfaces, design systems, and performance; San Francisco hybrid with relocation.",
+  "gemini": "strong",
+  "gemini_reason": "Senior frontend role in SF building React, TypeScript, CSS, and design systems."
+ },
+ "ashby:openai:099dd6af-b017-4a60-85d5-4c79da3a9ead": {
+  "codex": "maybe",
+  "codex_reason": "React and complex interfaces fit, but substantial backend requirements leave frontend emphasis uncertain.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF full-stack role requiring React/TypeScript UI expertise alongside backend service development."
+ },
+ "ashby:replit:4df82fb0-0bcb-4034-89ce-09e679b00fe7": {
+  "codex": "no",
+  "codex_reason": "Agent advertising workflows and integrations; no frontend or UI engineering focus established.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:73e56947-5d8b-414d-a0ac-9dc9b04e2406": {
+  "codex": "maybe",
+  "codex_reason": "US full-stack role; description states location only, leaving UI scope and level unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Bellevue onsite full-stack role on Core Experimentation; frontend focus and level unclear."
+ },
+ "greenhouse:twilio:7595407": {
+  "codex": "no",
+  "codex_reason": "Fraud detection and browser signal collection, rather than user interface engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:brex:8635331002": {
+  "codex": "no",
+  "codex_reason": "Requires deep production backend systems expertise and cross-team backend architecture leadership.",
+  "gemini": "no",
+  "gemini_reason": "Requires deep experience designing and operating large-scale backend systems."
+ },
+ "ashby:sierra:b8666a78-fcb1-47bb-ad07-5edb6cd3ad71": {
+  "codex": "no",
+  "codex_reason": "Inference infrastructure, GPU operations, and serving performance are outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:7831810": {
+  "codex": "no",
+  "codex_reason": "Agent infrastructure, orchestration, observability, and security engineering rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8798198002": {
+  "codex": "no",
+  "codex_reason": "Lakeflow pipeline engineering is data infrastructure, with no frontend scope indicated.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:5a265d2b-683f-4cea-9b69-8e137e704ab3": {
+  "codex": "no",
+  "codex_reason": "Silicon physical design requires hardware implementation expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8274571": {
+  "codex": "no",
+  "codex_reason": "Requires extensive C++ game engine and tools development experience.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:45f16834-5b6a-469d-b7ac-94e4e0773e0a": {
+  "codex": "no",
+  "codex_reason": "Technical recruiting position, not engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:sentry:81f09568-da7d-4ed1-8283-614f846c9b00": {
+  "codex": "no",
+  "codex_reason": "Python AI platform role requires production model and agent expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8225544": {
+  "codex": "no",
+  "codex_reason": "Native mobile game engineering requires C++ and platform-specific experience.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:mintlify:1e231925-7a38-41c9-a31c-26bf15457888": {
+  "codex": "maybe",
+  "codex_reason": "Senior product title and US location fit; actual engineering responsibilities are absent.",
+  "gemini": "maybe",
+  "gemini_reason": "Onsite SF Senior Product Engineer role, but truncated description leaves frontend scope unclear."
+ },
+ "ashby:harvey:7797d468-fabc-4bda-b861-726db7171f23": {
+  "codex": "no",
+  "codex_reason": "Requires deep full-stack, backend, or agent expertise; scope centers AI platforms and large-scale systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:f7d155c9-06e8-44f0-b2eb-bfa88707f2c1": {
+  "codex": "strong",
+  "codex_reason": "Explicit senior role emphasizing frontend interfaces, product experiments, and design collaboration in San Francisco.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior SF full-stack role with strong frontend emphasis alongside supporting backend systems."
+ },
+ "ashby:openai:66288824-8b77-4774-bc57-6825d3e6221e": {
+  "codex": "strong",
+  "codex_reason": "Experienced React/TypeScript engineers explicitly sought for developer interfaces, accessibility, and UX ownership in NYC.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack developer experience role seeking React/TypeScript skills alongside backend and SDK work."
+ },
+ "ashby:openai:2d7f1028-ce9b-49c7-acc8-782714ca1cf4": {
+  "codex": "maybe",
+  "codex_reason": "User interfaces are included alongside identity protocols and backend work; frontend emphasis unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF full-stack role spanning web/mobile agent UIs and backend identity protocols."
+ },
+ "ashby:elevenlabs:108c99e6-ba2b-44a0-b830-7d535e14a152": {
+  "codex": "strong",
+  "codex_reason": "Frontend strength, dashboard UX, and independent product ownership align; US remote permitted.",
+  "gemini": "maybe",
+  "gemini_reason": "Remote full-stack role with frontend emphasis, though requires backend services and unstated seniority."
+ },
+ "greenhouse:databricks:8384595002": {
+  "codex": "strong",
+  "codex_reason": "Staff frontend engineering role in New York directly matches target specialization and level.",
+  "gemini": "strong",
+  "gemini_reason": "Staff-level frontend software engineer role based in New York City."
+ },
+ "greenhouse:affirm:7829429003": {
+  "codex": "no",
+  "codex_reason": "Mobile app infrastructure role does not match web frontend or design engineering.",
+  "gemini": "no",
+  "gemini_reason": "Mobile app infrastructure role, not web frontend or design engineering."
+ },
+ "ashby:openai:c442eab0-b8b4-40f6-b0f2-0fc91aea294a": {
+  "codex": "no",
+  "codex_reason": "Explicitly backend-focused Go services, networking, and orchestration role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:b94099f6-8418-48b0-82b5-5953a27d636f": {
+  "codex": "no",
+  "codex_reason": "Requires deep backend expertise for high-volume agent platform services.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:8245503": {
+  "codex": "no",
+  "codex_reason": "Security tooling and distributed services dominate the responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:gitlab:8693563002": {
+  "codex": "no",
+  "codex_reason": "Security static analysis specialization, not frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8265763": {
+  "codex": "no",
+  "codex_reason": "Authorization infrastructure and identity security systems, not UI work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:8032175003": {
+  "codex": "maybe",
+  "codex_reason": "US posting exists; Engineer II full-stack scope is below target and frontend emphasis unspecified.",
+  "gemini": "no",
+  "gemini_reason": "Mid-level SWE II full-stack role and description restricts remote eligibility to Canadian provinces."
+ },
+ "greenhouse:databricks:8013809002": {
+  "codex": "no",
+  "codex_reason": "Engineering management includes recruiting and developing direct team talent.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8163193": {
+  "codex": "no",
+  "codex_reason": "Design recruiting role, not software engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:3b34eb10-25b0-4a97-bd6d-05fc90ad4981": {
+  "codex": "strong",
+  "codex_reason": "Senior and Staff mobile web roles emphasize accessible responsive interfaces and frontend performance.",
+  "gemini": "strong",
+  "gemini_reason": "Senior/Staff frontend web role in NYC focused on responsive UI, accessibility, and performance."
+ },
+ "ashby:openai:76c2a136-4e93-4e1a-bbdf-de4268498838": {
+  "codex": "no",
+  "codex_reason": "Requires deep native iOS or Android expertise for half the workload.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:01da8934-d3e3-4ebb-beb9-681b3c24fb9c": {
+  "codex": "no",
+  "codex_reason": "Backend AI platform infrastructure, model routing, and evaluation systems dominate.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:mercury:6116808004": {
+  "codex": "strong",
+  "codex_reason": "Senior frontend developer experience role with explicit US remote eligibility.",
+  "gemini": "strong",
+  "gemini_reason": "Remote US Senior Frontend Developer Experience role matching senior frontend architecture and tooling skills."
+ },
+ "greenhouse:anthropic:5097186008": {
+  "codex": "strong",
+  "codex_reason": "Owns interaction prototypes emphasizing frontend motion, polish, and product architecture at US offices.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack role leaning strongly toward frontend polish, motion, and interaction prototyping."
+ },
+ "ashby:replit:2f1de5f1-48c2-4104-a697-a51fe1620508": {
+  "codex": "maybe",
+  "codex_reason": "Design engineering and US hybrid fit; only bonus qualifications supplied, leaving seniority unclear.",
+  "gemini": "strong",
+  "gemini_reason": "Hybrid Foster City Design Engineer role focused on UI libraries and design tools."
+ },
+ "greenhouse:vercel:6129441004": {
+  "codex": "strong",
+  "codex_reason": "Independent React and TypeScript design engineering ownership, accessibility, and performance strongly align; US remote.",
+  "gemini": "strong",
+  "gemini_reason": "US remote Design Engineer role building React and TypeScript interfaces with high craft."
+ },
+ "greenhouse:anthropic:5367436008": {
+  "codex": "no",
+  "codex_reason": "Python frameworks, agent runtimes, and distributed infrastructure are outside frontend scope.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:xai:5255858007": {
+  "codex": "no",
+  "codex_reason": "Mechanical rack design and hardware manufacturing role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:10900071-f75f-49da-bff7-7e9db5e9b1f9": {
+  "codex": "maybe",
+  "codex_reason": "Senior React product work fits, but broad backend, GPU, and data responsibilities obscure frontend emphasis.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack role using React, TypeScript, and CSS alongside backend platform work."
+ },
+ "greenhouse:discord:8604768002": {
+  "codex": "maybe",
+  "codex_reason": "Senior fullstack commerce title is plausible, but description only supplies compensation details.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack product role in SF, but frontend versus backend split is unstated."
+ },
+ "ashby:replit:7c3c9d29-cec2-4367-8564-eadaed165aea": {
+  "codex": "no",
+  "codex_reason": "Internship is far below the target experience level.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5026097008": {
+  "codex": "strong",
+  "codex_reason": "Staff role owns web experiences, visual quality, responsiveness, and close product collaboration.",
+  "gemini": "strong",
+  "gemini_reason": "Hybrid Staff role owning Claude web/desktop user-facing features, UX quality, and responsiveness."
+ },
+ "ashby:perplexity:78675022-c4a7-41d2-9259-7c59be4de93c": {
+  "codex": "strong",
+  "codex_reason": "Owns design-system primitives, Figma translation, accessibility, and migrations across product surfaces; US hybrid.",
+  "gemini": "strong",
+  "gemini_reason": "US hybrid design systems engineer role building primitives, tokens, accessible components, and Figma integrations."
+ },
+ "ashby:ramp:ee493d8f-c75e-4ca4-b665-1576e835f522": {
+  "codex": "no",
+  "codex_reason": "Recruiting role supporting design hiring, not engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8003927": {
+  "codex": "no",
+  "codex_reason": "Backend platform ownership and distributed systems dominate despite some internal web tooling.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:resend:53d3710a-2d55-42ac-ba90-cdfd306bf560": {
+  "codex": "no",
+  "codex_reason": "Developer tools requirements emphasize API reliability, authentication, retries, and rate limits rather than UI.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:datadog:8292620": {
+  "codex": "no",
+  "codex_reason": "Storage formats, database optimization, and ingestion systems are backend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8416959002": {
+  "codex": "maybe",
+  "codex_reason": "Customer Experience Intelligence title leaves UI versus data engineering scope unspecified.",
+  "gemini": "no",
+  "gemini_reason": "Customer Experience Intelligence role with no indication of frontend or UI work."
+ },
+ "ashby:openai:bd2b8228-bb0f-42e0-94bd-c853cdd56140": {
+  "codex": "no",
+  "codex_reason": "AI chip design research and hardware automation are outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5436703008": {
+  "codex": "no",
+  "codex_reason": "Distributed inference infrastructure and accelerator orchestration role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:56ca2731-eb4b-44cc-9f3f-c677a6ccb9df": {
+  "codex": "no",
+  "codex_reason": "UX designer role, with no software engineering responsibilities indicated.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7749580003": {
+  "codex": "no",
+  "codex_reason": "Build pipelines, CI reliability, and developer infrastructure rather than frontend product work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:sentry:c00e77f5-bd58-49da-b4a8-3b6249529747": {
+  "codex": "no",
+  "codex_reason": "Agent execution tooling and developer automation, rather than frontend or design systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:sierra:3f6911c0-b49b-4d8e-a434-4064df2cde44": {
+  "codex": "strong",
+  "codex_reason": "Broad frontend ownership across product, CMS, accessibility, and performance supports senior scope in San Francisco.",
+  "gemini": "maybe",
+  "gemini_reason": "Onsite SF marketing web developer role with performance/accessibility focus, but seniority is unclear."
+ },
+ "ashby:plaid:95225497-fc9b-4c5d-8df0-df98df219ae5": {
+  "codex": "no",
+  "codex_reason": "Data governance platform architecture, reliability, and auditability are outside frontend focus.",
+  "gemini": "no",
+  "gemini_reason": "Backend data governance architecture role, not frontend or design engineering."
+ },
+ "greenhouse:databricks:6704975002": {
+  "codex": "maybe",
+  "codex_reason": "Staff full-stack title is plausible, but compensation-only description leaves frontend scope unknown.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff full-stack role in SF, but description omits frontend vs backend details."
+ },
+ "greenhouse:riotgames:8148783": {
+  "codex": "no",
+  "codex_reason": "Visual design artist position requires game art and visual communication expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:perplexity:fbbd496b-1d14-4396-b31d-38fbea0dc666": {
+  "codex": "strong",
+  "codex_reason": "Owns production frontend, interactive experiences, and design systems with broad independent scope in US.",
+  "gemini": "strong",
+  "gemini_reason": "SF/NYC Design Engineer role owning Figma-to-production UI, brand design system, and interactive experiences."
+ },
+ "ashby:vapi:00ee0249-bd57-4245-9a4f-a884b655dc73": {
+  "codex": "strong",
+  "codex_reason": "Primary frontend ownership with React, TypeScript, Storybook, design systems, accessibility, and performance; US hybrid.",
+  "gemini": "strong",
+  "gemini_reason": "SF hybrid frontend role owning React, TypeScript, design systems, Storybook, and accessibility."
+ },
+ "greenhouse:stripe:7977745": {
+  "codex": "no",
+  "codex_reason": "Product and brand design responsibilities, with engineering handled by collaborating teams.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:xai:5252108007": {
+  "codex": "no",
+  "codex_reason": "Student internship, not a Senior or Staff position.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:7994790002": {
+  "codex": "no",
+  "codex_reason": "Identity and access management specialization is security engineering, with no frontend scope indicated.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8295792002": {
+  "codex": "no",
+  "codex_reason": "Search ranking, retrieval, and embeddings specialization, not frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8649279002": {
+  "codex": "no",
+  "codex_reason": "Foundation model inference role, not frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:elevenlabs:e4e0450f-d139-4f8e-b210-2f326a680d90": {
+  "codex": "no",
+  "codex_reason": "Explicit backend-leaning Python payments role requires backend systems expertise.",
+  "gemini": "no",
+  "gemini_reason": "Explicitly backend-leaning payments role requiring Python expertise and strong backend background."
+ },
+ "greenhouse:anthropic:5231612008": {
+  "codex": "no",
+  "codex_reason": "Chip design reinforcement learning research, outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:8245211": {
+  "codex": "no",
+  "codex_reason": "Internship outside the US, far below target seniority.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8174908": {
+  "codex": "no",
+  "codex_reason": "Agent orchestration, retrieval, and evaluation expertise dominate; UI is only one component.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8509534002": {
+  "codex": "maybe",
+  "codex_reason": "Staff AI product fullstack role lacks details establishing frontend emphasis.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff full-stack AI product role in NYC/SF, but frontend balance is unclear."
+ },
+ "greenhouse:anthropic:5186067008": {
+  "codex": "maybe",
+  "codex_reason": "Substantial web interfaces and dashboards fit; seniority unspecified alongside backend services and data generation pipelines.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF/NYC full-stack role combining RL evaluation dashboards/web tooling with backend pipelines."
+ },
+ "ashby:decagon:9ce2499d-9950-4afc-82be-fa9af1d1f1e9": {
+  "codex": "no",
+  "codex_reason": "Human resources business partner role, not engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:7613aca3-9dd8-41cd-b114-06ef4de967a9": {
+  "codex": "no",
+  "codex_reason": "AI knowledge and automation platform engineering; no frontend-focused responsibilities established.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:sentry:c3ed6481-f031-4fe9-a456-775b7b3d2eda": {
+  "codex": "no",
+  "codex_reason": "Staff role demands distributed systems, data stores, queues, and database expertise rather than frontend depth.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:vanta:1513e1ac-5dca-4acb-a99d-8b5461115651": {
+  "codex": "maybe",
+  "codex_reason": "Senior React and TypeScript opportunity, but product versus infrastructure allocation remains unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "Remote US Senior full-stack role using TypeScript, React, and Node.js across product and infrastructure."
+ },
+ "greenhouse:affirm:8008645003": {
+  "codex": "no",
+  "codex_reason": "Machine learning internship is unsuitable in specialization and level.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:xai:5255111007": {
+  "codex": "no",
+  "codex_reason": "Student software engineering internship, not Senior or Staff work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:8015279003": {
+  "codex": "no",
+  "codex_reason": "Explicit senior staff backend engineering role.",
+  "gemini": "no",
+  "gemini_reason": "Senior Staff backend role in Cards, not frontend or UI engineering."
+ },
+ "ashby:notion:95800771-37a4-4226-b03f-d4fc6ea88f65": {
+  "codex": "no",
+  "codex_reason": "Native iOS platform engineering, not web frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8582271002": {
+  "codex": "no",
+  "codex_reason": "AI runtime engineering is outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:7979523002": {
+  "codex": "maybe",
+  "codex_reason": "Staff user activation title is plausible, but description supplies no actual engineering scope.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff growth/activation role in SF, but missing description leaves frontend focus unclear."
+ },
+ "greenhouse:riotgames:8221975": {
+  "codex": "no",
+  "codex_reason": "Backend services, data platforms, and game development tooling dominate.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:cursor:a577902e-28e9-4e68-9ee9-91e34d1b59c4": {
+  "codex": "no",
+  "codex_reason": "Model lifecycle and signals specialization, with no frontend work indicated.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:6cf91ff5-a811-435c-bf93-f3d958896599": {
+  "codex": "no",
+  "codex_reason": "RTL hardware design requires extensive networking silicon expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8560779002": {
+  "codex": "maybe",
+  "codex_reason": "Web products are relevant, but compensation-only description establishes neither seniority nor frontend responsibilities.",
+  "gemini": "maybe",
+  "gemini_reason": "Web products role in CA, but title and pay suggest mid-level rather than Senior."
+ },
+ "greenhouse:stripe:8076151": {
+  "codex": "strong",
+  "codex_reason": "Staff frontend role owns dashboard craft, design systems, UX quality, and performance.",
+  "gemini": "strong",
+  "gemini_reason": "SF Staff frontend role owning Dashboard UI craft, design system contributions, and design collaboration."
+ },
+ "greenhouse:brex:8618076002": {
+  "codex": "no",
+  "codex_reason": "Staff banking architecture centers on money movement infrastructure, reliability, and operational systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:datadog:8202699": {
+  "codex": "strong",
+  "codex_reason": "Staff frontend role owns customer experiences and product redesigns in US hybrid offices.",
+  "gemini": "strong",
+  "gemini_reason": "NYC hybrid Staff Frontend Engineer leading product and website redesigns at Datadog."
+ },
+ "greenhouse:cloudflare:8248635": {
+  "codex": "no",
+  "codex_reason": "Native iOS and Android security SDK engineering requires mobile expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:8008649003": {
+  "codex": "no",
+  "codex_reason": "Explicit early-career program is below target seniority.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:b7e894bd-686f-4cce-b165-0d77ba5f935f": {
+  "codex": "maybe",
+  "codex_reason": "Staff level and US location fit; compensation-only description leaves frontend scope unknown.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff product engineer in SF, but missing description leaves frontend focus unclear."
+ },
+ "greenhouse:anthropic:5454882008": {
+  "codex": "strong",
+  "codex_reason": "Staff IC builds enterprise admin consoles and governance interfaces with product and design; US hybrid.",
+  "gemini": "maybe",
+  "gemini_reason": "SF/NYC hybrid Staff+ full-stack role spanning admin UI surfaces, APIs, and data models."
+ },
+ "ashby:openai:9b1b62f5-1400-4672-910a-fda6f975f642": {
+  "codex": "maybe",
+  "codex_reason": "Experienced React product engineering fits partly; broad backend responsibilities leave frontend emphasis unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "SF hybrid full-stack role using React/TypeScript and partnering with design alongside backend systems."
+ },
+ "greenhouse:anthropic:5456453008": {
+  "codex": "no",
+  "codex_reason": "Core work centers on agent memory, retrieval, ranking, and evaluations rather than frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:replit:43bd4e63-22c3-4b80-abd2-67eaf2c89790": {
+  "codex": "no",
+  "codex_reason": "Agent platform and event-sourcing focus; frontend responsibility is not established.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8692516002": {
+  "codex": "maybe",
+  "codex_reason": "Shared web frontend work fits partly; required mobile and native platform breadth leaves fit uncertain.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff client platform role in SF/MV spanning web UI and mobile/desktop native shells."
+ },
+ "ashby:replit:22e99380-e48c-4bc3-a870-721411b22957": {
+  "codex": "no",
+  "codex_reason": "Agent purchasing execution, payment lifecycles, and integrations lack a frontend engineering focus.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:eba9c8bc-dc0a-4666-a9c8-356d05b7daf5": {
+  "codex": "no",
+  "codex_reason": "Cloud computing and browser automation infrastructure, not frontend UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:twilio:8067027": {
+  "codex": "no",
+  "codex_reason": "Native mobile identity and fraud SDK engineering, not web frontend work.",
+  "gemini": "no",
+  "gemini_reason": "Mobile SDK and device internals role, not web frontend or design engineering."
+ },
+ "greenhouse:stripe:8234357": {
+  "codex": "maybe",
+  "codex_reason": "Frontend experience is preferred, but location, seniority, and frontend versus services balance remain unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack role with React/TypeScript emphasis, but location is N/A and level leans mid-level."
+ },
+ "greenhouse:discord:8846330002": {
+  "codex": "no",
+  "codex_reason": "Product designer position, not a design engineering role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8842963002": {
+  "codex": "no",
+  "codex_reason": "Agent quality, evaluation, and testing infrastructure focus rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:sentry:35193bfb-bb6b-4479-85be-0945e5b94a3e": {
+  "codex": "no",
+  "codex_reason": "Python developer infrastructure, CI/CD, and cloud tooling dominate.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:7364013": {
+  "codex": "no",
+  "codex_reason": "Console game engineering requires platform-specific development and performance expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ashby:272bc3f4-5af6-4c14-b797-a424b62d306c": {
+  "codex": "maybe",
+  "codex_reason": "Senior product role, but provided description leaves frontend responsibilities unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote senior product engineer role, but description omits frontend vs backend focus."
+ },
+ "greenhouse:affirm:8030973003": {
+  "codex": "no",
+  "codex_reason": "Engineering manager role conflicts with individual contributor preference.",
+  "gemini": "no",
+  "gemini_reason": "Engineering manager role; candidate wants to remain an individual contributor."
+ },
+ "ashby:harvey:b0996df6-6b6e-42be-a4f9-0084536068f5": {
+  "codex": "no",
+  "codex_reason": "Explicit new graduate role requiring recent graduation, far below target seniority.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8864368002": {
+  "codex": "no",
+  "codex_reason": "Explicit backend engineering role, outside frontend specialization.",
+  "gemini": "no",
+  "gemini_reason": "Backend engineering role on the Files team, not frontend."
+ },
+ "greenhouse:anthropic:5444766008": {
+  "codex": "no",
+  "codex_reason": "Scientific AI agents, simulation integrations, and evaluation are outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:7436086": {
+  "codex": "no",
+  "codex_reason": "Description explicitly emphasizes backend infrastructure and large-scale distributed systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7872398003": {
+  "codex": "no",
+  "codex_reason": "Analytics leadership and data modeling, not frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:vanta:9962b3c8-f1c4-4ad1-9308-7c8df6a28b28": {
+  "codex": "no",
+  "codex_reason": "Enterprise tenancy architecture, data isolation, residency, and production migrations dominate the role.",
+  "gemini": "no",
+  "gemini_reason": "Staff backend architecture role focused on multi-tenant org models and data residency."
+ },
+ "greenhouse:affirm:8010617003": {
+  "codex": "no",
+  "codex_reason": "Early career program is far below target seniority.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:mercury:6221407004": {
+  "codex": "no",
+  "codex_reason": "Services platform role indicates backend infrastructure rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:notion:d82a0b31-59b8-4699-ae8d-6fb3fe47518c": {
+  "codex": "no",
+  "codex_reason": "Native Android engineering falls outside the desired web frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7819704003": {
+  "codex": "no",
+  "codex_reason": "Explicit backend role on the order platform.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5113224008": {
+  "codex": "no",
+  "codex_reason": "AI serving reliability, observability, and infrastructure operations rather than UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:d16bd223-cb68-46f3-8bf6-41267b9770cb": {
+  "codex": "no",
+  "codex_reason": "Security and identity architecture require specialized backend expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:plaid:0d80a5be-8860-46ea-9e67-c4a2bb53b1bf": {
+  "codex": "no",
+  "codex_reason": "Requires production LLM engineering and backend microservices expertise; frontend is secondary to AI systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5174743008": {
+  "codex": "maybe",
+  "codex_reason": "Senior product work includes developer console, but team options leave frontend versus backend assignment unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack role in US hubs across multiple teams; frontend balance is unclear."
+ },
+ "ashby:harvey:45c49e6b-a7b5-40f9-812f-daa038b81bb3": {
+  "codex": "maybe",
+  "codex_reason": "Experienced React full-stack role mixes application features with substantial infrastructure; frontend emphasis remains unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "SF hybrid senior-level full-stack role using React, TypeScript, TailwindCSS, and Python."
+ },
+ "ashby:vapi:4fbfa699-a543-49da-857c-64a2c990fd06": {
+  "codex": "no",
+  "codex_reason": "Product designer position, with no engineering responsibilities established.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5440427008": {
+  "codex": "no",
+  "codex_reason": "Sandbox infrastructure and Linux systems programming are outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8760176002": {
+  "codex": "no",
+  "codex_reason": "Data collection tags and SDKs are not UI or design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:8250155": {
+  "codex": "no",
+  "codex_reason": "Backend domain management services and distributed control plane engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5399162008": {
+  "codex": "maybe",
+  "codex_reason": "US location fits; compensation-only description leaves engineering scope and level unknown.",
+  "gemini": "maybe",
+  "gemini_reason": "US Senior/Staff-pay Product Engineer role, but missing description leaves frontend focus unclear."
+ },
+ "greenhouse:stripe:8214618": {
+  "codex": "no",
+  "codex_reason": "Service infrastructure and data migration dominate; no senior frontend ownership is established.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5370690008": {
+  "codex": "no",
+  "codex_reason": "Python research frameworks and reinforcement learning reliability, not frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:perplexity:f3814af2-55a3-49a5-b0cb-67199a2a45fb": {
+  "codex": "no",
+  "codex_reason": "Agent evaluation infrastructure and model routing dominate the work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8578177002": {
+  "codex": "no",
+  "codex_reason": "Search indexing, retrieval infrastructure, and ranking expertise required.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8575248002": {
+  "codex": "maybe",
+  "codex_reason": "Observability and governance could involve interfaces or infrastructure; responsibilities are absent.",
+  "gemini": "no",
+  "gemini_reason": "Sr. Staff observability and governance infrastructure role, not frontend engineering."
+ },
+ "greenhouse:figma:5691911004": {
+  "codex": "maybe",
+  "codex_reason": "React and polished interfaces fit, but backend responsibilities are substantial and level is interview-dependent.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote/hybrid full-stack role using React/TypeScript and backend tech with broad level range."
+ },
+ "ashby:plaid:41448609-24d6-44ea-a5ba-c87cf3dc3f0d": {
+  "codex": "no",
+  "codex_reason": "Internal engineering platforms and AI tooling operations lack a frontend focus.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8221963": {
+  "codex": "no",
+  "codex_reason": "Requires extensive C++ game engine and shipped game UI experience.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8090141": {
+  "codex": "no",
+  "codex_reason": "Service infrastructure and distributed architecture, not frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:posthog:20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8": {
+  "codex": "maybe",
+  "codex_reason": "React and product ownership fit partly; agent-facing requirements, level, and remote eligibility remain unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Remote full-stack product role with React/TypeScript, though heavily focused on agent APIs and MCP."
+ },
+ "ashby:sierra:f391b10c-7a4a-42b4-9887-dd32b31d6e4e": {
+  "codex": "strong",
+  "codex_reason": "Senior frontend ownership, design systems, Figma collaboration, accessibility, and performance; San Francisco onsite works.",
+  "gemini": "strong",
+  "gemini_reason": "Senior-scope frontend role in SF leading design systems, Figma implementation, performance, and accessibility."
+ },
+ "greenhouse:stripe:8055701": {
+  "codex": "no",
+  "codex_reason": "API platform and service infrastructure technical leadership rather than frontend development.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:discord:8856467002": {
+  "codex": "maybe",
+  "codex_reason": "Senior full-stack engagement title is plausible; compensation-only description leaves frontend responsibilities unknown.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack role in SF, but description omits frontend vs backend scope."
+ },
+ "ashby:sentry:5ee81d6f-e837-43bb-af06-8f26c992a766": {
+  "codex": "no",
+  "codex_reason": "Distributed data infrastructure and real-time streaming engineering, not frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:6998777": {
+  "codex": "strong",
+  "codex_reason": "Senior React/TypeScript design engineering with Figma, components, and dashboard UX; Austin hybrid works.",
+  "gemini": "strong",
+  "gemini_reason": "Austin hybrid Senior Design Engineer role using TypeScript, React, and Figma for dashboard UI."
+ },
+ "ashby:harvey:aede4098-91f4-44f5-9d53-27c15cb2bae7": {
+  "codex": "no",
+  "codex_reason": "Product designer position requires extensive product design experience and portfolio, despite engineering collaboration.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:5408888002": {
+  "codex": "no",
+  "codex_reason": "Explicit Staff backend role, outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:elevenlabs:10e6475e-67ef-4621-8718-7b087c354651": {
+  "codex": "no",
+  "codex_reason": "Backend expertise, reliable platforms, workflow engines, and data pipelines dominate despite UI work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ramp:7cd46077-05fe-4cd7-816f-5528638342f1": {
+  "codex": "strong",
+  "codex_reason": "Leads complex frontend projects, design systems, and interactive experiences; US hybrid locations work.",
+  "gemini": "strong",
+  "gemini_reason": "Hybrid NYC/SF frontend role leading complex web projects, design systems, and interactive UI."
+ },
+ "ashby:ramp:4e64ab86-4e30-403b-b1b9-41dc052570ce": {
+  "codex": "strong",
+  "codex_reason": "Frontend project leadership, polished interfaces, and mentoring match senior scope; US relocation available.",
+  "gemini": "strong",
+  "gemini_reason": "NYC/SF hybrid frontend role leading complex UI projects, UX quality, and mentoring engineers."
+ },
+ "greenhouse:affirm:7906337003": {
+  "codex": "no",
+  "codex_reason": "Explicit backend loan origination and reporting engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8663972002": {
+  "codex": "no",
+  "codex_reason": "Spark streaming engine and state management work, not frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:8013444003": {
+  "codex": "no",
+  "codex_reason": "Backend lakehouse infrastructure work is outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:datadog:8185652": {
+  "codex": "no",
+  "codex_reason": "Web content operations and technical SEO dominate; partners with engineering for components.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:4d1ede8c-3d4c-4503-8408-81e4b68c5c91": {
+  "codex": "maybe",
+  "codex_reason": "US full-stack opportunity, but description omits responsibilities and seniority.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack product role in SF; description lacks detail on frontend focus and level."
+ },
+ "ashby:harvey:c84964b6-9e60-4005-8580-b865f3e47b4f": {
+  "codex": "no",
+  "codex_reason": "Web design role handing specifications to engineers, rather than implementing frontend code.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8118929": {
+  "codex": "no",
+  "codex_reason": "Backend connectors, transactional infrastructure, and data migration dominate despite full-stack title.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:9909555b-3dc4-4ba2-859e-43eae7c97a34": {
+  "codex": "no",
+  "codex_reason": "Build systems, CI, deployment pipelines, and developer infrastructure rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:60d3a393-50bc-4f1c-88b7-df6d2507ceda": {
+  "codex": "no",
+  "codex_reason": "Secure agent execution infrastructure and systems security engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8142764": {
+  "codex": "maybe",
+  "codex_reason": "Senior-compatible web interface work, but substantial payment backend ownership makes frontend fit uncertain.",
+  "gemini": "no",
+  "gemini_reason": "Full-stack role heavily focused on payments APIs, SQL databases, and financial backend infrastructure."
+ },
+ "ashby:harvey:06d64648-b84b-48ae-94a2-d9c06dfdcb5d": {
+  "codex": "no",
+  "codex_reason": "Student internship requiring current enrollment, not a Senior or Staff role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:47d3d763-8c64-4e33-b76e-ca15f584c1fd": {
+  "codex": "strong",
+  "codex_reason": "Staff frontend role requires React, TypeScript, CSS, and intuitive enterprise products; US posting available.",
+  "gemini": "strong",
+  "gemini_reason": "Staff Frontend Engineer role available in SF using React, TypeScript, and CSS."
+ },
+ "ashby:elevenlabs:0b3a97d4-193c-4b47-9888-7ef5803ed945": {
+  "codex": "maybe",
+  "codex_reason": "Global full-stack product work includes interfaces, but substantial agent infrastructure and unspecified level complicate fit.",
+  "gemini": "maybe",
+  "gemini_reason": "Remote full-stack role spanning frontend interfaces, backend services, and agent orchestration."
+ },
+ "ashby:harvey:fc038666-be6f-4365-be8d-fb46e520473d": {
+  "codex": "no",
+  "codex_reason": "Python agent engineering, evaluations, and execution infrastructure rather than frontend development.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8275261": {
+  "codex": "no",
+  "codex_reason": "Physical workplace design coordination, not software engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:5ed99d32-eed1-4679-b7b4-037de073e57c": {
+  "codex": "maybe",
+  "codex_reason": "Senior experience and polished React interfaces fit; role equally requires production backend ownership.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack product role emphasizing React and interaction design alongside backend services."
+ },
+ "greenhouse:databricks:8635216002": {
+  "codex": "maybe",
+  "codex_reason": "Senior web platform title is promising, but frontend versus underlying platform responsibilities are unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior Web Platform role in CA, but missing description leaves frontend scope unclear."
+ },
+ "greenhouse:riotgames:8076086": {
+  "codex": "strong",
+  "codex_reason": "Staff web application development with React, TypeScript, and Next.js in Los Angeles.",
+  "gemini": "strong",
+  "gemini_reason": "Staff web engineering role in LA using TypeScript, React, and Next.js."
+ },
+ "greenhouse:affirm:7999870003": {
+  "codex": "no",
+  "codex_reason": "Engineering management position conflicts with individual contributor preference.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:gitlab:8845277002": {
+  "codex": "no",
+  "codex_reason": "Data products role specifies Golang and Node, indicating backend specialization rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8552484002": {
+  "codex": "no",
+  "codex_reason": "AI research infrastructure is outside frontend and design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:36a16618-abdc-41bd-80f6-a1203e38026b": {
+  "codex": "no",
+  "codex_reason": "Platform security, infrastructure, and software supply chain specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:hex:954a640c-47f8-4186-b6cc-79f1c6ebe255": {
+  "codex": "no",
+  "codex_reason": "Web designer role provides no evidence of engineering responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:gitlab:8716179002": {
+  "codex": "no",
+  "codex_reason": "Organizational AI strategy and transformation ownership, not frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:twilio:7782805": {
+  "codex": "no",
+  "codex_reason": "Data platform engineering is outside frontend specialization; California hiring is also excluded.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8257354": {
+  "codex": "strong",
+  "codex_reason": "Staff IC owns polished consumer interfaces, React/CSS standards, and accessibility alongside backend work; US locations.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff IC full-stack role spanning React/CSS/GraphQL UI and Ruby backend services."
+ },
+ "ashby:openai:9d11e1d8-af1d-413b-873f-d8fac2bdee99": {
+  "codex": "maybe",
+  "codex_reason": "US hybrid location fits; scheduling role lacks responsibilities establishing frontend scope or level.",
+  "gemini": "maybe",
+  "gemini_reason": "SF hybrid full-stack role, but missing description leaves level and frontend focus unclear."
+ },
+ "ashby:openai:f873dd71-46c9-4be1-8580-bc67c56b4cad": {
+  "codex": "no",
+  "codex_reason": "Role centers safe services, infrastructure, identity, and adversarial protection rather than frontend specialization.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid full-stack role building frontend and backend systems for platform foundations."
+ },
+ "ashby:replit:2fa2d079-96a5-4d51-8718-04134ed39032": {
+  "codex": "strong",
+  "codex_reason": "Owns major frontend experiences, reusable UI primitives, accessibility, and performance; US hybrid location works.",
+  "gemini": "strong",
+  "gemini_reason": "CA hybrid product engineer role focused on frontend craft, interaction design, accessibility, and UI primitives."
+ },
+ "ashby:openai:5ebd5f66-75db-4a96-8d39-babc14f1c582": {
+  "codex": "maybe",
+  "codex_reason": "End-to-end developer product ownership is plausible; UI responsibilities and seniority remain unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack role in SF, though description emphasizes systems and Rust/TypeScript over UI."
+ },
+ "greenhouse:databricks:8760165002": {
+  "codex": "no",
+  "codex_reason": "Building advertising data and agent layers rather than frontend experiences.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:perplexity:7ae341c4-411e-468c-bc26-bbdd8e55d388": {
+  "codex": "no",
+  "codex_reason": "Web design role collaborates with frontend engineers; coding is only optional supporting knowledge.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:2351ca53-b7fd-4835-b967-4ae2b976b5b4": {
+  "codex": "no",
+  "codex_reason": "Voice agent engineering centers on speech, streaming audio, and low-latency systems.",
+  "gemini": "no",
+  "gemini_reason": "Focuses on speech recognition, VAD, real-time audio streaming, and low-latency LLM systems."
+ },
+ "greenhouse:xai:5063930007": {
+  "codex": "strong",
+  "codex_reason": "Web expert owns UI-rich features and architecture using React, TypeScript, CSS, and UX design.",
+  "gemini": "strong",
+  "gemini_reason": "Palo Alto web engineer role requiring expert React, TypeScript, CSS, UI/UX, and performance."
+ },
+ "greenhouse:stripe:8137972": {
+  "codex": "no",
+  "codex_reason": "Builds backend risk scoring, signal processing, APIs, and services rather than UI.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8584144002": {
+  "codex": "maybe",
+  "codex_reason": "Staff US role, but CXI responsibilities and frontend scope are unexplained.",
+  "gemini": "no",
+  "gemini_reason": "General Staff SWE role in CXI with no indication of frontend or UI work."
+ },
+ "greenhouse:discord:8802354002": {
+  "codex": "no",
+  "codex_reason": "Explicit machine learning engineering role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8177513": {
+  "codex": "no",
+  "codex_reason": "Money movement APIs and large-scale distributed backend systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7663434003": {
+  "codex": "maybe",
+  "codex_reason": "Senior US remote fullstack role, but description never establishes frontend responsibilities.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote Senior full-stack consumer role, but frontend versus backend split is unclear."
+ },
+ "ashby:openai:bce2bcbd-01e6-4afc-9109-d325483aa47e": {
+  "codex": "no",
+  "codex_reason": "Product design leadership rather than software engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:asana:8227428": {
+  "codex": "no",
+  "codex_reason": "Principal distributed platform architecture, data models, and migrations rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:plaid:ee0f35b6-22ee-4fd9-b734-fc8e99426563": {
+  "codex": "no",
+  "codex_reason": "Backend credit products, data pipelines, and ML serving infrastructure.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8222014": {
+  "codex": "no",
+  "codex_reason": "Student internship far below senior or staff level.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:discord:8642085002": {
+  "codex": "maybe",
+  "codex_reason": "Senior full-stack growth title is plausible; compensation-only description leaves frontend responsibilities unknown.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack growth role in SF, but description lacks frontend vs backend details."
+ },
+ "ashby:openai:e6e5e4b6-a1d9-4a4e-beef-8d3befef08c0": {
+  "codex": "no",
+  "codex_reason": "Android platform engineering rather than web frontend development.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:datadog:8100001": {
+  "codex": "no",
+  "codex_reason": "Product design and visual direction role, not frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:replit:7e48291b-6188-46d7-bc21-1d66a512ffcb": {
+  "codex": "no",
+  "codex_reason": "Engineering manager role conflicts with individual contributor goals.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5436697008": {
+  "codex": "no",
+  "codex_reason": "Cloud inference deployment, CI/CD, and distributed systems engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:5f6685ad-2fba-4e60-8982-fa142b33e194": {
+  "codex": "strong",
+  "codex_reason": "Frontend architecture ownership, polished UI, component systems, and design collaboration fit senior scope.",
+  "gemini": "strong",
+  "gemini_reason": "SF frontend role owning UI craft, design partnership, component systems, and rendering performance."
+ },
+ "greenhouse:riotgames:8275279": {
+  "codex": "no",
+  "codex_reason": "C++ game engine performance and build tooling require a different specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7719647003": {
+  "codex": "no",
+  "codex_reason": "Explicit backend capacity-modeling position, not frontend engineering.",
+  "gemini": "no",
+  "gemini_reason": "Backend engineering role focused on capacity modeling, not frontend or design engineering."
+ },
+ "greenhouse:affirm:8003022003": {
+  "codex": "no",
+  "codex_reason": "Backend streaming role, outside frontend specialization and target seniority.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8202698002": {
+  "codex": "no",
+  "codex_reason": "LLM inference engine and GPU optimization rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8032546002": {
+  "codex": "maybe",
+  "codex_reason": "Staff documentation platform could involve frontend work, but description supplies only compensation details.",
+  "gemini": "maybe",
+  "gemini_reason": "SF Staff role on Customer Engagement and Docs Platform; frontend scope is unstated."
+ },
+ "greenhouse:discord:8464570002": {
+  "codex": "maybe",
+  "codex_reason": "Staff US role, but consumer revenue title does not distinguish frontend, backend, or mobile responsibilities.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote Staff role on Consumer Revenue, but description lacks technical stack details."
+ },
+ "greenhouse:mercury:5847987004": {
+  "codex": "maybe",
+  "codex_reason": "Staff fraud role provides no responsibilities; frontend tooling versus backend fraud systems remains unclear.",
+  "gemini": "no",
+  "gemini_reason": "Backend/domain role focused on fraud systems rather than frontend or UI engineering."
+ },
+ "greenhouse:databricks:8635188002": {
+  "codex": "strong",
+  "codex_reason": "Staff web platform engineering matches frontend platform specialization, with a viable US location.",
+  "gemini": "maybe",
+  "gemini_reason": "Mountain View Staff Web Platform role, but description omits day-to-day frontend details."
+ },
+ "greenhouse:cloudflare:8269100": {
+  "codex": "no",
+  "codex_reason": "Distributed database storage, transactions, and query execution are outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5363469008": {
+  "codex": "strong",
+  "codex_reason": "Staff React product work optimizes onboarding, adoption, and conversion experiences; US hybrid location fits.",
+  "gemini": "maybe",
+  "gemini_reason": "US Staff full-stack growth role using React and backend with heavy experimentation focus."
+ },
+ "ashby:vanta:0fcbc935-76c7-4eac-b522-af421ed200c9": {
+  "codex": "no",
+  "codex_reason": "Product designer owns design standards and partners with engineering rather than coding frontend systems.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:4899511008": {
+  "codex": "no",
+  "codex_reason": "Native Android development requires Kotlin and Jetpack Compose expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8001087": {
+  "codex": "no",
+  "codex_reason": "Primary work requires expert C++ desktop development; web contributions are secondary.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7833952003": {
+  "codex": "no",
+  "codex_reason": "Explicit backend online storage position.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:60613af4-9061-426a-b4d6-720a4399be37": {
+  "codex": "no",
+  "codex_reason": "Brand design leadership rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:ef285771-5770-42b9-8edd-542447793924": {
+  "codex": "no",
+  "codex_reason": "Explicitly requires backend systems depth; primary ownership covers platform infrastructure, integrations, and operations.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:plaid:ecc50d24-e303-480d-85d7-3041c1508cfe": {
+  "codex": "no",
+  "codex_reason": "Explicitly majority backend and targets two to four years of experience.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:7644950": {
+  "codex": "maybe",
+  "codex_reason": "Senior frontend craft and design systems fit strongly, but location and US eligibility are unstated.",
+  "gemini": "maybe",
+  "gemini_reason": "Strong React and design-systems frontend fit, but location is N/A and level is unstated."
+ },
+ "greenhouse:affirm:7978722003": {
+  "codex": "maybe",
+  "codex_reason": "Consumer experiences are plausible, but broader platform leadership and Senior Staff level stretch target scope.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote full-stack consumer role at Senior Staff level; frontend focus is unclear."
+ },
+ "ashby:openai:bdbb2292-ecb3-42dc-ba89-65edf397d8f8": {
+  "codex": "no",
+  "codex_reason": "Hardware acceleration, kernels, and compiler optimization require unrelated specialized expertise.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5385590008": {
+  "codex": "no",
+  "codex_reason": "Audiovisual office systems design and installation, not software frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:linear:0c7c2e26-0a98-42cf-a47c-9a3999fb513b": {
+  "codex": "strong",
+  "codex_reason": "Owns polished UI components, collaborative editor, and performance with designers; North American remote eligible.",
+  "gemini": "strong",
+  "gemini_reason": "Remote US product engineer role focused on UI components, collaborative editor, design partnership, and performance."
+ },
+ "greenhouse:stripe:8206731": {
+  "codex": "maybe",
+  "codex_reason": "Product prototyping and polished interfaces fit partly; substantial backend scope leaves specialization unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "SF full-stack role building user-facing interfaces and backend services; frontend split unclear."
+ },
+ "ashby:elevenlabs:35813150-a851-4821-b732-a037b4e6c4fe": {
+  "codex": "no",
+  "codex_reason": "Backend-focused agent orchestration, generation services, and evaluations dominate the work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ashby:97c6542c-7ff9-43e5-ac54-b77b45fc7378": {
+  "codex": "strong",
+  "codex_reason": "Staff design engineering role with explicit US remote eligibility.",
+  "gemini": "strong",
+  "gemini_reason": "US remote Staff Design Engineer role matching the candidate's exact level and specialty."
+ },
+ "greenhouse:databricks:7111068002": {
+  "codex": "maybe",
+  "codex_reason": "Staff level and US location fit; Money Team title alone does not establish engineering scope.",
+  "gemini": "no",
+  "gemini_reason": "Staff role on billing/money team with no indication of frontend work."
+ },
+ "greenhouse:stripe:8230952": {
+  "codex": "no",
+  "codex_reason": "Backend financial data platforms and distributed systems role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:mercury:6101151004": {
+  "codex": "maybe",
+  "codex_reason": "Senior and US remote fit; full-stack title without responsibilities cannot establish frontend emphasis.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote Senior full-stack role, but missing description leaves frontend focus unclear."
+ },
+ "greenhouse:discord:8846732002": {
+  "codex": "maybe",
+  "codex_reason": "Consumer product title is plausible; seniority and frontend responsibilities remain unspecified.",
+  "gemini": "no",
+  "gemini_reason": "Mid-level general SWE role on Consumer Revenue with no frontend focus."
+ },
+ "greenhouse:brex:8815495002": {
+  "codex": "no",
+  "codex_reason": "Requires seven-plus years focused on scalable backend systems and backend languages.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:datadog:8139161": {
+  "codex": "no",
+  "codex_reason": "Website analytics and conversion strategy rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:5445641002": {
+  "codex": "maybe",
+  "codex_reason": "Senior full-stack title and US location fit; description provides no responsibilities or frontend emphasis.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack role in CA, but missing description leaves frontend balance unclear."
+ },
+ "ashby:sentry:f7b4f37b-4293-433d-910e-9033bf10d6d4": {
+  "codex": "no",
+  "codex_reason": "Billing platform emphasizes financial correctness and reliable service operation rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:8017340003": {
+  "codex": "no",
+  "codex_reason": "Software Engineer I role with supported task execution is junior, below target level.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:linear:069c4628-88d7-4e4d-b393-c996fc7f3076": {
+  "codex": "strong",
+  "codex_reason": "Senior or Staff US-remote work building UI components, collaborative editors, and application performance.",
+  "gemini": "strong",
+  "gemini_reason": "US remote Senior/Staff role at Linear building high-craft UI components and performance."
+ },
+ "greenhouse:riotgames:8221973": {
+  "codex": "no",
+  "codex_reason": "Requires Unreal game tooling, C++/C#, and AI infrastructure expertise rather than web frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:sentry:af7fab29-5d68-4041-9794-de4de3f41953": {
+  "codex": "no",
+  "codex_reason": "Cloud platforms and large-scale distributed systems dominate responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:replit:47235851-fadd-4bd7-9cc6-61f545059ac1": {
+  "codex": "maybe",
+  "codex_reason": "Staff product role has suitable US location, but no description of frontend scope.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff product engineering role in CA, but truncated description leaves frontend focus unclear."
+ },
+ "greenhouse:discord:8811574002": {
+  "codex": "maybe",
+  "codex_reason": "Senior full-stack US role; compensation-only description leaves frontend emphasis unknown.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior full-stack role in SF, but truncated description leaves frontend scope unclear."
+ },
+ "greenhouse:affirm:8010610003": {
+  "codex": "maybe",
+  "codex_reason": "Frontend role has US posting, but Engineer II scope is one level below target.",
+  "gemini": "maybe",
+  "gemini_reason": "Frontend role, but SWE II is one level below Senior and lists Canadian residency."
+ },
+ "greenhouse:figma:6219995004": {
+  "codex": "no",
+  "codex_reason": "PhD internship requiring current enrollment, not a senior IC opening.",
+  "gemini": "no",
+  "gemini_reason": "PhD internship focused on C++/Rust graphics shaders, not Senior/Staff web frontend."
+ },
+ "greenhouse:databricks:7274902002": {
+  "codex": "no",
+  "codex_reason": "Security infrastructure specialization does not match frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8198280": {
+  "codex": "no",
+  "codex_reason": "Backend scalability, APIs, databases, and testing systems role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:brex:8430182002": {
+  "codex": "no",
+  "codex_reason": "Backend distributed data platform architecture, query optimization, and JVM systems dominate.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8493002002": {
+  "codex": "no",
+  "codex_reason": "Data pipeline and dataset systems specialization rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:plaid:a4a868a6-555a-4119-bbd7-6300f16d9045": {
+  "codex": "maybe",
+  "codex_reason": "Senior full-stack product role includes frontend applications but requires substantial backend and microservices work.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF senior full-stack role spanning backend microservices/MySQL and frontend UI development."
+ },
+ "ashby:openai:3a415c1d-4f66-4578-8eb3-8b15ef0ab52b": {
+  "codex": "no",
+  "codex_reason": "Hardware verification using SystemVerilog and UVM, unrelated to web design engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8399551002": {
+  "codex": "strong",
+  "codex_reason": "Staff frontend UI platform role in Seattle matches specialization and relocation preferences.",
+  "gemini": "strong",
+  "gemini_reason": "Staff Frontend Engineer on UI Platform in Seattle matches level, specialty, and location."
+ },
+ "greenhouse:stripe:7746721": {
+  "codex": "maybe",
+  "codex_reason": "Excellent frontend and design-system fit; Senior Staff responsibility across four to six teams exceeds target.",
+  "gemini": "maybe",
+  "gemini_reason": "Seattle frontend/UI platform role, but Senior Staff scope (4-6 teams) exceeds Staff level."
+ },
+ "greenhouse:mercury:6212437004": {
+  "codex": "maybe",
+  "codex_reason": "Senior US remote role fits level and location; treasury engineering scope is absent.",
+  "gemini": "no",
+  "gemini_reason": "General Senior SWE role in Treasury banking domain with no frontend indication."
+ },
+ "greenhouse:datadog:7743369": {
+  "codex": "no",
+  "codex_reason": "Log processing and customer cloud infrastructure operations role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:linear:d3bc1ced-3ce4-4086-a050-555055dbb1ff": {
+  "codex": "strong",
+  "codex_reason": "Senior/Staff product engineering includes UI components, collaborative editing, and rendering performance; US remote eligible.",
+  "gemini": "maybe",
+  "gemini_reason": "Remote Senior/Staff full-stack role mixing UI and virtualized rendering with backend sync and databases."
+ },
+ "ashby:openai:4f0d64b8-bfa7-4c30-9972-a10d74b49075": {
+  "codex": "no",
+  "codex_reason": "Explicitly seeks strong backend skills for services, APIs, and scientific integrations.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:8691490002": {
+  "codex": "no",
+  "codex_reason": "Authorization services and access management specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:modal:23311dfd-2a80-40dc-a41c-1ff7202e15a2": {
+  "codex": "no",
+  "codex_reason": "Brand identity and campaign design rather than engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8011859": {
+  "codex": "no",
+  "codex_reason": "Game build pipelines, CI, and release infrastructure role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:3fd94885-5e06-4018-9421-00e7e692472a": {
+  "codex": "maybe",
+  "codex_reason": "Web growth work is plausible; engineering depth and seniority remain unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "SF web and growth engineering role; seniority and depth of frontend work unclear."
+ },
+ "greenhouse:stripe:7712852": {
+  "codex": "no",
+  "codex_reason": "ML infrastructure, model training, GPU compute, and distributed systems are outside frontend scope.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:gitlab:8738179002": {
+  "codex": "no",
+  "codex_reason": "Security analysis engines and vulnerability detection rather than UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5432558008": {
+  "codex": "maybe",
+  "codex_reason": "Staff internal tools role includes user workflows, but frontend technologies and responsibility balance are unstated.",
+  "gemini": "no",
+  "gemini_reason": "Focuses on datacenter lifecycle tracking, data migration, and backend operational systems."
+ },
+ "ashby:replit:f98605a1-36d2-4b2f-b9be-f66064a02645": {
+  "codex": "no",
+  "codex_reason": "Cloud platform service specialization with no stated frontend responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:39e06ef9-5e62-425d-81e2-e8690188011f": {
+  "codex": "maybe",
+  "codex_reason": "React and visualization experience fit, but full-stack scope and seniority are unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF full-stack role requiring backend services alongside React/TypeScript and dashboard UI work."
+ },
+ "greenhouse:anthropic:5238637008": {
+  "codex": "maybe",
+  "codex_reason": "Web interfaces fit partly, but agent harness reliability and broad fullstack ownership complicate fit.",
+  "gemini": "maybe",
+  "gemini_reason": "Full-stack product engineer role mixing web UI with backend and agent harness work."
+ },
+ "ashby:openai:a14780e7-0316-478c-8e6a-d7629c31c49d": {
+  "codex": "no",
+  "codex_reason": "Embedded firmware, cryptography, and hardware security role, unrelated to frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:7994759002": {
+  "codex": "no",
+  "codex_reason": "Security infrastructure specialization does not match frontend work.",
+  "gemini": "no",
+  "gemini_reason": "Security infrastructure role, not frontend or design engineering."
+ },
+ "ashby:elevenlabs:77f23be6-16c0-40c5-87b6-29dc2ee752ab": {
+  "codex": "no",
+  "codex_reason": "Explicit backend emphasis on databases, scalability, and production operations.",
+  "gemini": "no",
+  "gemini_reason": "Explicitly backend-leaning role focused on backend services, databases, and scaling production systems."
+ },
+ "ashby:vanta:fedc71ba-ef1d-454c-9536-ce87333a23c7": {
+  "codex": "maybe",
+  "codex_reason": "Senior React and TypeScript opportunity, but product versus infrastructure allocation remains unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote senior full-stack role (React, TypeScript, Node.js) with unclear frontend split."
+ },
+ "greenhouse:cloudflare:8262000": {
+  "codex": "no",
+  "codex_reason": "Only Lisbon or London locations offered; no US option.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5386971008": {
+  "codex": "maybe",
+  "codex_reason": "Excellent frontend stack match, but explicitly mid-level scope below the desired senior level.",
+  "gemini": "maybe",
+  "gemini_reason": "Strong frontend and design system match, but scoped at mid-level below Senior."
+ },
+ "greenhouse:anthropic:5390966008": {
+  "codex": "no",
+  "codex_reason": "Agent orchestration, evaluations, and GTM systems dominate rather than frontend development.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7813107003": {
+  "codex": "no",
+  "codex_reason": "Bank infrastructure, networking, data platforms, and operational integrations role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:d6636cf6-7750-424a-90a3-7a79ac0c35ca": {
+  "codex": "maybe",
+  "codex_reason": "Senior product engineering title fits level, but description gives no frontend scope.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior product engineer in SF, but description omits frontend vs backend details."
+ },
+ "greenhouse:xai:5214350007": {
+  "codex": "no",
+  "codex_reason": "Electrical power infrastructure design, not software UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:4572744008": {
+  "codex": "no",
+  "codex_reason": "Native iOS development requiring Swift and Apple frameworks.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:8003016003": {
+  "codex": "no",
+  "codex_reason": "Backend checkout orchestration role is outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:brex:8859394002": {
+  "codex": "no",
+  "codex_reason": "Backend authentication, authorization, and identity platform engineering rather than frontend work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:dbe79b89-e593-44b3-8aec-c667f7134445": {
+  "codex": "strong",
+  "codex_reason": "Explicit Senior/Staff role building web interfaces and user workflows with design partners in NYC.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior/Staff full-stack role in NYC spanning web interfaces, APIs, and backend services."
+ },
+ "ashby:runway:6dc52fd2-0ec0-4d93-9c67-23ebe95c2c4b": {
+  "codex": "maybe",
+  "codex_reason": "Senior/Staff product ownership and US remote fit; full-stack responsibilities do not establish frontend emphasis.",
+  "gemini": "maybe",
+  "gemini_reason": "Remote Senior/Staff product engineer working closely with design, though full-stack across the codebase."
+ },
+ "ashby:openai:c7bcdaec-9714-44b0-8ba8-adc824594b54": {
+  "codex": "no",
+  "codex_reason": "Distributed services, APIs, concurrency, and inference systems specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:d4cd5172-d4bc-4f9e-956e-c6bcaef1c355": {
+  "codex": "strong",
+  "codex_reason": "Staff IC owns checkout interactions, shared components, frontend architecture, and web performance in US hybrid.",
+  "gemini": "maybe",
+  "gemini_reason": "SF hybrid Staff full-stack monetization role combining web UI, checkout components, and APIs."
+ },
+ "ashby:harvey:24f9a3fa-476a-490f-87bf-e8cebb7b3928": {
+  "codex": "strong",
+  "codex_reason": "Senior frontend architecture, design systems, tooling, and performance role with US hybrid locations.",
+  "gemini": "strong",
+  "gemini_reason": "Senior hybrid US frontend platform role owning design systems, architecture, and web performance."
+ },
+ "ashby:cursor:5afc044a-00ed-4392-8759-59c7effe179d": {
+  "codex": "no",
+  "codex_reason": "Connector integration role offers no frontend or design-engineering responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:ef7616f0-dbf6-456b-8167-a85f1ef9b0e3": {
+  "codex": "no",
+  "codex_reason": "Model serving, distributed systems, and cloud infrastructure are outside frontend scope.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:mintlify:e75e8952-9c32-4d33-abf7-9926d54e1e73": {
+  "codex": "maybe",
+  "codex_reason": "US product engineer role provides neither responsibilities nor seniority details.",
+  "gemini": "maybe",
+  "gemini_reason": "SF product engineer role, but description lacks details on seniority and frontend focus."
+ },
+ "greenhouse:affirm:7995361003": {
+  "codex": "no",
+  "codex_reason": "Staff backend fraud decisioning role, outside frontend specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:56d541d3-02b5-44d8-b40b-4df72cdd0405": {
+  "codex": "no",
+  "codex_reason": "AI chip-design tooling and research infrastructure rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5451889008": {
+  "codex": "no",
+  "codex_reason": "Developer automation, CLI tooling, and shared engineering systems rather than frontend platforms.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:posthog:3c592b84-8b34-4ae4-ae23-cadce8f2212d": {
+  "codex": "no",
+  "codex_reason": "Product management role rather than individual-contributor engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:67eb66cd-d89e-4312-a2cf-59e9a0a5e43f": {
+  "codex": "no",
+  "codex_reason": "Web strategy and audience journeys rather than hands-on frontend engineering.",
+  "gemini": "no",
+  "gemini_reason": "Non-engineering marketing web strategy role focused on audience journeys and content, not software development."
+ },
+ "ashby:openai:88164d12-c8ed-4b62-ae26-dcb6f1cc8482": {
+  "codex": "no",
+  "codex_reason": "Backend permissions, authorization, and enterprise governance services.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:ramp:a13ae586-f4cb-4385-8822-c42b9b54ed74": {
+  "codex": "no",
+  "codex_reason": "Frontend internship below the requested seniority.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:4d661139-19ad-42af-9f6c-a68c71263e14": {
+  "codex": "no",
+  "codex_reason": "Site reliability and global cloud infrastructure operations role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:9cc08902-8916-47a8-a849-eec2c67ab3bd": {
+  "codex": "no",
+  "codex_reason": "Backend developer infrastructure, CI/CD, containers, and load testing role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:twilio:8026211": {
+  "codex": "no",
+  "codex_reason": "Early-career infrastructure and identity automation role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:8024849": {
+  "codex": "no",
+  "codex_reason": "Sales compensation strategy and analytics rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:vanta:ed632c31-2a66-4c91-8d29-f450bbd4de67": {
+  "codex": "no",
+  "codex_reason": "Platform services, APIs, and backend architecture dominate; React contributions are secondary.",
+  "gemini": "no",
+  "gemini_reason": "Backend-heavy full-stack role focused on Node.js platform services, APIs, and service boundaries."
+ },
+ "greenhouse:databricks:8612865002": {
+  "codex": "no",
+  "codex_reason": "AI security, adversarial testing, and infrastructure specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5428124008": {
+  "codex": "no",
+  "codex_reason": "Product design position requiring design experience; code contributions supplement primarily design responsibilities.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:6544364002": {
+  "codex": "no",
+  "codex_reason": "Staff distributed data systems role, outside frontend and UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7871458003": {
+  "codex": "no",
+  "codex_reason": "Business analytics and revenue insights role, not frontend software engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:riotgames:8187605": {
+  "codex": "no",
+  "codex_reason": "Enterprise data pipelines and AI platform specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:asana:8237744": {
+  "codex": "no",
+  "codex_reason": "Backend systems and applied agent infrastructure requirements dominate.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:cloudflare:8157281": {
+  "codex": "no",
+  "codex_reason": "Global network architecture and infrastructure strategy role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:asana:7962412": {
+  "codex": "no",
+  "codex_reason": "Backend data loading, storage, and infrastructure operations role.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:7993609002": {
+  "codex": "no",
+  "codex_reason": "Data governance platform architecture rather than frontend or UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:elevenlabs:2d0016e0-3cc2-4ec7-b164-bc2b83990fb6": {
+  "codex": "no",
+  "codex_reason": "Customer deployments emphasize Python, software architecture, and API integration rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7800317003": {
+  "codex": "no",
+  "codex_reason": "Explicit backend ledger engineering position.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:hex:2a8b2c67-053a-4178-bd96-07deba8b7b9f": {
+  "codex": "no",
+  "codex_reason": "Backend computation, storage, and execution architecture specialization.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:harvey:6ad3902b-2888-4c02-913d-de942e807133": {
+  "codex": "no",
+  "codex_reason": "Explicitly backend-focused platform engineering and distributed services.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:72a58872-70e2-4340-a259-e9bea3596883": {
+  "codex": "no",
+  "codex_reason": "Identity infrastructure, security, and distributed backend systems role.",
+  "gemini": "no",
+  "gemini_reason": "Identity and cloud infrastructure role requiring Go, Rust, or Python, not frontend."
+ },
+ "ashby:perplexity:4b5e02a8-6a94-494d-9d49-037f2cfc144d": {
+  "codex": "no",
+  "codex_reason": "QA testing and test documentation dominate; small fixes do not constitute frontend development.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:affirm:7984716003": {
+  "codex": "strong",
+  "codex_reason": "Senior frontend role with US remote option and technical ownership matching desired level.",
+  "gemini": "strong",
+  "gemini_reason": "US remote Senior Frontend Engineer role working with product and design."
+ },
+ "ashby:ramp:baa94095-c976-46d0-8d18-25a951950714": {
+  "codex": "no",
+  "codex_reason": "Design systems team leadership includes people development and accountability, conflicting with IC preference.",
+  "gemini": "no",
+  "gemini_reason": "Involves managing and developing the design systems team rather than pure IC engineering."
+ },
+ "greenhouse:asana:8095555": {
+  "codex": "no",
+  "codex_reason": "Owns build systems, developer environments, and CI across engineering rather than frontend product work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:sentry:ccbee884-5fc1-492e-ba18-df568587ccc2": {
+  "codex": "no",
+  "codex_reason": "Distributed storage, databases, caching, and Kubernetes operations are infrastructure work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:88654e7f-4e23-4e75-8e54-18c10d09b093": {
+  "codex": "maybe",
+  "codex_reason": "Full-stack cybersecurity product role lacks responsibilities and level; frontend work remains possible but unconfirmed.",
+  "gemini": "maybe",
+  "gemini_reason": "SF hybrid full-stack role, but truncated description leaves level and frontend focus unclear."
+ },
+ "greenhouse:affirm:8009368003": {
+  "codex": "no",
+  "codex_reason": "Database control planes, storage networking, migrations, and reliability are backend infrastructure work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:openai:d1c6cb87-a44d-4d04-92a8-dc40eccd090e": {
+  "codex": "strong",
+  "codex_reason": "Seven-plus years, strong frontend skills, polished interfaces, accessibility, and UX ownership in San Francisco.",
+  "gemini": "maybe",
+  "gemini_reason": "Senior-level SF full-stack role that leans heavily toward frontend, UX, and accessibility."
+ },
+ "ashby:openai:ef828b89-41ed-4cde-96a9-94ffe5770d4c": {
+  "codex": "maybe",
+  "codex_reason": "Learning interfaces offer plausible fit; seniority and frontend versus backend allocation remain unclear.",
+  "gemini": "maybe",
+  "gemini_reason": "Hybrid SF/NYC full-stack role spanning interactive learning interfaces and backend services."
+ },
+ "ashby:openai:d4780eac-03ad-4dae-861f-99af22b4287e": {
+  "codex": "maybe",
+  "codex_reason": "React product ownership is plausible, but Python and database work share an unspecified frontend balance.",
+  "gemini": "maybe",
+  "gemini_reason": "US remote or SF full-stack role using React and Python for internal tools."
+ },
+ "greenhouse:affirm:8011590003": {
+  "codex": "no",
+  "codex_reason": "Internship and early-career development below the requested level.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:attention:3ca7f446-5a19-49f8-9a8f-4cca5ee1027b": {
+  "codex": "strong",
+  "codex_reason": "High-ownership product design engineering with direct decision authority; US onsite relocation works.",
+  "gemini": "strong",
+  "gemini_reason": "SF Bay Area onsite Design Engineer role designing and building core product interfaces."
+ },
+ "ashby:decagon:52943ef2-e3ed-44d8-ab3f-17dd28d0376d": {
+  "codex": "maybe",
+  "codex_reason": "Staff product title fits, but compensation-only description leaves frontend scope unknown.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff product role in SF, but truncated description leaves frontend versus backend unclear."
+ },
+ "greenhouse:databricks:8220836002": {
+  "codex": "maybe",
+  "codex_reason": "Staff fullstack title and US location fit partly; frontend responsibilities are unspecified.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff full-stack role in CA, but missing description leaves frontend focus unclear."
+ },
+ "greenhouse:anthropic:5134895008": {
+  "codex": "no",
+  "codex_reason": "API strategy and backend platform architecture rather than UI engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:7369269": {
+  "codex": "no",
+  "codex_reason": "Payment APIs, money movement systems, and backend infrastructure dominate.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "ashby:decagon:7df0a996-5a9f-496f-9f8b-c302983765b2": {
+  "codex": "no",
+  "codex_reason": "Agent platform specialization offers no evidence of frontend or UI work.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:stripe:8130913": {
+  "codex": "no",
+  "codex_reason": "Web design role rather than engineering, with lower experience requirements.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:anthropic:5174747008": {
+  "codex": "maybe",
+  "codex_reason": "Staff full-stack product opportunities are plausible, but team-specific frontend responsibilities remain undefined.",
+  "gemini": "maybe",
+  "gemini_reason": "Staff+ full-stack role in US, but frontend versus backend focus is unclear."
+ },
+ "ashby:perplexity:fcb4cc78-d4bd-4489-8756-7d39e755ac76": {
+  "codex": "no",
+  "codex_reason": "Native iOS growth engineering requiring Swift and mobile experience.",
+  "gemini": null,
+  "gemini_reason": null
+ },
+ "greenhouse:databricks:7274557002": {
+  "codex": "no",
+  "codex_reason": "Identity and access management specialization rather than frontend engineering.",
+  "gemini": null,
+  "gemini_reason": null
+ }
+}

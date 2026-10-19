@@ -1,0 +1,1046 @@
+{
+ "date": "2026-10-19",
+ "persona": "senior frontend / design engineer, LA area, remote US or hybrid; open to relocating within the US",
+ "snapshot": "2026-10-19",
+ "roles": [
+  {
+   "ats": "ashby",
+   "slug": "ashby",
+   "title": "Staff Design Engineer - Canada",
+   "first_published": "2025-11-13",
+   "key": "ashby:ashby:97c6542c-7ff9-43e5-ac54-b77b45fc7378"
+  },
+  {
+   "ats": "ashby",
+   "slug": "attention",
+   "title": "MTS - Design Engineer",
+   "first_published": "2025-08-08",
+   "key": "ashby:attention:3ca7f446-5a19-49f8-9a8f-4cca5ee1027b"
+  },
+  {
+   "ats": "ashby",
+   "slug": "harvey",
+   "title": "Senior Software Engineer, Frontend",
+   "first_published": "2024-03-08",
+   "key": "ashby:harvey:04e17f81-d0a7-4f83-8526-ec4c9532ddcc"
+  },
+  {
+   "ats": "ashby",
+   "slug": "harvey",
+   "title": "Frontend Platform Engineer",
+   "first_published": "2026-07-31",
+   "key": "ashby:harvey:19db4c0a-8883-43c3-b667-60463098feb2"
+  },
+  {
+   "ats": "ashby",
+   "slug": "harvey",
+   "title": "Senior Frontend Platform Engineer",
+   "first_published": "2026-04-28",
+   "key": "ashby:harvey:24f9a3fa-476a-490f-87bf-e8cebb7b3928"
+  },
+  {
+   "ats": "ashby",
+   "slug": "harvey",
+   "title": "Staff Software Engineer, Frontend",
+   "first_published": "2025-08-07",
+   "key": "ashby:harvey:47d3d763-8c64-4e33-b76e-ca15f584c1fd"
+  },
+  {
+   "ats": "ashby",
+   "slug": "linear",
+   "title": "Senior / Staff Product Engineer",
+   "first_published": "2022-01-22",
+   "key": "ashby:linear:069c4628-88d7-4e4d-b393-c996fc7f3076"
+  },
+  {
+   "ats": "ashby",
+   "slug": "linear",
+   "title": "Product Engineer",
+   "first_published": "2026-06-09",
+   "key": "ashby:linear:0c7c2e26-0a98-42cf-a47c-9a3999fb513b"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Frontend Software Engineer, ChatGPT Space",
+   "first_published": "2026-10-08",
+   "key": "ashby:openai:1f99d5d3-4512-4247-aaba-3133a3dabf5a"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Software Engineer, Mobile Web \u2014 Dots",
+   "first_published": "2026-10-16",
+   "key": "ashby:openai:3b34eb10-25b0-4a97-bd6d-05fc90ad4981"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Frontend Software Engineer, Codex App",
+   "first_published": "2026-10-01",
+   "key": "ashby:openai:5f6685ad-2fba-4e60-8982-fa142b33e194"
+  },
+  {
+   "ats": "ashby",
+   "slug": "perplexity",
+   "title": "Member of Technical Staff (Software Engineer, Design System)",
+   "first_published": "2026-08-11",
+   "key": "ashby:perplexity:78675022-c4a7-41d2-9259-7c59be4de93c"
+  },
+  {
+   "ats": "ashby",
+   "slug": "perplexity",
+   "title": "Design Engineer, Growth & Marketing",
+   "first_published": "2026-07-27",
+   "key": "ashby:perplexity:fbbd496b-1d14-4396-b31d-38fbea0dc666"
+  },
+  {
+   "ats": "ashby",
+   "slug": "ramp",
+   "title": "Software Engineer, Frontend",
+   "first_published": "2023-03-09",
+   "key": "ashby:ramp:4e64ab86-4e30-403b-b1b9-41dc052570ce"
+  },
+  {
+   "ats": "ashby",
+   "slug": "ramp",
+   "title": "Software Engineer, Frontend, Growth",
+   "first_published": "2026-09-21",
+   "key": "ashby:ramp:7cd46077-05fe-4cd7-816f-5528638342f1"
+  },
+  {
+   "ats": "ashby",
+   "slug": "ramp",
+   "title": "Design Engineer",
+   "first_published": "2026-07-08",
+   "key": "ashby:ramp:b68aca53-16c0-4ced-ab1d-e8beb2940b4f"
+  },
+  {
+   "ats": "ashby",
+   "slug": "replit",
+   "title": "Product Engineer, New Products",
+   "first_published": "2026-08-03",
+   "key": "ashby:replit:2fa2d079-96a5-4d51-8718-04134ed39032"
+  },
+  {
+   "ats": "ashby",
+   "slug": "sierra",
+   "title": "Software Engineer, Frontend",
+   "first_published": "2025-06-04",
+   "key": "ashby:sierra:f391b10c-7a4a-42b4-9887-dd32b31d6e4e"
+  },
+  {
+   "ats": "ashby",
+   "slug": "vapi",
+   "title": "Member of Technical Staff, Frontend",
+   "first_published": "2026-09-22",
+   "key": "ashby:vapi:00ee0249-bd57-4245-9a4f-a884b655dc73"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Senior Software Engineer, Frontend (Auth Experiences)",
+   "first_published": "2026-09-10",
+   "key": "greenhouse:affirm:7984716003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Staff Software Engineer, Product",
+   "first_published": "2025-12-18",
+   "key": "greenhouse:anthropic:5026097008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Staff+ Fullstack Software Engineer, Safeguards Engineering",
+   "first_published": "2026-10-09",
+   "key": "greenhouse:anthropic:5369710008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "brex",
+   "title": "Senior Software Engineer, Frontend",
+   "first_published": "2026-09-16",
+   "key": "greenhouse:brex:8815462002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "cloudflare",
+   "title": "Senior Design Engineer",
+   "first_published": "2025-06-20",
+   "key": "greenhouse:cloudflare:6998777"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer - Frontend (NYC)",
+   "first_published": "2026-01-21",
+   "key": "greenhouse:databricks:8384595002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Frontend Engineer - UI Platform - Seattle",
+   "first_published": "2026-02-03",
+   "key": "greenhouse:databricks:8399551002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "datadog",
+   "title": "Staff Software Engineer - Frontend",
+   "first_published": "2026-09-15",
+   "key": "greenhouse:datadog:8202699"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "mercury",
+   "title": "Senior Software Engineer - Frontend Developer Experience",
+   "first_published": "2026-07-15",
+   "key": "greenhouse:mercury:6116808004"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "riotgames",
+   "title": "Staff Software Engineer - Esports Platforms",
+   "first_published": "2026-07-23",
+   "key": "greenhouse:riotgames:8076086"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Staff Software Engineer, Dashboard Product",
+   "first_published": "2026-08-12",
+   "key": "greenhouse:stripe:8076151"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Design Engineer, Expansion",
+   "first_published": "2026-09-22",
+   "key": "greenhouse:stripe:8212314"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "vercel",
+   "title": "Design Engineer",
+   "first_published": "2026-09-15",
+   "key": "greenhouse:vercel:6129441004"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "xai",
+   "title": "Web Engineer, X",
+   "first_published": "2026-03-19",
+   "key": "greenhouse:xai:5063930007"
+  }
+ ],
+ "maybe": [
+  {
+   "ats": "ashby",
+   "slug": "ashby",
+   "title": "Design Engineer - EU",
+   "first_published": "2026-06-12",
+   "key": "ashby:ashby:188cc71b-a625-4022-94dc-7c43fa1a8b06"
+  },
+  {
+   "ats": "ashby",
+   "slug": "ashby",
+   "title": "Senior Product Engineer - Canada",
+   "first_published": "2026-04-30",
+   "key": "ashby:ashby:272bc3f4-5af6-4c14-b797-a424b62d306c"
+  },
+  {
+   "ats": "ashby",
+   "slug": "ashby",
+   "title": "Staff Product Engineer - Americas",
+   "first_published": "2026-04-30",
+   "key": "ashby:ashby:6a15668c-3f98-4404-8f1f-927cddfc5af7"
+  },
+  {
+   "ats": "ashby",
+   "slug": "decagon",
+   "title": "Growth Engineer, Web & Growth Products",
+   "first_published": "2026-08-27",
+   "key": "ashby:decagon:3fd94885-5e06-4018-9421-00e7e692472a"
+  },
+  {
+   "ats": "ashby",
+   "slug": "decagon",
+   "title": "Staff Software Engineer, Enterprise Product",
+   "first_published": "2026-10-13",
+   "key": "ashby:decagon:52943ef2-e3ed-44d8-ab3f-17dd28d0376d"
+  },
+  {
+   "ats": "ashby",
+   "slug": "decagon",
+   "title": "Staff Software Engineer, Agent Product",
+   "first_published": "2026-06-18",
+   "key": "ashby:decagon:834d9a8b-4f7f-416a-9953-05d93c326a5f"
+  },
+  {
+   "ats": "ashby",
+   "slug": "decagon",
+   "title": "Staff Software Engineer, Product",
+   "first_published": "2026-10-16",
+   "key": "ashby:decagon:b7e894bd-686f-4cce-b165-0d77ba5f935f"
+  },
+  {
+   "ats": "ashby",
+   "slug": "decagon",
+   "title": "Senior Software Engineer, Product",
+   "first_published": "2026-10-16",
+   "key": "ashby:decagon:d6636cf6-7750-424a-90a3-7a79ac0c35ca"
+  },
+  {
+   "ats": "ashby",
+   "slug": "elevenlabs",
+   "title": "Full-Stack Engineer - Creative Agents",
+   "first_published": "2026-10-07",
+   "key": "ashby:elevenlabs:0b3a97d4-193c-4b47-9888-7ef5803ed945"
+  },
+  {
+   "ats": "ashby",
+   "slug": "elevenlabs",
+   "title": "Full-Stack Engineer - ElevenAPI",
+   "first_published": "2026-10-13",
+   "key": "ashby:elevenlabs:108c99e6-ba2b-44a0-b830-7d535e14a152"
+  },
+  {
+   "ats": "ashby",
+   "slug": "elevenlabs",
+   "title": "Full-Stack Engineer",
+   "first_published": "2024-09-06",
+   "key": "ashby:elevenlabs:6a530871-b6c6-4783-ac6b-69cc3b084192"
+  },
+  {
+   "ats": "ashby",
+   "slug": "harvey",
+   "title": "Senior Software Engineer, Full Stack - NYC",
+   "first_published": "2026-02-09",
+   "key": "ashby:harvey:10900071-f75f-49da-bff7-7e9db5e9b1f9"
+  },
+  {
+   "ats": "ashby",
+   "slug": "harvey",
+   "title": "Software Engineer",
+   "first_published": "2026-10-14",
+   "key": "ashby:harvey:45c49e6b-a7b5-40f9-812f-daa038b81bb3"
+  },
+  {
+   "ats": "ashby",
+   "slug": "harvey",
+   "title": "Staff Software Engineer, OfficeJS",
+   "first_published": "2026-06-25",
+   "key": "ashby:harvey:daad560f-c851-4cb9-89ac-efb2186c4031"
+  },
+  {
+   "ats": "ashby",
+   "slug": "hex",
+   "title": "Software Engineer, Fullstack",
+   "first_published": "2026-02-19",
+   "key": "ashby:hex:996c38fd-0a7a-4df9-a5c3-4234b20b7b71"
+  },
+  {
+   "ats": "ashby",
+   "slug": "linear",
+   "title": "Senior / Staff Fullstack Engineer",
+   "first_published": "2021-04-27",
+   "key": "ashby:linear:d3bc1ced-3ce4-4086-a050-555055dbb1ff"
+  },
+  {
+   "ats": "ashby",
+   "slug": "mintlify",
+   "title": "Senior Product Engineer",
+   "first_published": "2026-09-10",
+   "key": "ashby:mintlify:1e231925-7a38-41c9-a31c-26bf15457888"
+  },
+  {
+   "ats": "ashby",
+   "slug": "mintlify",
+   "title": "Product Engineer",
+   "first_published": "2026-10-01",
+   "key": "ashby:mintlify:e75e8952-9c32-4d33-abf7-9926d54e1e73"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer - Codex for Finance",
+   "first_published": "2026-08-13",
+   "key": "ashby:openai:099dd6af-b017-4a60-85d5-4c79da3a9ead"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, Sales Platform",
+   "first_published": "2026-10-01",
+   "key": "ashby:openai:1f7c6071-ad3a-4903-9b05-4684f5c1a7c8"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, Agent Enablement",
+   "first_published": "2026-06-17",
+   "key": "ashby:openai:2d7f1028-ce9b-49c7-acc8-782714ca1cf4"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, ChatGPT Finances",
+   "first_published": "2026-06-15",
+   "key": "ashby:openai:39e06ef9-5e62-425d-81e2-e8690188011f"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, Product Explorations",
+   "first_published": "2026-09-03",
+   "key": "ashby:openai:4d1ede8c-3d4c-4503-8408-81e4b68c5c91"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Software Engineer, Shop/Feed Ads",
+   "first_published": "2026-10-06",
+   "key": "ashby:openai:4d7145cf-ef4e-4a39-b1ef-b58e4e5c06d2"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, Codex",
+   "first_published": "2026-06-11",
+   "key": "ashby:openai:5ebd5f66-75db-4a96-8d39-babc14f1c582"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Product Engineer, Full Stack - Agents",
+   "first_published": "2026-08-17",
+   "key": "ashby:openai:5ed99d32-eed1-4679-b7b4-037de073e57c"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, API Experience",
+   "first_published": "2026-06-25",
+   "key": "ashby:openai:66288824-8b77-4774-bc57-6825d3e6221e"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, ChatGPT ImageGen",
+   "first_published": "2026-06-09",
+   "key": "ashby:openai:6b47238e-025a-4350-b270-2f3564002fcc"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Software Engineer, Full-Stack - Core Experimentation",
+   "first_published": "2026-03-17",
+   "key": "ashby:openai:73e56947-5d8b-414d-a0ac-9dc9b04e2406"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, Growth",
+   "first_published": "2026-01-30",
+   "key": "ashby:openai:77bc0b3a-35c1-4ecf-99c7-1b3b19d959ca"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, Cybersecurity Products",
+   "first_published": "2026-06-04",
+   "key": "ashby:openai:88654e7f-4e23-4e75-8e54-18c10d09b093"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Software Engineer, Education",
+   "first_published": "2026-04-16",
+   "key": "ashby:openai:9b1b62f5-1400-4672-910a-fda6f975f642"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Engineer, Fleet Scheduling",
+   "first_published": "2025-02-06",
+   "key": "ashby:openai:9d11e1d8-af1d-413b-873f-d8fac2bdee99"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Engineer, Enterprise Expansions",
+   "first_published": "2026-07-13",
+   "key": "ashby:openai:d1c6cb87-a44d-4d04-92a8-dc40eccd090e"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Software Engineer, Full Stack (People Innovation)",
+   "first_published": "2025-07-22",
+   "key": "ashby:openai:d4780eac-03ad-4dae-861f-99af22b4287e"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full Stack Staff & Software Engineer, Consumer Monetization",
+   "first_published": "2026-09-24",
+   "key": "ashby:openai:d4cd5172-d4bc-4f9e-956e-c6bcaef1c355"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Software Engineer, Full Stack \u2014 Dots",
+   "first_published": "2026-10-16",
+   "key": "ashby:openai:dbe79b89-e593-44b3-8aec-c667f7134445"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full-Stack Engineer, ChatGPT Education  & Learning",
+   "first_published": "2026-08-04",
+   "key": "ashby:openai:ef828b89-41ed-4cde-96a9-94ffe5770d4c"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full-Stack Software Engineer, Emerging Products",
+   "first_published": "2026-09-10",
+   "key": "ashby:openai:f7d155c9-06e8-44f0-b2eb-bfa88707f2c1"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Full-Stack Software Engineer, Applied Foundations",
+   "first_published": "2026-05-07",
+   "key": "ashby:openai:f873dd71-46c9-4be1-8580-bc67c56b4cad"
+  },
+  {
+   "ats": "ashby",
+   "slug": "openai",
+   "title": "Founding Full Stack Software Engineer, Legal",
+   "first_published": "2026-06-29",
+   "key": "ashby:openai:fcb0ed1a-9329-4e8f-8aab-92bb626d8141"
+  },
+  {
+   "ats": "ashby",
+   "slug": "plaid",
+   "title": "Senior Software Engineer, Full Stack",
+   "first_published": "2026-05-04",
+   "key": "ashby:plaid:a4a868a6-555a-4119-bbd7-6300f16d9045"
+  },
+  {
+   "ats": "ashby",
+   "slug": "posthog",
+   "title": "Product Engineer",
+   "first_published": "2026-09-24",
+   "key": "ashby:posthog:20ab9628-20ff-4ae3-bd6a-46ae7e9dc6b8"
+  },
+  {
+   "ats": "ashby",
+   "slug": "ramp",
+   "title": "Applied AI Engineer, Fullstack",
+   "first_published": "2026-06-24",
+   "key": "ashby:ramp:6a7e382f-240a-4952-b9e5-7fe2b3856bc9"
+  },
+  {
+   "ats": "ashby",
+   "slug": "replit",
+   "title": "Staff Software Engineer, Money",
+   "first_published": "2025-12-18",
+   "key": "ashby:replit:14b3aef3-f926-4db9-8c31-af8ba848fbd8"
+  },
+  {
+   "ats": "ashby",
+   "slug": "replit",
+   "title": "Design Engineer",
+   "first_published": "2026-10-16",
+   "key": "ashby:replit:2f1de5f1-48c2-4104-a697-a51fe1620508"
+  },
+  {
+   "ats": "ashby",
+   "slug": "replit",
+   "title": "Staff Software Engineer, Product",
+   "first_published": "2025-12-30",
+   "key": "ashby:replit:47235851-fadd-4bd7-9cc6-61f545059ac1"
+  },
+  {
+   "ats": "ashby",
+   "slug": "runway",
+   "title": "\u2699\ufe0f Senior/Staff Product Engineer",
+   "first_published": "2025-06-09",
+   "key": "ashby:runway:6dc52fd2-0ec0-4d93-9c67-23ebe95c2c4b"
+  },
+  {
+   "ats": "ashby",
+   "slug": "sierra",
+   "title": "Web Developer, Marketing Site",
+   "first_published": "2026-09-16",
+   "key": "ashby:sierra:3f6911c0-b49b-4d8e-a434-4064df2cde44"
+  },
+  {
+   "ats": "ashby",
+   "slug": "vanta",
+   "title": "Senior Fullstack Software Engineer, GRC",
+   "first_published": "2025-03-13",
+   "key": "ashby:vanta:1513e1ac-5dca-4acb-a99d-8b5461115651"
+  },
+  {
+   "ats": "ashby",
+   "slug": "vanta",
+   "title": "Senior Fullstack Software Engineer, Expansion",
+   "first_published": "2026-09-29",
+   "key": "ashby:vanta:ad10bda4-f02d-4682-9dc4-b374fa647c99"
+  },
+  {
+   "ats": "ashby",
+   "slug": "vanta",
+   "title": "Senior Fullstack Software Engineer, Risk",
+   "first_published": "2026-09-23",
+   "key": "ashby:vanta:bbaea4cf-1439-4996-b7b1-c10425413c3f"
+  },
+  {
+   "ats": "ashby",
+   "slug": "vanta",
+   "title": "Senior II Fullstack Software Engineer, GRC",
+   "first_published": "2026-03-12",
+   "key": "ashby:vanta:fedc71ba-ef1d-454c-9536-ce87333a23c7"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Senior Software Engineer, Fullstack (Consumer Engineering)",
+   "first_published": "2026-03-18",
+   "key": "greenhouse:affirm:7663434003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Software Engineer II, Fullstack (App Experience)",
+   "first_published": "2026-08-21",
+   "key": "greenhouse:affirm:7819445003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Senior Staff Software Engineer, Fullstack (Marketplace and Consumer Experiences)",
+   "first_published": "2026-09-03",
+   "key": "greenhouse:affirm:7978722003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Senior Software Engineer, Fullstack (App Experience)",
+   "first_published": "2026-10-09",
+   "key": "greenhouse:affirm:7981725003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Software Engineer II, Frontend (Marketing and Privacy)",
+   "first_published": "2026-10-08",
+   "key": "greenhouse:affirm:8010610003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Software Engineer II, Fullstack (Ads Platform)",
+   "first_published": "2026-10-09",
+   "key": "greenhouse:affirm:8016866003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "affirm",
+   "title": "Software Engineer II, Full Stack (Card Acquisition)",
+   "first_published": "2026-10-15",
+   "key": "greenhouse:affirm:8032175003"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Full Stack Engineer, Education Labs",
+   "first_published": "2026-01-27",
+   "key": "greenhouse:anthropic:5097186008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Senior Software Engineer, Full-stack",
+   "first_published": "2026-04-08",
+   "key": "greenhouse:anthropic:5174743008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Staff+ Software Engineer, Full-stack",
+   "first_published": "2026-04-08",
+   "key": "greenhouse:anthropic:5174747008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Full-Stack Software Engineer, Reinforcement Learning",
+   "first_published": "2026-04-14",
+   "key": "greenhouse:anthropic:5186067008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Product Engineer, Computer Use",
+   "first_published": "2026-06-02",
+   "key": "greenhouse:anthropic:5238637008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Staff Software Engineer, Growth",
+   "first_published": "2026-07-20",
+   "key": "greenhouse:anthropic:5363469008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Staff Software Engineer, Claude Code",
+   "first_published": "2026-08-07",
+   "key": "greenhouse:anthropic:5383610008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Front End Engineer, Marketing",
+   "first_published": "2026-08-18",
+   "key": "greenhouse:anthropic:5386971008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Product Engineer - Manufacturing Operations",
+   "first_published": "2026-08-24",
+   "key": "greenhouse:anthropic:5399162008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Staff Software Engineer: Compute",
+   "first_published": "2026-09-23",
+   "key": "greenhouse:anthropic:5432558008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "anthropic",
+   "title": "Staff+ Software Engineer, Enterprise (Full Stack)",
+   "first_published": "2026-10-15",
+   "key": "greenhouse:anthropic:5454882008"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "asana",
+   "title": "Software Engineer",
+   "first_published": "2026-10-14",
+   "key": "greenhouse:asana:8194522"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "asana",
+   "title": "Software Engineer, AI Teammates Experience",
+   "first_published": "2026-10-08",
+   "key": "greenhouse:asana:8227390"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Senior Software Engineer - Fullstack",
+   "first_published": "2022-02-28",
+   "key": "greenhouse:databricks:5445641002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Fullstack Engineer",
+   "first_published": "2025-01-23",
+   "key": "greenhouse:databricks:6704975002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer - Money Team",
+   "first_published": "2024-01-24",
+   "key": "greenhouse:databricks:7111068002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Senior Staff Software Engineer - App and Partner Ecosystem",
+   "first_published": "2025-03-19",
+   "key": "greenhouse:databricks:7807722002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Senior Staff Software Engineer - Enzyme",
+   "first_published": "2025-03-28",
+   "key": "greenhouse:databricks:7934466002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer - User Activation",
+   "first_published": "2025-04-30",
+   "key": "greenhouse:databricks:7979523002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer - Customer Engagement & Docs Platform",
+   "first_published": "2025-06-10",
+   "key": "greenhouse:databricks:8032546002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Fullstack Engineer, Agentic Applications",
+   "first_published": "2025-10-29",
+   "key": "greenhouse:databricks:8220836002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Sr. Staff Fullstack Engineer, Agentic Applications",
+   "first_published": "2025-10-29",
+   "key": "greenhouse:databricks:8220902002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Sr. Staff Software Engineer - Money Team",
+   "first_published": "2025-11-11",
+   "key": "greenhouse:databricks:8285949002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer \u2013 Customer Experience Intelligence (CXI)",
+   "first_published": "2026-02-24",
+   "key": "greenhouse:databricks:8416959002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer, Fullstack - AI Product (NYC)",
+   "first_published": "2026-04-15",
+   "key": "greenhouse:databricks:8509534002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Software Engineer, Web Products",
+   "first_published": "2026-06-23",
+   "key": "greenhouse:databricks:8560779002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer, AI Native Web Platform",
+   "first_published": "2026-06-11",
+   "key": "greenhouse:databricks:8560783002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Sr. Staff Software Engineer \u2014 Observability, Insights & Governance",
+   "first_published": "2026-06-02",
+   "key": "greenhouse:databricks:8575248002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer- CXI",
+   "first_published": "2026-07-15",
+   "key": "greenhouse:databricks:8584144002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer, Agentic Applications",
+   "first_published": "2026-07-15",
+   "key": "greenhouse:databricks:8635182002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer, AI Native Web Platform",
+   "first_published": "2026-07-15",
+   "key": "greenhouse:databricks:8635188002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Senior Software Engineer, AI Native Web Platform",
+   "first_published": "2026-07-15",
+   "key": "greenhouse:databricks:8635216002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "databricks",
+   "title": "Staff Software Engineer \u2013 Genie One Mobile & Desktop",
+   "first_published": "2026-09-09",
+   "key": "greenhouse:databricks:8692516002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "discord",
+   "title": "Staff Software Engineer - Consumer Revenue",
+   "first_published": "2026-09-02",
+   "key": "greenhouse:discord:8464570002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "discord",
+   "title": "Senior Full-Stack Software Engineer, Social Commerce",
+   "first_published": "2026-06-23",
+   "key": "greenhouse:discord:8604768002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "discord",
+   "title": "Senior Full-Stack Software Engineer, Growth",
+   "first_published": "2026-07-21",
+   "key": "greenhouse:discord:8642085002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "discord",
+   "title": "Senior Full-Stack Software Engineer, Ads",
+   "first_published": "2026-07-31",
+   "key": "greenhouse:discord:8659978002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "discord",
+   "title": "Senior Full-Stack Software Engineer, Developer Success",
+   "first_published": "2026-09-15",
+   "key": "greenhouse:discord:8811574002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "discord",
+   "title": "Software Engineer, Consumer Revenue",
+   "first_published": "2026-09-28",
+   "key": "greenhouse:discord:8846732002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "discord",
+   "title": "Senior Full-Stack Software Engineer, Engagement",
+   "first_published": "2026-10-01",
+   "key": "greenhouse:discord:8856467002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "figma",
+   "title": "Software Engineer - Full Stack",
+   "first_published": "2025-11-01",
+   "key": "greenhouse:figma:5691911004"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "gitlab",
+   "title": "Fullstack Engineer (TypeScript), AI Engineering: Duo Client SDK",
+   "first_published": "2026-08-20",
+   "key": "greenhouse:gitlab:8698330002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "gitlab",
+   "title": "Staff Fullstack Engineer (Ruby/Vue.js) Monetization Engineering: Purchase",
+   "first_published": "2026-08-31",
+   "key": "greenhouse:gitlab:8739391002"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "mercury",
+   "title": "Staff Software Engineer - Fraud",
+   "first_published": "2026-04-02",
+   "key": "greenhouse:mercury:5847987004"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "mercury",
+   "title": "Senior Full-Stack Engineer",
+   "first_published": "2026-07-01",
+   "key": "greenhouse:mercury:6101151004"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "mercury",
+   "title": "Senior Software Engineer - Treasury",
+   "first_published": "2026-10-07",
+   "key": "greenhouse:mercury:6212437004"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Full Stack Engineer, Developer & End User Experience Platform",
+   "first_published": "2025-04-03",
+   "key": "greenhouse:stripe:6567104"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Full Stack Engineer, Money as a Service",
+   "first_published": "2025-12-01",
+   "key": "greenhouse:stripe:6606581"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Frontend Engineer, Expansion",
+   "first_published": "2026-05-04",
+   "key": "greenhouse:stripe:7644950"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Senior Staff Software Engineer, Stripe Dashboard",
+   "first_published": "2026-03-24",
+   "key": "greenhouse:stripe:7746721"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Full Stack Engineer, Link",
+   "first_published": "2026-07-13",
+   "key": "greenhouse:stripe:8062305"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Full Stack Engineer, Bridge",
+   "first_published": "2026-08-20",
+   "key": "greenhouse:stripe:8142764"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Full Stack Engineer, Builder Experience",
+   "first_published": "2026-10-05",
+   "key": "greenhouse:stripe:8206731"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Full Stack Engineer, Revenue",
+   "first_published": "2026-10-02",
+   "key": "greenhouse:stripe:8234357"
+  },
+  {
+   "ats": "greenhouse",
+   "slug": "stripe",
+   "title": "Staff Software Engineer, Link - Consumer Preference",
+   "first_published": "2026-10-05",
+   "key": "greenhouse:stripe:8257354"
+  }
+ ],
+ "labelled_by": "two-model consensus, not human-labelled: Codex labelled all 433 pooled roles (two passes); Gemini 4 Argon (high) labelled the 178 Codex Strong/Maybe roles, the 15 previous ground-truth roles and a 30-role sample of Codex No (blind to Codex). strong = both Strong; maybe = any disagreement or double Maybe; no = both No, or Codex No outside the review set (Gemini agreed with 30 of 31 sampled Codex No)."
+}
