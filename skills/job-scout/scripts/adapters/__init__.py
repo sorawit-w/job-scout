@@ -1,6 +1,6 @@
 """ATS adapter port: the one contract every job-board adapter implements.
 
-Each adapter module (greenhouse, ashby, lever, smartrecruiters) provides three functions:
+Each adapter module (greenhouse, ashby, lever, smartrecruiters, workday, usajobs) provides three functions:
 
     fetch_board(slug)                -> list of raw job dicts from the board's list endpoint
     normalize(raw, slug, company)    -> one normalized job dict (schema: references/ats-notes.md)
@@ -10,6 +10,18 @@ probe.py is the composition point: it looks adapters up in REGISTRY by the `ats`
 column of companies.csv. fetch_board and fetch_job also take an optional
 `budget` (net.Budget). fetch_board returns [] for an empty board and None when
 the board is gone (404), so callers can tell an unverified board from a dead one.
+
+Search sources set `PARTIAL = True` (read it with getattr(module, "PARTIAL", False)): their
+board list is a keyword search, never the whole board (workday, usajobs). Such a module also
+  * takes `fetch_board(slug, budget, terms=[...])` — probe.py passes the brief's target_roles,
+    then title_synonyms, cut to the module's MAX_TERMS;
+  * sets MAX_TERMS and MAX_PAGES, so one board costs at most MAX_TERMS * MAX_PAGES requests
+    (probe.py sizes its request budget from them);
+  * never closes a saved role: a job missing from a search is unseen, not gone, so probe.py
+    records the board under "partial_boards", never "live_boards", and does not cache it
+    (the result depends on the terms).
+An opt-in source may also define `enabled()`; while it returns False probe.py makes no request
+to it and records "<name>: no key" once under "skipped".
 
 What it does NOT do: no network, no caching, no normalization — only the contract.
 """
@@ -22,6 +34,7 @@ def missing(module):
     return [name for name in CONTRACT if not callable(getattr(module, name, None))]
 
 
-from adapters import ashby, greenhouse, lever, smartrecruiters  # noqa: E402  (after missing(): adapters import this package)
+from adapters import ashby, greenhouse, lever, smartrecruiters, usajobs, workday  # noqa: E402  (after missing(): adapters import this package)
 
-REGISTRY = {"greenhouse": greenhouse, "ashby": ashby, "lever": lever, "smartrecruiters": smartrecruiters}
+REGISTRY = {"greenhouse": greenhouse, "ashby": ashby, "lever": lever, "smartrecruiters": smartrecruiters,
+            "workday": workday, "usajobs": usajobs}

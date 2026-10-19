@@ -17,10 +17,18 @@ def replay():
 
 
 class RegistryTest(unittest.TestCase):
-    def test_registry_has_the_four_adapters(self):
-        self.assertEqual(sorted(adapters.REGISTRY), ["ashby", "greenhouse", "lever", "smartrecruiters"])
+    def test_registry_has_the_six_adapters(self):
+        self.assertEqual(sorted(adapters.REGISTRY),
+                         ["ashby", "greenhouse", "lever", "smartrecruiters", "usajobs", "workday"])
         for module in adapters.REGISTRY.values():
             self.assertEqual(adapters.missing(module), [])
+
+    def test_only_search_sources_are_partial_and_declare_their_caps(self):
+        partial = sorted(k for k, m in adapters.REGISTRY.items() if getattr(m, "PARTIAL", False))
+        self.assertEqual(partial, ["usajobs", "workday"])
+        for name in partial:
+            module = adapters.REGISTRY[name]
+            self.assertGreater(module.MAX_TERMS * module.MAX_PAGES, 0, name)
 
 
 class SchemaMixin:

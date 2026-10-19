@@ -25,7 +25,8 @@ What it does NOT do:
     * No judging or scoring — that is the LLM step in SKILL.md; cite_check.py verifies its quotes.
     * Never rewords description text: trim_jd only selects whole lines, so quotes stay checkable.
     * Never treats a network error as open or closed — that row is "unverified", as is a 200
-      response without a description or for a different job.
+      response for a different job, or one with no description when the candidate row (from the
+      board list) has none either. A live check without a description (USAJOBS) keeps the row's.
     * Never parses pay out of description text; comp comes only from ATS pay fields.
 """
 import argparse
@@ -115,10 +116,15 @@ def check(row, budget):
     except (AttributeError, KeyError, TypeError, ValueError) as e:  # AttributeError: a list or string body
         entry["error"] = "bad job record: %s" % e
         return entry, None
-    full = job.get("description_text")
-    if not full or str(job.get("job_id")) != str(row["job_id"]):  # a 200 with {} or an error object
-        entry["error"] = "bad job record: no description, or not the requested job"
+    if str(job.get("job_id")) != str(row["job_id"]):  # a 200 with {} or an error object
+        entry["error"] = "bad job record: not the requested job"
         return entry, None
+    # Some live checks carry no description (USAJOBS Historic JOA): keep the board list's text.
+    full = job.get("description_text") or row.get("description_text")
+    if not full:
+        entry["error"] = "bad job record: no description"
+        return entry, None
+    job["description_text"] = full
     entry.update(status="open", full=full, trimmed=trim_jd(full), comp=job.get("comp"))
     return entry, job
 

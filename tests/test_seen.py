@@ -249,6 +249,21 @@ class RecordTest(HomeCase):
         self.assertEqual(state.record(run, now=NOW)["closed"], 0)
         self.assertIsNone(state.load_seen()["ashby:acme:1"]["closed_at"])
 
+    def test_saved_workday_role_missing_from_todays_search_is_not_closed(self):
+        # A Workday list is a keyword search, never the whole board: a role it did not return is unseen.
+        gone = "workday:sharp.wd1.External:Old-Nurse-Role_JR1-1"
+        state.write_json_atomic(state.seen_path(), {gone: entry(status="saved")})
+        state.write_json_atomic(state.profile_path(), {"schema": 1, "target_roles": ["nurse"], "work_modes": ["onsite"],
+                                                       "needs_sponsorship": "no", "base_pay_floor": None})
+        env = {"JOB_SCOUT_REPLAY_DIR": os.path.join(FIXTURES, "workday"), "JOB_SCOUT_HOME": str(self.home)}
+        with mock.patch.dict(os.environ, env), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(probe.main(["--boards", "workday:sharp.wd1.External"]), 0)
+        run = state.latest_run()
+        self.assertTrue(state.read_json(run / "jobs.json"))  # the board answered; the role just was not in it
+        self.assertEqual(state.probed_ok_boards(run), set())
+        self.assertEqual(state.record(run, now=NOW)["closed"], 0)
+        self.assertIsNone(state.load_seen()[gone]["closed_at"])
+
     def test_unshown_jobs_refresh_aliases_and_last_seen_so_churning_variants_keep_matching(self):
         run = self.make_run([job("ashby:acme:a", more=["ashby:acme:b"])], [{"key": "ashby:acme:a", "show": True}])
         state.record(run, now=NOW)

@@ -26,6 +26,7 @@ from adapters import _common
 
 _SLUG_RE = re.compile(r"([a-z0-9-]+)\.(wd[0-9]+)\.([A-Za-z0-9_-]+)")
 _COUNT_ONLY_RE = re.compile(r"\d+ Locations?", re.I)  # list text for a multi-location posting
+PARTIAL = True  # the board list is a keyword search: probe.py never lets it close roles
 LIMIT = 20  # the largest page the API accepts: limit 21 answers HTTP 400 (checked 2026-10-19)
 MAX_TERMS = 3  # each term costs up to MAX_PAGES requests per board; the brief's first terms are its best
 # shortcut: a search stops after MAX_PAGES pages (60 postings per term);

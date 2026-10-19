@@ -29,6 +29,7 @@ EMAIL_ENV = "JOB_SCOUT_USAJOBS_EMAIL"
 SEARCH = "https://data.usajobs.gov/api/Search"
 JOA = "https://data.usajobs.gov/api/historicjoa?USAJOBSControlNumbers=%s"
 JOB_PAGE = "https://www.usajobs.gov/job/%s"
+PARTIAL = True  # the board list is a keyword search: probe.py never lets it close roles
 MAX_TERMS = 3  # one search per term; extra terms mostly re-find the same postings
 # shortcut: newest MAX_PAGES * PAGE postings per term (2 requests); raise MAX_PAGES if a term needs more.
 MAX_PAGES = 2
