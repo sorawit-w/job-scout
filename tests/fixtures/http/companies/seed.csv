@@ -1,0 +1,7 @@
+company,ats,slug,sector,status,jobs,us_share,remote_share,checked_at,source
+Linear,ashby,linear,productivity,live,29,0.62,1.0,2026-10-19,seed49
+Notion,ashby,notion,productivity,live,128,0.57,0.63,2026-10-19,seed49
+Brex,greenhouse,brex,fintech,live,260,0.95,0.0,2026-10-19,seed49
+Figma,greenhouse,figma,design,live,139,0.67,0.0,2026-10-19,seed49
+Vercel,greenhouse,vercel,devtools,live,93,0.78,0.18,2026-10-19,seed49
+City of Boulder,workday,bouldercolorado.wd1.external,unknown,unchecked,,,,,kalil0321
