@@ -68,3 +68,10 @@ Status: DONE
 Notes: skill-evaluator: 27/27 first pass at 4b2c814; executors flagged the rerun-vs-gate ambiguity, the rerun coverage line, missing links and the §4 rerun case (skill-text layer) → fixed; changed parts re-run on the final text (M1r, M4r, M7, M8: 16/16).
   skill-evaluator: clean (43/43) at cb31d38 — 2026-10-19
 Observations: deferred — filter --limit can cut saved roles when more than 150 new roles exist; seen.json and companies.csv have no lock (writes are atomic).
+
+Task: M4 — Codex review fixes on the state-reruns PR
+Action: seen record works without results.json, and SKILL.md Phase 9 runs it at the end of every rerun, so closures are recorded once; the closed list is saved/applied roles only; load_seen validates every entry. M4r re-run with an added "record on a nothing-new rerun" assertion.
+Commit: 0c7b30e..fde6b92 (branch feature/state-reruns)
+Status: DONE
+Notes: skill-evaluator: clean (44/44) at fde6b92 — 2026-10-19 (as recorded above, with M4r replaced by its 5/5 re-run on the final text)
+Observations: open for M5 — the brief table has no Source label for a saved brief on a rerun (cosmetic).
