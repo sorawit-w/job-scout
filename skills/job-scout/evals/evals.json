@@ -1,0 +1,60 @@
+{
+  "skill_name": "job-scout",
+  "evals": [
+    {
+      "id": "E1",
+      "name": "confirmation gate fires before any search",
+      "prompt": "Here's my resume (attached). Find me roles that fit.",
+      "expected_output": "A search brief table with a Source column built from the resume, followed by at most about 5 numbered questions in one message that ask for work mode, base pay floor and visa sponsorship. No job-board request is made before the user answers.",
+      "files": ["evals/files/persona-frontend.md"],
+      "assertions": [
+        "Shows a search brief table with a Source column (values like resume / inferred / default / needs you)",
+        "Asks for work mode, base pay floor, and visa sponsorship",
+        "Asks at most about 5 questions, all in one message",
+        "Does not run scripts/probe.py (search or --health) before the user replies",
+        "Does not ask about or infer age, gender, race, nationality, religion, or family status",
+        "Marks the current employer (Lumenly) as an inferred exclusion to confirm"
+      ]
+    },
+    {
+      "id": "E4",
+      "name": "just go — proceeds with labelled defaults",
+      "prompt": "Here's my resume (attached). Skip the questions and just go — use your best guess.",
+      "expected_output": "The brief is still shown, with every assumed value labelled default (or inferred), and the skill proceeds in the same reply without waiting: it saves the profile and runs the network check.",
+      "files": ["evals/files/persona-frontend.md"],
+      "assertions": [
+        "Shows the brief table even though the user asked to skip questions",
+        "Every value the user did not provide is labelled default or inferred, not presented as confirmed",
+        "Does not stop to ask questions",
+        "Saves the profile with scripts/state.py profile save and runs scripts/probe.py --health in the same reply",
+        "Does not invent a pay floor or a sponsorship answer: base_pay_floor is null (no floor) and needs_sponsorship is undisclosed unless stated"
+      ]
+    },
+    {
+      "id": "E7",
+      "name": "negative trigger — cover letter",
+      "prompt": "Write a cover letter for the Vercel Design Engineer role: https://job-boards.greenhouse.io/vercel/jobs/6129441004",
+      "expected_output": "No search runs. The reply says cover letters are out of scope for job-scout (or routes outreach to ghostwriter if installed) and offers to find more roles instead.",
+      "files": [],
+      "assertions": [
+        "Runs no job-scout script (no probe.py, no state.py)",
+        "Says cover letters are out of scope for job-scout",
+        "Does not draft a cover letter as job-scout output"
+      ]
+    },
+    {
+      "id": "E9",
+      "name": "chat-only, non-developer user",
+      "prompt": "I'm a marketing manager in Austin, what's out there?",
+      "expected_output": "With no resume, the brief is built from the chat (target roles inferred from 'marketing manager', home base Austin from the user). The gate still asks work mode, pay floor and sponsorship. No jargon such as ATS, slug, JSON or API in the questions or brief.",
+      "files": [],
+      "assertions": [
+        "Builds a brief from the chat message alone; home base Austin has Source you",
+        "Still asks for work mode, base pay floor, and visa sponsorship before any search",
+        "Does not run scripts/probe.py before the user replies",
+        "Uses no jargon (ATS, slug, JSON, API) in the questions or the brief",
+        "Mentions honestly that coverage is best for tech and startup employers, if relevant to marketing roles outside tech"
+      ]
+    }
+  ]
+}

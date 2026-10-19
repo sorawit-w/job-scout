@@ -1,0 +1,13 @@
+[
+  {"query": "Here's my CV (pasted below). What should I apply to?", "should_trigger": true},
+  {"query": "Find me remote frontend roles that fit my resume.", "should_trigger": true},
+  {"query": "Anything new since my job search last week?", "should_trigger": true},
+  {"query": "Can you check Figma and Linear for openings that match my background?", "should_trigger": true},
+  {"query": "I'm a marketing manager in Austin — what jobs are out there for me?", "should_trigger": true},
+  {"query": "Write a cover letter for this Vercel Design Engineer role.", "should_trigger": false},
+  {"query": "Draft a reply to this recruiter who messaged me on LinkedIn.", "should_trigger": false},
+  {"query": "Help me prepare for my Ramp onsite interview next week.", "should_trigger": false},
+  {"query": "Rewrite the bullet points on my resume to sound more senior.", "should_trigger": false},
+  {"query": "Is a $180k base a good offer for a staff engineer in LA?", "should_trigger": false},
+  {"query": "Find candidates for our senior frontend opening.", "should_trigger": false}
+]

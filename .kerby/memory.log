@@ -33,3 +33,13 @@ Commit: b6643e9..6023f71
 Status: DONE
 Notes: lever_eu dropped (every sampled seed slug answers on api.lever.co) — ROADMAP follow-up. Greenhouse pay exists only on the single-job endpoint, so GH comp is null at list time and filled for the shortlist. collapse_variants now groups by department too (QA major). CSV writers switched to LF.
 Observations: seed-check 5,689 boards in 2m45s: live 5,358 · unverified 193 · dead 138 · errors 0; 176,570 open jobs; 4,429 boards with US roles. Live 60-board probe: 60 requests, 5.5 s, 8,432 postings → 6,913 roles. Suite 170 tests OK on 3.14.7 and 3.9.6.
+
+[2026-10-19T01:11:51Z]
+Task: M2 — confirmation gate (implementation-plan.yaml impl-confirmation-gate, G1–G9)
+Action: profile schema + validate/save/show CLI (test-first); docx_text.py (test-first); SKILL.md phases 0–3 (route check, ingest, brief + confirmation gate, health) with phases 4–9 stubbed "not built yet"; skill README stub; trigger fixtures (5+/6-); evals E1/E4/E7/E9 + synthetic personas; ran the 4 gate evals with fresh sub-agents (19/19 assertions); fixed the "just go" vs never-guess ambiguity the E4 run surfaced; skill-evaluator split-role audit (8 tests, 32 assertions); manifests re-declare skills/job-scout; DEVELOPER_TODO for the claude.ai upload check (G8).
+Files: skills/job-scout/{SKILL.md,README.md,scripts/state.py,scripts/docx_text.py,evals/*}, .eval/triggers/job-scout.json, tests/{test_profile,test_docx_text}.py, .claude-plugin/plugin.json, .codex-plugin/plugin.json, DEVELOPER_TODO.md
+Commit: d7792db..1249653 (branch feature/confirmation-gate)
+Status: DONE
+Notes: skill-evaluator: 30/32 at 6fb48b3 (S1: volunteered protected attributes were repeated back to the user — skill-text gap) → fixed in 1249653 → all 8 tests re-run on the exact text.
+  skill-evaluator: clean (32/32) at 1249653 — 2026-10-19
+Observations: one executor run was stopped by an API safety filter flagged reasoning_extraction (false positive on the brief's "show your reasoning" wording); rerun with a "Notes" section passed. Gate evals and the audit used stated-intent executors; nothing searched a live job board.

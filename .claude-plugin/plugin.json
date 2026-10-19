@@ -18,5 +18,8 @@
     "lever",
     "career",
     "skill"
+  ],
+  "skills": [
+    "./skills/job-scout"
   ]
 }
