@@ -1,4 +1,5 @@
-# job-scout v0 implementation plan (approved 2026-10-18).
+# job-scout v0 implementation plan (approved 2026-10-18; amended 2026-10-19: open_to_relocation in M3,
+# M5b more hiring tools before launch — both maintainer decisions).
 # Shape: phases → milestones → tasks (kerby swe references/implementation-planning.md).
 # Each milestone = one branch + one PR; the human merges. Expected outcomes are per
 # milestone (case table); every task commits on its own with a conventional type.
@@ -23,6 +24,8 @@ decisions:
   dedupe: "collapsed rows keep variants[]; recall counts any variant"
   pay: "structured ATS fields only, never parsed from free text"
   state_dir: "~/.job-scout/ (JOB_SCOUT_HOME overrides)"
+  relocation: "open_to_relocation brief field; asked only for hybrid/onsite; roles elsewhere kept, flagged"
+  coverage: "M5b adds SmartRecruiters, Workday (verified company list) and opt-in USAJOBS before launch; job connectors stay off (discovery-only use is a follow-up)"
 
 phases:
   - id: setup
@@ -184,6 +187,28 @@ phases:
             - {case: edge, input: "GT role closed by eval day", expected: "dropped from denominator with a note"}
             - {case: failure, input: "recall below 15", expected: "V8 loop; no PR until pass or accepted gap"}
 
+      - id: int-more-ats
+        name: "M5b — More hiring tools"
+        branch: feature/more-hiring-tools
+        complexity: 7
+        tasks:
+          - {id: C1, name: "SmartRecruiters adapter (paged list, per-job detail) + fixtures", area: scripts, depends_on: [D1, D2], complexity: 4}
+          - {id: C2, name: "SmartRecruiters tenants in seed_import + seed_check", area: scripts, depends_on: [C1, D11, D12], complexity: 3}
+          - {id: C3, name: "Workday adapter (keyword search from the brief, per-job detail; jobscope MIT as reference) + fixtures", area: scripts, depends_on: [D1], complexity: 6}
+          - {id: C4, name: "Workday company list: find a source, verify each tenant live, record source and status in companies.csv", area: data, depends_on: [C3], complexity: 5}
+          - {id: C5, name: "USAJOBS opt-in adapter (user's own free key via env, never stored in the profile)", area: scripts, depends_on: [D1], complexity: 4}
+          - {id: C6, name: "probe/fetch_jd/budget support for keyword-search sources; board selection by the user's field so new tools never crowd tech boards out of the cap", area: scripts, depends_on: [C3, C5], complexity: 5}
+          - {id: C7, name: "SKILL.md coverage text + USAJOBS key setup; companies.py guesses Workday/SmartRecruiters", area: skill, depends_on: [C6, R4], complexity: 3}
+          - {id: C8, name: "nurse persona re-run (E8) + replay fixtures", area: evals, depends_on: [C7], complexity: 3}
+          - {id: C9, name: "skill-evaluator pass + record", area: skill, depends_on: [C8], complexity: 3}
+        expected_outcomes:
+          end_state: "nurse persona gets hospital roles with employer links; coverage line names the new tools"
+          cases:
+            - {case: happy path, input: "E8 nurse, live", expected: "Workday/USAJOBS roles, each open on the live check, employer link"}
+            - {case: edge, input: "frontend persona, live, after M5b", expected: "still 18/18 ground truth in candidates; board selection by the user's field keeps tech boards inside the 400 cap"}
+            - {case: edge, input: "USAJOBS key not set", expected: "USAJOBS skipped and said once; the run continues"}
+            - {case: failure, input: "Workday changes its response shape", expected: "those boards are errors/unverified; never shown as open; run continues"}
+
   - id: deployment
     exit: "release zip built, every surface smoke-tested; going public is the maintainer's call"
     milestones:
@@ -214,7 +239,7 @@ out_of_scope:
   - LinkedIn, login-walled scraping, auto-apply, bulk messaging
   - cover letters and drafting
   - any server, hosted index or MCP
-  - Workday, Workable, iCIMS, Taleo, USAJOBS (v0)
+  - Workable, iCIMS, Taleo, SuccessFactors (v0)
   - telemetry, recruiter features, alerts/scheduling
   - job-connector data (discovery use is v0.1)
   - making anything public without the maintainer's go-ahead

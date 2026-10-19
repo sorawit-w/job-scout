@@ -6,7 +6,10 @@ Purpose:
     ``~/.job-scout``), never inside the repo. This milestone holds:
       * atomic JSON read/write helpers,
       * the per-board fetch cache (6 h TTL),
-      * run directories (newest 3 kept).
+      * run directories (newest 3 kept),
+      * the profile (validate_profile + the `profile` CLI),
+      * seen.json: which roles the user has seen, saved, applied to or dismissed, and the
+        new / changed / saved-open / closed diff for reruns (the `seen` CLI).
 
 Usage:
     import state
@@ -19,9 +22,12 @@ Usage:
 
 What it does NOT do:
     * No network access; adapters fetch, this module only stores.
-    * Profile: validate_profile() + the `profile` CLI (M2). seen.json logic arrives in M4.
+    * A board that errored, was dead, was empty or was not probed this run never closes its seen
+      roles: only live boards with no error (probed_ok_boards) can.
+    * Never treats an unreadable seen.json as empty: load_seen raises and nothing is written.
     * Never caches errors: callers store only successful fetches.
 """
+import hashlib
 import json
 import os
 import re
@@ -255,8 +261,283 @@ def profile_path():
     return home() / "profile.json"
 
 
+# --- seen memory (seen.json) ---------------------------------------------------
+# {job_key: {first_seen, last_seen, status, reason, closed_at, sig, aliases, [snap, title, company, url]}}
+# snap = job_snap(): the readable fields behind sig, so `seen diff` can say what changed.
+# A collapsed job's variants can close or reorder, so an entry matches a job when its key or
+# any alias equals the job's key or any variant key.
+
+SEEN_STATUSES = ("seen", "saved", "applied", "dismissed")
+_OPEN_STATUSES = ("saved", "applied")  # only roles the user cared about are reported closed
+_KEY_RE = re.compile(r"^[a-z_]+:[^:/\\\s]+:\S+$")  # ats:slug:job_id
+MAX_REASON = 200
+
+
+def seen_path():
+    return home() / "seen.json"
+
+
+def load_seen():
+    """seen.json's content; {} only when the file does not exist. A file that exists but cannot be
+    read as a JSON object raises ValueError naming it, so no caller ever writes over the history."""
+    path = seen_path()
+    if not path.exists():
+        return {}
+    try:
+        with open(str(path), encoding="utf-8") as f:
+            seen = json.load(f)
+    except (OSError, ValueError) as e:
+        raise ValueError("%s is unreadable (%s); it was not changed — fix or move it, then rerun" % (path, e))
+    if not isinstance(seen, dict):
+        raise ValueError("%s is unreadable (not a JSON object); it was not changed — fix or move it, then rerun" % path)
+    for key, e in seen.items():
+        aliases = e.get("aliases", []) if isinstance(e, dict) else None
+        if not (isinstance(e, dict) and e.get("status") in SEEN_STATUSES and isinstance(aliases, list)
+                and all(isinstance(a, str) for a in aliases)):
+            raise ValueError("%s is unreadable (bad entry %r); it was not changed — fix or move it, then rerun"
+                             % (path, key))
+    return seen
+
+
+def job_sig(job):
+    """sha1[:12] of title, pay and sorted locations; any change to these makes the job "changed"."""
+    comp = job.get("comp") if isinstance(job.get("comp"), dict) else {}
+    parts = [job.get("title") or "", comp.get("min"), comp.get("max"), comp.get("currency"), comp.get("interval"),
+             sorted(job.get("locations") or [])]
+    return hashlib.sha1(json.dumps(parts, ensure_ascii=False).encode("utf-8")).hexdigest()[:12]
+
+
+def job_snap(job):
+    """The fields job_sig hashes, kept readable so a rerun can say what changed (e.g. pay only)."""
+    comp = job.get("comp")
+    return {"title": job.get("title"),
+            "comp": {k: comp.get(k) for k in ("min", "max", "currency", "interval")} if isinstance(comp, dict) else None,
+            "locations": sorted(job.get("locations") or [])}
+
+
+def job_keys(job):
+    """The collapsed job's key, then its variants' keys, without duplicates."""
+    keys = [job.get("key")] + [v.get("key") for v in job.get("variants") or [] if isinstance(v, dict)]
+    return [k for i, k in enumerate(keys) if k and k not in keys[:i]]
+
+
+def seen_index(seen):
+    """{key or alias: entry key} for matching current jobs against seen.json. An entry's own key
+    wins over another entry's alias for the same key."""
+    index = {key: key for key in seen}
+    for key, e in seen.items():
+        for k in e.get("aliases") or []:
+            index.setdefault(k, key)
+    return index
+
+
+def _matches(job, index):
+    """Every seen.json entry key any of the job's keys points at (two roles can regroup into one)."""
+    keys = [index[k] for k in job_keys(job) if k in index]
+    return [k for i, k in enumerate(keys) if k not in keys[:i]]
+
+
+_STRENGTH = ("saved", "applied", "dismissed", "seen")  # saved must stay shown; applied/dismissed stay hidden
+
+
+def _strength(e):
+    return _STRENGTH.index(e.get("status")) if e.get("status") in _STRENGTH else len(_STRENGTH)
+
+
+def _deciding_entry(job, seen, index=None):
+    """The matching entry with the strongest status (saved > applied > dismissed > seen), or None."""
+    keys = _matches(job, seen_index(seen) if index is None else index)
+    return min((seen[k] for k in keys), key=_strength) if keys else None
+
+
+def job_state(job, seen, index=None):
+    """new | changed | seen | saved | applied | dismissed for one collapsed job; with several
+    matching entries, the strongest status (saved > applied > dismissed > seen) decides."""
+    e = _deciding_entry(job, seen, index)
+    if e is None:
+        return "new"
+    if e.get("status") in ("seen", "saved") and e.get("sig") and e["sig"] != job_sig(job):  # no sig: marked before record
+        return "changed"
+    return e.get("status") or "seen"
+
+
+def _board(key):
+    return ":".join(key.split(":", 2)[:2])
+
+
+def probed_ok_boards(run_dir):
+    """{"ats:slug"} boards probed successfully this run: live (≥1 job) with no error. An empty
+    board does not count — a board that briefly returns no jobs must not close every role on it."""
+    b = read_json(Path(run_dir) / "boards.json", {})
+    if not isinstance(b, dict):
+        return set()
+    bad = {e.get("board") for e in b.get("errors") or [] if isinstance(e, dict)}
+    return set(b.get("live_boards") or []) - bad
+
+
+def diff(jobs, probed_ok, seen):
+    """Lists of keys: new / changed / saved_open / applied_open (current job keys) and closed
+    (seen.json keys whose boards were all probed ok this run but no current job matches)."""
+    index = seen_index(seen)
+    out = {"new": [], "changed": [], "saved_open": [], "applied_open": [], "closed": []}
+    matched = set()
+    for job in jobs:
+        keys = _matches(job, index)
+        if not keys:
+            out["new"].append(job.get("key"))
+            continue
+        matched.update(keys)
+        if job_state(job, seen, index) == "changed":
+            out["changed"].append(job.get("key"))
+        statuses = {seen[k].get("status") for k in keys}
+        for status in ("saved", "applied"):
+            if status in statuses:
+                out[status + "_open"].append(job.get("key"))
+    for key, e in seen.items():
+        if (key not in matched and e.get("status") in _OPEN_STATUSES and not e.get("closed_at")
+                and all(_board(k) in probed_ok for k in [key] + list(e.get("aliases") or []))):
+            out["closed"].append(key)
+    return out
+
+
+def _merge_aliases(e, key, keys):
+    merged = list(e.get("aliases") or []) + keys  # old aliases stay: a closed variant can come back
+    e["aliases"] = [k for i, k in enumerate(merged) if k != key and k not in merged[:i]]
+
+
+def _shown_url(job, row_key):
+    """The link the user saw: the variant whose key is the results row key, else the job's url."""
+    v = next((v for v in job.get("variants") or [] if isinstance(v, dict) and v.get("key") == row_key), {})
+    return v.get("url") or job.get("url")
+
+
+def record(run_dir, now=None):
+    """Mark results.json rows with show true as seen (sig, title and url refreshed on every matching
+    entry); for every job in jobs.json that matches an entry, refresh aliases and last_seen but not
+    sig, so an unshown job can still read "changed"; set or clear closed_at; return counts.
+    A run with no results.json (a rerun with nothing new) records closures only.
+    Raises FileNotFoundError when the run has no jobs.json or an unreadable results.json,
+    ValueError (nothing written) when seen.json is unreadable."""
+    run_dir = Path(run_dir)
+    jobs = read_json(run_dir / "jobs.json")
+    results = read_json(run_dir / "results.json") if (run_dir / "results.json").exists() else {"rows": []}
+    if not isinstance(results, dict) or not isinstance(jobs, list):
+        raise FileNotFoundError("run %s has no jobs.json, or results.json is unreadable" % run_dir.name)
+    stamp = now_iso(now)
+    seen = load_seen()
+    by_key = {k: j for j in jobs for k in job_keys(j)}
+    counts = {"inserted": 0, "updated": 0, "missing": 0, "closed": 0, "reopened": 0}
+    for row in results.get("rows") or []:
+        if not (isinstance(row, dict) and row.get("show") is True):
+            continue
+        job = by_key.get(row.get("key"))
+        if job is None:
+            counts["missing"] += 1  # shown row not in jobs.json: nothing to sign
+            continue
+        keys = job_keys(job)
+        targets = _matches(job, seen_index(seen))
+        if not targets:
+            targets = keys[:1]
+            seen[keys[0]] = {"first_seen": stamp, "status": "seen", "reason": None, "closed_at": None, "aliases": []}
+            counts["inserted"] += 1
+        else:
+            counts["updated"] += 1
+        for key in targets:
+            _merge_aliases(seen[key], key, keys)
+            seen[key].update(last_seen=stamp, sig=job_sig(job), snap=job_snap(job), title=job.get("title"),
+                             company=job.get("company"), url=_shown_url(job, row.get("key")))
+    index = seen_index(seen)
+    for job in jobs:  # unshown too: filter drops unchanged roles, and their variants keep moving
+        keys = job_keys(job)
+        for key in _matches(job, index):
+            e = seen[key]
+            _merge_aliases(e, key, keys)
+            e["last_seen"] = stamp
+            if e.get("closed_at"):
+                e["closed_at"] = None
+                counts["reopened"] += 1
+    for key in diff(jobs, probed_ok_boards(run_dir), seen)["closed"]:
+        seen[key]["closed_at"] = stamp
+        counts["closed"] += 1
+    write_json_atomic(seen_path(), seen)
+    return counts
+
+
+def mark(key, status, reason=None, now=None):
+    """Set a role's status (creating the entry if record never saw it). ValueError on bad input."""
+    if status not in SEEN_STATUSES:
+        raise ValueError("status must be one of %s" % "/".join(SEEN_STATUSES))
+    if not isinstance(key, str) or not _KEY_RE.match(key):
+        raise ValueError("bad job key %r (want ats:slug:job_id)" % (key,))
+    if reason is not None and (not isinstance(reason, str) or len(reason) > MAX_REASON):
+        raise ValueError("reason must be a string of at most %d characters" % MAX_REASON)
+    seen = load_seen()
+    target = seen_index(seen).get(key, key)
+    e = seen.setdefault(target, {"first_seen": now_iso(now), "last_seen": now_iso(now), "closed_at": None,
+                                 "sig": None, "aliases": []})
+    e.update(status=status, reason=reason)
+    write_json_atomic(seen_path(), seen)
+    return dict(e, key=target)
+
+
+def seen_summary():
+    """{"counts": {status: n}, "saved"/"applied": [{key, title, company, url, closed}]} — `seen show`."""
+    seen = load_seen()
+    counts = {}
+    for e in seen.values():
+        counts[e.get("status")] = counts.get(e.get("status"), 0) + 1
+    out = {"counts": counts}
+    for status in ("saved", "applied"):
+        out[status] = [{"key": k, "title": e.get("title"), "company": e.get("company"), "url": e.get("url"),
+                        "closed": bool(e.get("closed_at"))} for k, e in seen.items() if e.get("status") == status]
+    return out
+
+
+def _seen_cli(args):
+    """seen diff|record [--run] · seen mark KEY STATUS [--reason] · seen show. Exit 0 ok, 1 bad input
+    (including an unreadable seen.json, which is left unchanged), 2 no run."""
+    try:
+        if args.action in ("diff", "record"):
+            try:
+                run = resolve_run(args.run)
+            except FileNotFoundError as e:
+                print(json.dumps({"error": str(e)}))
+                return 2
+            if args.action == "record":
+                try:
+                    out = record(run)
+                except FileNotFoundError as e:
+                    print(json.dumps({"error": str(e)}))
+                    return 2
+            else:
+                jobs = read_json(run / "jobs.json")
+                if not isinstance(jobs, list):
+                    print(json.dumps({"error": "run %s has no jobs.json — run probe.py first" % run.name}))
+                    return 2
+                seen = load_seen()
+                out = diff(jobs, probed_ok_boards(run), seen)
+                index, by_key = seen_index(seen), {j.get("key"): j for j in jobs}
+                out = dict(out, counts={k: len(v) for k, v in out.items()},
+                           changed_details=[{"key": k, "before": _deciding_entry(by_key[k], seen, index).get("snap"),
+                                             "after": job_snap(by_key[k])} for k in out["changed"]],
+                           closed_details=[{"key": k, "title": seen[k].get("title"), "company": seen[k].get("company"),
+                                            "status": seen[k].get("status"), "url": seen[k].get("url")}
+                                           for k in out["closed"]])
+        elif args.action == "mark":
+            e = mark(args.key, args.status, args.reason)
+            out = {"ok": True, "key": e["key"], "status": e["status"], "reason": e["reason"]}
+        else:
+            out = seen_summary()
+    except ValueError as e:  # bad run id, bad mark input, or unreadable seen.json
+        print(json.dumps({"error": str(e)}, ensure_ascii=False))
+        return 1
+    print(json.dumps(out, ensure_ascii=False))
+    return 0
+
+
 def main(argv=None):
-    """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout)."""
+    """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout);
+    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] · seen show."""
     import argparse
     import sys
     ap = argparse.ArgumentParser(prog="state.py")
@@ -264,8 +545,27 @@ def main(argv=None):
     prof = sub.add_parser("profile")
     prof.add_argument("action", choices=("validate", "save", "show"))
     prof.add_argument("--stdin", action="store_true", help="read the profile JSON from stdin (save)")
-    args = ap.parse_args(argv)
+    seen = sub.add_parser("seen")
+    seen_sub = seen.add_subparsers(dest="action", required=True)
+    for name in ("diff", "record"):
+        seen_sub.add_parser(name).add_argument("--run", default="latest")
+    mark_p = seen_sub.add_parser("mark")
+    mark_p.add_argument("key")
+    mark_p.add_argument("status")  # checked by mark(), so a bad status is exit 1, not argparse's 2
+    mark_p.add_argument("--reason")
+    seen_sub.add_parser("show")
+    try:
+        args = ap.parse_args(argv)
+    except SystemExit as e:
+        # seen exit 2 means "no run"; an argparse failure there (e.g. --reason -onsite) is bad input
+        if e.code and list(sys.argv[1:] if argv is None else argv)[:1] == ["seen"]:
+            print(json.dumps({"error": "bad arguments for seen (usage on stderr); "
+                                       "write a reason that starts with - as --reason=-text"}))
+            return 1
+        raise
 
+    if args.area == "seen":
+        return _seen_cli(args)
     if args.action == "show":
         p = read_json(profile_path())
         if p is None:

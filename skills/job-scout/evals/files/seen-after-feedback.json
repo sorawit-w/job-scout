@@ -1,0 +1,130 @@
+{
+ "ashby:turquoise-health:806f5f93-6eb6-4aea-9483-f8f7458e6730": {
+  "first_seen": "2026-10-19T03:57:51Z",
+  "status": "applied",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-19T03:57:51Z",
+  "sig": "c1460c5d1d55",
+  "snap": {
+   "title": "Senior Design Engineer",
+   "comp": {
+    "min": 172000,
+    "max": 195000,
+    "currency": "USD",
+    "interval": "year"
+   },
+   "locations": [
+    "Remote"
+   ]
+  },
+  "title": "Senior Design Engineer",
+  "company": "turquoise-health",
+  "url": "https://jobs.ashbyhq.com/turquoise-health/806f5f93-6eb6-4aea-9483-f8f7458e6730"
+ },
+ "greenhouse:arizeai:5778086004": {
+  "first_seen": "2026-10-19T03:57:51Z",
+  "status": "saved",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-19T03:57:51Z",
+  "sig": "053647632c5a",
+  "snap": {
+   "title": "Senior Open Source Design Engineer",
+   "comp": null,
+   "locations": [
+    "Remote (United States)",
+    "United States"
+   ]
+  },
+  "title": "Senior Open Source Design Engineer",
+  "company": "arizeai",
+  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5778086004"
+ },
+ "greenhouse:arizeai:5396420004": {
+  "first_seen": "2026-10-19T03:57:51Z",
+  "status": "seen",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-19T03:57:51Z",
+  "sig": "c359b4e87e26",
+  "snap": {
+   "title": "Senior AI Product Engineer, Fullstack",
+   "comp": null,
+   "locations": [
+    "Remote (United States)",
+    "United States"
+   ]
+  },
+  "title": "Senior AI Product Engineer, Fullstack",
+  "company": "arizeai",
+  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396420004"
+ },
+ "greenhouse:koboldmetals:4286209005": {
+  "first_seen": "2026-10-19T03:57:51Z",
+  "status": "seen",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-19T03:57:51Z",
+  "sig": "f838b49ed732",
+  "snap": {
+   "title": "Frontend Software Engineer",
+   "comp": null,
+   "locations": [
+    "North America",
+    "Remote"
+   ]
+  },
+  "title": "Frontend Software Engineer",
+  "company": "koboldmetals",
+  "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4286209005"
+ },
+ "ashby:turquoise-health:87306d91-a18e-490c-b4e6-4758d63b12a1": {
+  "first_seen": "2026-10-19T03:57:51Z",
+  "status": "dismissed",
+  "reason": "too senior",
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-19T03:57:51Z",
+  "sig": "5388b24ef769",
+  "snap": {
+   "title": "Senior Software Engineer, Transactions",
+   "comp": {
+    "min": 172000,
+    "max": 195000,
+    "currency": "USD",
+    "interval": "year"
+   },
+   "locations": [
+    "Remote"
+   ]
+  },
+  "title": "Senior Software Engineer, Transactions",
+  "company": "turquoise-health",
+  "url": "https://jobs.ashbyhq.com/turquoise-health/87306d91-a18e-490c-b4e6-4758d63b12a1"
+ },
+ "greenhouse:arizeai:5396396004": {
+  "first_seen": "2026-10-19T03:57:51Z",
+  "status": "seen",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-19T03:57:51Z",
+  "sig": "852458509123",
+  "snap": {
+   "title": "Senior AI Product Engineer, Backend",
+   "comp": null,
+   "locations": [
+    "Remote (United States)",
+    "United States"
+   ]
+  },
+  "title": "Senior AI Product Engineer, Backend",
+  "company": "arizeai",
+  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396396004"
+ }
+}

@@ -77,7 +77,7 @@ it, comment on it, or record it. Visa status is different — the user may state
 used only as the sponsorship filter.
 
 If `python3 scripts/state.py profile show` returns a saved profile, start from it: this is a
-rerun. Show the brief with what changed since last time ("same as last time — change
+rerun (Phase 9). Show the brief with what changed since last time ("same as last time — change
 anything?") instead of re-deriving everything.
 
 ## Phase 2 — Search brief and confirmation gate (required)
@@ -85,7 +85,7 @@ anything?") instead of re-deriving everything.
 **Rule: no request reaches any job board until the user confirms or edits the brief.** The one
 exception is an explicit "just go" / "skip the questions" / "use your best guess" — and even
 then you show the brief, with every assumed value labelled `default`, and proceed in the same
-reply.
+reply. A brief saved on an earlier run was already confirmed: see Phase 9.
 
 Why: wrong parameters waste the request budget and anchor the ranking on the wrong things, and
 people trust results more when they have seen the assumptions behind them.
@@ -215,7 +215,8 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
    location, remote scope, level, track, excluded companies and titles, pay floor) and prints
    `counts`, ranked `candidates` (each `strong` or `borderline`, with `flags`) and up to 5
    `near_misses`. With **zero candidates**, stop and explain using `counts.removed` (see
-   `references/output-format.md` §4) — never pad.
+   `references/output-format.md` §4) — never pad. On a rerun, zero candidates usually means
+   nothing new: follow Phase 9 instead.
 2. Choose **up to 40** candidates whose descriptions are worth reading: all plausible `strong`
    ones, then `borderline` titles that could be the target role in substance (a title like
    "Software Engineer, Product" may be exactly a design-engineering job). Skip ones the title
@@ -246,17 +247,59 @@ Follow `references/output-format.md`: one coverage line, the six-column table (e
 only), one notes line per row with the quoted why/risk and "open since", 3–5 "close but
 excluded" lines, then the feedback prompt.
 
-## Phase 8 — Feedback
+## Phase 8 — Remember and take feedback
 
-Ask what to do with the roles ("save 1", "applied 3", "dismiss 2: too senior"). Remembering
-them across runs arrives in the next milestone; until then, say the feedback can't be saved yet.
-If feedback implies a brief change ("I keep dismissing hybrid roles"), propose the change and
-confirm it — never change the brief silently.
+Right after showing the results, run `python3 scripts/state.py seen record` so the shown roles
+count as seen next time. Then act on the user's feedback, one command per role (keys come
+from results.json):
 
-## Phase 9 — Reruns (not built yet)
+```
+python3 scripts/state.py seen mark <key> saved
+python3 scripts/state.py seen mark <key> applied
+python3 scripts/state.py seen mark <key> dismissed --reason="too senior"
+```
 
-Showing only what's new since last time arrives in the next milestone. For now a rerun is a
-fresh search from the saved brief (Phase 1 already starts from it).
+Confirm each in one line ("Saved #1 — Vercel, Design Engineer"). If feedback implies a brief
+change ("I keep dismissing hybrid roles", three dismissals for the same reason), propose the
+change and save it only after the user agrees — never change the brief silently.
+
+**Adding companies.** When the user names companies to always check ("also check Linear and
+Figma"), run `python3 scripts/companies.py add "Linear" "Figma"` (up to 5 names). Report what
+it found:
+
+- A **guessed** board (`"from": "guess"`) may belong to a different company with the same
+  name. Show its `sample_titles` and ask "is this the right company?"; if not, run
+  `python3 scripts/companies.py remove "<name>"`.
+- No hits → nothing is saved; say so. If the user knows the company's board address (a
+  Greenhouse, Ashby or Lever jobs page), run `companies.py add "<name>" --board ats:slug`.
+- Exit 4 → the request cap stopped it; what was found is saved — say the rest wasn't checked.
+  Exit 3 → the job boards can't be reached (Phase 3).
+- If it prints a `suggest_row`, mention that the user can share it with the project so
+  everyone gets that company. `companies.py list` shows the saved companies.
+
+## Phase 9 — Reruns
+
+A saved profile means a rerun (Phase 1). The saved brief was confirmed on an earlier run, so
+show it as "same as last time" and search in the same reply. If the user's message changes
+anything in it ("I'm open to hybrid now"), show the changed brief and confirm it first, as in
+Phase 2. After Phases 3–4 run `python3 scripts/state.py seen diff` and
+`python3 scripts/filter.py` (on a rerun it shows only new, changed and saved roles; `--all`
+shows everything). Lead with what moved:
+
+- **New** roles first (mark them `NEW`), then **changed** ones — say what changed, from
+  `changed_details` (`before` → `after`: title, pay or locations).
+- **Saved or applied, still open** (`saved_open`, `applied_open`) — a short list, so nothing
+  they cared about is lost.
+- **Closed since last time** — the saved or applied roles in `closed_details` that are gone.
+  Only boards checked successfully this run can close a role; never call a role closed
+  because a board failed.
+
+With nothing new, say so in one line and show the saved-or-applied list. End every rerun with
+`python3 scripts/state.py seen record` — also when nothing was new — so closures are remembered
+and not reported again next time.
+
+**claude.ai:** files do not persist there. At the end, offer the profile and the saved/applied
+roles (title, company, link) as one block the user can paste next time.
 
 ## Cross-skill integration
 

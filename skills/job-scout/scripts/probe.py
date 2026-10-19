@@ -122,7 +122,8 @@ def _probe_one(board, budget, refresh):
 
 def probe(boards, budget, refresh=False, denylist=frozenset()):
     """Fetch boards concurrently. Returns (summary dict, collapsed jobs list)."""
-    summary = {"probed": 0, "cached": 0, "live": 0, "empty": [], "dead": [], "errors": [], "denylisted": 0}
+    summary = {"probed": 0, "cached": 0, "live": 0, "live_boards": [], "empty": [], "dead": [], "errors": [],
+               "denylisted": 0}
     jobs, outcomes = [], []
     todo = []
     for board in boards:
@@ -142,6 +143,7 @@ def probe(boards, budget, refresh=False, denylist=frozenset()):
         summary["cached"] += 1 if cached else 0
         if status == "live":
             summary["live"] += 1
+            summary["live_boards"].append(name)  # state.probed_ok_boards: only probed boards can close jobs
             module = adapters.REGISTRY[ats]
             for raw in raws:
                 try:

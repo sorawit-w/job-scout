@@ -86,7 +86,7 @@ Full report: `docs/m0/M0_REPORT.md`. Scripts: `docs/m0/connector_scorecard.py`, 
 - **Auto-apply, mass outreach, or bulk messaging.**
 - **Cover letters or outreach drafts.** If a writing skill is installed (e.g., `ghostwriter` from agent-skills), route to it by name. Otherwise, say drafting is out of scope for v0. Never depend on it being present.
 - **Any server, hosted index, or MCP** (see §12).
-- **Workday-hosted employers.** This is a known coverage gap: many large LA employers use Workday. Document it in the README; don't build for it in v0. (jobscope's MIT Workday adapter shows it can be done; see §13 for v0.1.)
+- **Workday-hosted employers.** This is a known coverage gap: many large LA employers use Workday. Now planned for v0 as M5b (see `implementation-plan.yaml`); until it ships, document it in the README.
 - **Recruiter-side features.**
 
 ---
@@ -416,7 +416,7 @@ If any of the three fails, stay a skill.
 | SmartRecruiters in v0? | Yes if the field check passes in M1; Workable deferred to v0.1 |
 | Seed list scope | **Changed after M0:** import corpHuntingMCP's ~5,000 Greenhouse/Ashby/Lever slugs (0BSD), keep only live boards via the seed check, then add sector tags; community PRs after that |
 | Build vs. contribute to jobscope | **Build** (M0 §1b: jobscope showed 4/18 by default, 3/18 in its top 15). Borrow its MIT adapters with credit where useful. |
-| Workday in v0.1? | Proposed yes, using jobscope's MIT Workday adapter as the starting point. Still a v0 non-goal. |
+| Workday in v0.1? | Moved into v0: M5b (2026-10-19, maintainer) adds SmartRecruiters, Workday with a verified company list, and opt-in USAJOBS before launch. |
 | Default `result_count` | 15 |
 | Eval resumes | 3–4 synthetic personas (senior frontend matching the §1 test, data analyst, PM, one out-of-coverage). Any real resume is used locally only, never committed. |
 | Thin MCP (§12 exception) | **Not needed** (M0: claude.ai Pro/Max works by default). Revisit only for blocked Team/Enterprise users. |

@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Implementation — matching complete and in review; state and reruns next |
-| **Milestone** | impl-state-reruns (M4) |
-| **Milestone Goal** | seen/diff memory, rerun view of new and changed roles, feedback recording, adding companies, SKILL.md phases 8–9 |
+| **Phase** | Integration — state and reruns complete and in review; evals next |
+| **Milestone** | int-evals (M5) |
+| **Milestone Goal** | E1–E9 run end to end, re-labelled ground truth, recall ≥15/18, a scorecard against jobscope |
 
 ---
 
@@ -23,9 +23,9 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M4 R1–R2 — `state.py` seen/diff (an errored or unprobed board never marks jobs closed) and the diff/record/mark CLI | matching merged |
-| 2 | M4 R3–R5 — `filter.py` state tags and only-new reruns; `companies.py` add; probe always includes the user's companies | R1 |
-| 3 | M4 R6–R8 — SKILL.md feedback and rerun phases, day2 replay world, E5/E6, skill-evaluator pass | R1–R5 |
+| 1 | M5 V1–V2 — personas and E1–E9 with assertions | state and reruns merged |
+| 2 | M5 V3–V4 — re-labelling snapshot + sheet; the human labels the ground truth (maintainer task) | V1 |
+| 3 | M5 V5–V10 — scorer for jobscope runs, scorecard, benchmark, fix loop, trigger eval, final skill-evaluator | V4 |
 
 ---
 

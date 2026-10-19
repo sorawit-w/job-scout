@@ -62,6 +62,36 @@
       ]
     },
     {
+      "id": "E5",
+      "name": "rerun — new first, changed explained, applied not new, saved role closed, failed board never closes",
+      "prompt": "Anything new since last week?\n\n[Eval setup — not part of the user's message: from the skill folder, run every job-scout script with JOB_SCOUT_REPLAY_DIR=evals/files/worlds/day2 and JOB_SCOUT_HOME set to a new temp directory. Before the conversation starts, copy evals/files/worlds/day2/profile.json into it as profile.json and evals/files/seen-after-feedback.json as seen.json (the brief the user confirmed last week and their feedback on last week's results). In Phase 4 run `python3 scripts/probe.py --boards greenhouse:koboldmetals,greenhouse:arizeai,ashby:turquoise-health,ashby:reactivemarkets` instead of the default board pick.]",
+      "expected_output": "The saved brief is shown as same as last time and not re-asked. The search runs on the four replayed boards; the KoBold Metals board fails (HTTP 503) and is reported as not checked. The Arize AI 'Design Engineer, Design Systems' leads, marked NEW. The Arize AI 'Senior AI Product Engineer, Frontend' is shown as changed, with its title changed from Fullstack to Frontend. The applied Turquoise Health 'Senior Design Engineer' is listed as applied and still open, not as new. The saved Arize AI 'Senior Open Source Design Engineer' is listed as closed since last time. The KoBold Metals 'Frontend Software Engineer' is not called closed. The reply ends with the feedback prompt.",
+      "files": [],
+      "assertions": [
+        "Runs scripts/probe.py with JOB_SCOUT_REPLAY_DIR pointing at evals/files/worlds/day2 and the four-board --boards list, then scripts/state.py seen diff and scripts/filter.py",
+        "Shows the saved brief as same as last time (at most asks whether to change anything) and does not re-ask work mode, pay floor or sponsorship before searching",
+        "The Arize AI 'Design Engineer, Design Systems' role is listed before every other role and is marked NEW",
+        "The Arize AI 'Senior AI Product Engineer, Frontend' role is marked as changed and says what changed: the title went from '..., Fullstack' to '..., Frontend'",
+        "The Turquoise Health 'Senior Design Engineer' (applied last week) is not marked NEW and not shown as a new result; if mentioned, it is under applied or still open",
+        "The Arize AI 'Senior Open Source Design Engineer' (saved last week) is listed as closed since last time",
+        "No KoBold Metals role is called closed; the KoBold Metals board is described as not checked or failed this time, not as having no jobs",
+        "Ends with a feedback prompt (save, applied, dismiss, or similar)"
+      ]
+    },
+    {
+      "id": "E6",
+      "name": "add companies mid-conversation — Linear and Figma from the seed list",
+      "prompt": "Also check Linear and Figma from now on.\n\n[Eval setup — not part of the user's message: same setup as E5 — from the skill folder, run every job-scout script with JOB_SCOUT_REPLAY_DIR=evals/files/worlds/day2 and JOB_SCOUT_HOME set to a new temp directory holding evals/files/worlds/day2/profile.json as profile.json and evals/files/seen-after-feedback.json as seen.json. This message comes mid-conversation, right after rerun results were shown; you do not need to search again. If you do run probe.py, pass `--boards greenhouse:koboldmetals,greenhouse:arizeai,ashby:turquoise-health,ashby:reactivemarkets`; Linear and Figma boards have no replay fixtures, so requests to them fail as replay misses.]",
+      "expected_output": "The skill runs companies.py add for Linear and Figma. Both are in the seed list, so companies.py finds them with 0 requests and saves them to the user's always-check list. The reply says both were found and saved, and that they will be checked on every search from now on. It never says a company was found when companies.py did not report a hit for it.",
+      "files": [],
+      "assertions": [
+        "Runs scripts/companies.py add with both \"Linear\" and \"Figma\" (one call or two)",
+        "Reports Linear and Figma as found in the seed list with no requests made, matching companies.py's output (requests 0, hits from the seed)",
+        "Says both were saved and will be checked on every search from now on",
+        "Never says a company was found unless companies.py listed a hit for it; any name without a hit is reported as not found and not saved"
+      ]
+    },
+    {
       "id": "E7",
       "name": "negative trigger — cover letter",
       "prompt": "Write a cover letter for the Vercel Design Engineer role: https://job-boards.greenhouse.io/vercel/jobs/6129441004",

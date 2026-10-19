@@ -1,0 +1,13 @@
+{
+ "schema": 1,
+ "target_roles": ["Senior Frontend Engineer", "Design Engineer"],
+ "title_synonyms": ["Frontend Software Engineer", "UI Engineer", "Product Engineer"],
+ "title_keywords": ["Software Engineer"],
+ "seniority": ["Senior", "Staff"],
+ "track": "ic",
+ "work_modes": ["remote"],
+ "remote_scope": ["US"],
+ "needs_sponsorship": "no",
+ "base_pay_floor": null,
+ "companies_exclude": ["Lumenly"]
+}

@@ -8,6 +8,9 @@ Open the results with this line — no summary sentence before it. (On a "just g
 comes first in the same reply, then this line.)
 
 `Checked N of M company job boards (K jobs open today). Best for tech and startup roles.`
+
+On a rerun, count what moved instead, so a short list doesn't read as "only K jobs exist":
+`Checked N of M company job boards — K new or changed since last time.`
 Use `boards.probed` and `boards.available` from probe.py and the number of open jobs from
 fetch_jd.py. If the user's field is mostly outside tech, say coverage was thin here too.
 
@@ -36,7 +39,8 @@ Under the table, one notes line per row, keyed by `#`:
   at the ends, never in the middle).
 - Add `Open since <first_published>` for every row and `(open over 90 days)` when flagged —
   long-open roles stay visible; they are often still hiring.
-- Add `NEW` for roles not seen on a previous run (M4).
+- Add `NEW` for roles whose `state` from filter.py is `new` on a rerun, and say what changed
+  for `changed` ones ("pay now listed", "title changed").
 
 ## 3. Close but excluded — 3 to 5 rows
 
@@ -51,6 +55,9 @@ One line each, one reason each, so the user can spot a filter that's too tight.
 
 ## 4. When nothing matches
 
+On a rerun, zero candidates usually means nothing new: follow SKILL.md Phase 9 (say so in one
+line, show the saved and applied roles still open) instead of the explanation below.
+
 Say so plainly and name the filter that removed the most jobs, using filter.py's
 `counts.removed` (e.g. "Most roles were removed by your remote scope (US only) — 212 of 640.
 Want me to include Americas-wide remote roles?"). Never fill the table with weak matches.
@@ -62,9 +69,7 @@ Tell me what to do with any of these — "save 1", "applied 3", "dismiss 2: too 
 I'll remember them next time and show you only what's new.
 ```
 
-(Until memory ships in M4, say the feedback can't be saved yet instead of the second sentence.)
-
 ## 6. claude.ai only
 
-Files don't persist between conversations there. Offer the saved profile as a code block the
-user can paste next time.
+Files don't persist between conversations there. Offer the saved profile and the saved/applied
+roles (title, company, link) as one code block the user can paste next time.

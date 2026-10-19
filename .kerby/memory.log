@@ -59,3 +59,19 @@ Action: remote_scope ANY/AMER honoured on the brief's side; fetch_jd shows live 
 Commit: 30ebf1c..df0dff4 (branch feature/matching)
 Status: DONE
 Notes: skill-evaluator: clean (50/50) at df0dff4 — 2026-10-19 (T1–T9 as recorded above; T10 4/4 on the final rubric text)
+
+Task: M4 — state and reruns (implementation-plan.yaml impl-state-reruns, R1–R8) + plan amendment M5b
+Action: plan gained M5b (SmartRecruiters, Workday with a verified company list, opt-in USAJOBS) before launch, maintainer decision. state.py seen memory (seen/saved/applied/dismissed, sig, aliases, snapshot, url) with diff/record/mark/show CLI — only live boards probed this run can close a role; filter.py state tags and only-new reruns (--all); companies.py add/list/remove (seed first, then ≤15 slug guesses; samples for guessed boards; --board); SKILL.md phases 8–9 (record, feedback, add companies, reruns, claude.ai paste-back); day2 replay world + E5/E6. QA review: 3 important + 7 others → all but the --limit/lock notes fixed test-first.
+Files: skills/job-scout/scripts/{state,filter,probe,companies}.py, skills/job-scout/{SKILL.md,references/output-format.md,evals/*}, tests/{test_seen,test_filter,test_companies,test_rerun_world}.py, tests/fixtures/http/companies/, implementation-plan.yaml, ROADMAP.md, docs/HANDOFF.md
+Commit: a1dde16..cb31d38 (branch feature/state-reruns)
+Status: DONE
+Notes: skill-evaluator: 27/27 first pass at 4b2c814; executors flagged the rerun-vs-gate ambiguity, the rerun coverage line, missing links and the §4 rerun case (skill-text layer) → fixed; changed parts re-run on the final text (M1r, M4r, M7, M8: 16/16).
+  skill-evaluator: clean (43/43) at cb31d38 — 2026-10-19
+Observations: deferred — filter --limit can cut saved roles when more than 150 new roles exist; seen.json and companies.csv have no lock (writes are atomic).
+
+Task: M4 — Codex review fixes on the state-reruns PR
+Action: seen record works without results.json, and SKILL.md Phase 9 runs it at the end of every rerun, so closures are recorded once; the closed list is saved/applied roles only; load_seen validates every entry. M4r re-run with an added "record on a nothing-new rerun" assertion.
+Commit: 0c7b30e..fde6b92 (branch feature/state-reruns)
+Status: DONE
+Notes: skill-evaluator: clean (44/44) at fde6b92 — 2026-10-19 (as recorded above, with M4r replaced by its 5/5 re-run on the final text)
+Observations: open for M5 — the brief table has no Source label for a saved brief on a rerun (cosmetic).
