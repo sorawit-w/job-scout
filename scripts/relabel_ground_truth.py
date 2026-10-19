@@ -253,7 +253,7 @@ def sheet_rows(jobs, keys, seed):
         where = _where(r) + (" · also posted in %d other region%s" % (others, "s" if others > 1 else "") if others else "")
         rows.append({"n": n, "key": k, "company": by_key[k].get("company") or "", "title": r.get("title") or "",
                      "location": where, "mode": r.get("workplace") or by_key[k].get("workplace") or "not stated",
-                     "posted": (by_key[k].get("first_published") or "")[:10], "link": _link(r.get("url")),
+                     "posted": (r.get("first_published") or "")[:10], "link": _link(r.get("url")),
                      "label": "", "note": ""})
     return rows
 
@@ -482,7 +482,7 @@ def to_ground_truth(labels, jobs, snap, date):
             "labels must be strong/maybe/no: %s" % ", ".join(bad_vals) if bad_vals else ""])))
 
     def role(k):
-        r = by_key[k]
+        r = _us_posting(by_key[k])[0]  # the posting the sheet showed, so exact-match scoring agrees
         return {"ats": r["ats"], "slug": r["slug"], "title": (r.get("title") or "").strip(),
                 "first_published": (r.get("first_published") or "")[:10], "key": k}
 

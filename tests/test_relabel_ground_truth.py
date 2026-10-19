@@ -212,6 +212,18 @@ class ImportTest(unittest.TestCase):
             score_run.main(["--gt", self.out, "--run", self.snap])
         self.assertIn("recall: 1/1 found", buf.getvalue())
 
+    def test_import_records_the_posting_the_sheet_showed(self):
+        # Brio's first posting is Canada; the sheet showed the Americas one, so the key must too,
+        # or a baseline that returns the Americas posting is scored as a miss (Codex review, PR 7).
+        path = self.write_labels({key(self.jobs, "brio"): "strong"})
+        self.assertEqual(run(["import", path, "--snapshot", self.snap, "--out", self.out])[0], 0)
+        with open(self.out, encoding="utf-8") as f:
+            role = json.load(f)["roles"][0]
+        self.assertEqual((role["title"], role["first_published"]), ("Design Engineer - Americas", "2026-09-20"))
+        self.assertEqual(role["key"], key(self.jobs, "brio"))
+        sheet = R.sheet_rows(self.jobs, {key(self.jobs, "brio")}, 1)[0]
+        self.assertEqual(sheet["posted"], "2026-09-20")
+
     def test_unknown_key_is_an_error(self):
         path = self.write_labels({"ashby:nope:1": "strong"})
         code, _, err = run(["import", path, "--snapshot", self.snap, "--out", self.out])

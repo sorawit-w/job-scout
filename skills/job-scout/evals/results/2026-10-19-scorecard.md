@@ -25,7 +25,7 @@ run 2 used the filter after the relevance-ranking fix below.
 
 | Stage | job-scout run 1 | job-scout run 2 | jobscope |
 |---|---|---|---|
-| Kept / candidates | 27 / 33 in the 150 shown to the agent | **30 / 33** | 19 / 33 in all 432 roles kept |
+| Kept / candidates | 27 / 33 in the 150 shown to the agent | **30 / 33** | 21 / 33 in all 432 roles kept |
 | Shortlist — the agent's 40 picks, live-checked | **26 / 33** | **26 / 33** | — |
 | Final list shown (top 15) | **13 / 33**; 13 of 15 shown are in the key | **13 / 33**; 13 of 15 in the key | **2 / 33** in its top 15 by score |
 | Shown roles open on a live check | 15 / 15 (40 / 40 shortlist) | not checked |

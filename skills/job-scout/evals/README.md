@@ -50,10 +50,13 @@ not in the world fails as a replay miss. `tests/test_replay_world.py` and
 
 ## Recall and ground truth
 
-- Ground truth today: `docs/reference/ground_truth_2026-10-18.json` (18 strong-fit roles for
-  the frontend persona on the 49-board seed).
-- After the M5 re-label: `skills/job-scout/evals/ground_truth/<date>.json`, one file per eval
-  day. Roles open and close, so re-label on the day you score.
+- Current answer key: `skills/job-scout/evals/ground_truth/2026-10-19.json` — 33 strong roles
+  (plus 115 uncertain) for the frontend persona on the 49-board seed, by two-model consensus;
+  its `labelled_by` field says how. Results: `evals/results/2026-10-19-scorecard.md`.
+- It matches the snapshot `evals/snapshots/2026-10-19/` (gitignored; rebuild with
+  `scripts/relabel_ground_truth.py snapshot`). Roles open and close, so a new eval day needs a new
+  snapshot and a new key (`relabel_ground_truth.py sheet` → label → `import`).
+- `docs/reference/ground_truth_2026-10-18.json` is the older M0 key (18 roles), kept for history.
 - Score a run with `scripts/score_run.py`:
 
 ```
