@@ -161,16 +161,16 @@ anyway; never pad the results with weak matches to compensate.
 
 ### Optional: work style
 
-When the profile has no `work_style` and the user did not say "just go", ask **once**, after they
-confirm the brief and before searching, in one numbered message (outside the 5-question budget).
+On a first run (no saved profile), once the user confirms the brief — not on "just go" — ask
+**once** before searching, in one numbered message (outside the 5-question budget).
 Every topic is optional; offer exactly these choices: 1. Meetings: async-first / meetings OK ·
 2. On-call: none / OK · 3. Travel: none / some / lots OK · 4. Autonomy: high / guided ·
 5. Company stage: startup / growth / established. Say once that these never change fit, rank or
 what is shown — each role shows what its posting says (matches / doesn't match / not stated).
 Save the picks as `work_style` (`{}` for "skip"), so it is never asked again; "change my work
-style" edits it any time (from the next search on). The questions are about the job, not the person: if the user gives a
-personal reason ("no travel — I have kids"), store only the choice; never record or repeat the
-reason. "Only show async companies" is a dealbreaker, not a signal: offer `dealbreakers` instead.
+style" edits it any time (from the next search on). The questions are about the job, not the
+person: if the user gives a personal reason ("no travel — I have kids"), store only the choice;
+never record or repeat the reason. "Only show async companies" is a dealbreaker, not a signal: offer `dealbreakers` instead.
 On "just go", list it as an optional follow-up. On a rerun without it, offer it once after the
 results; if the user moves on, save `{}`.
 

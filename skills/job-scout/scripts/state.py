@@ -263,7 +263,7 @@ def validate_profile(p):
         if key in p and not (isinstance(p[key], int) and not isinstance(p[key], bool) and lo <= p[key] <= hi):
             errors.append("%s must be an integer from %d to %d" % (key, lo, hi))
     style = p.get("work_style", {})
-    if not (isinstance(style, dict) and all(k in WORK_STYLE and v in WORK_STYLE[k] for k, v in style.items())):
+    if not (isinstance(style, dict) and all(k in WORK_STYLE and isinstance(v, str) and v in WORK_STYLE[k] for k, v in style.items())):
         errors.append("work_style must map %s to one of their choices (%s)" % (
             "/".join(WORK_STYLE), "; ".join("%s: %s" % (k, "/".join(v)) for k, v in WORK_STYLE.items())))
     sources = p.get("sources", {})

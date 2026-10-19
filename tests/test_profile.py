@@ -76,7 +76,8 @@ class ValidateTest(unittest.TestCase):
         for ok in ({}, {"meetings": "async", "travel": "none"}, {k: next(iter(v)) for k, v in state.WORK_STYLE.items()}):
             self.assertEqual(state.validate_profile(good(work_style=ok, sources={"work_style": "you"})), [], ok)
         for bad in ({"family": "kids"},  # no topic for a personal reason: the protected-trait guard
-                    {"travel": "never, I have kids"}, {"travel": "NONE"}, ["async"], "async", None):
+                    {"travel": "never, I have kids"}, {"travel": "NONE"}, {"travel": ["none"]}, {"travel": {"none": 1}},
+                    ["async"], "async", None):
             errors = state.validate_profile(good(work_style=bad))
             self.assertTrue(any(e.startswith("work_style must map") for e in errors), (bad, errors))
 
