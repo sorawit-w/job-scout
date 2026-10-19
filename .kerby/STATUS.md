@@ -13,8 +13,8 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Integration — more hiring tools in review; launch next |
-| **Milestone** | int-more-ats (M5b), then deploy-launch (M6) |
+| **Phase** | Deployment — launch docs and release zip in review |
+| **Milestone** | deploy-launch (M6) |
 | **Milestone Goal** | First public release: docs, release zip, install smoke tests; going public is the maintainer's call |
 
 ---
@@ -23,15 +23,15 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M5b PR — review findings fixed, squash-merged | skill-evaluator clean |
-| 2 | M6 L1–L5 — root and skill README, PRIVACY (search titles go to Workday/USAJOBS), CONTRIBUTING, NOTICE | M5b merged |
-| 3 | M6 L6–L8 — release zip script, version bump + CHANGELOG, trim SKILL.md toward ~300 lines, install smoke tests | L1–L5 |
+| 1 | M6 PR — review findings fixed, squash-merged | skill-evaluator clean |
+| 2 | Maintainer: make the repo public, publish the release zip, run the four install smoke tests (DEVELOPER_TODO) | M6 merged |
+| 3 | Follow-ups in ROADMAP (iCIMS, Taleo, Phenom first) | release published |
 
 ---
 
 ## Blockers
 
-None.
+- Going public, the GitHub release and the install smoke tests are maintainer actions (DEVELOPER_TODO).
 
 ---
 
