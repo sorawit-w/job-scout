@@ -119,8 +119,13 @@ def _run_dirs():
     root = _runs_dir()
     if not root.is_dir():
         return []
-    # shortcut: name sort puts "-10" before "-2"; fine unless 10+ runs start in one second.
-    return sorted(p for p in root.iterdir() if p.is_dir())
+    return sorted((p for p in root.iterdir() if p.is_dir() and _RUN_ID_RE.match(p.name)), key=_run_key)
+
+
+def _run_key(path):
+    """Chronological order: timestamp, then numeric suffix ("-10" after "-2")."""
+    base, _, suffix = path.name.partition("-")
+    return base, int(suffix) if suffix.isdigit() else 1
 
 
 def new_run(now=None):
@@ -128,7 +133,10 @@ def new_run(now=None):
     root = _runs_dir()
     root.mkdir(parents=True, exist_ok=True)
     base = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime(now))
-    n = 1
+    # Always number above any run with this timestamp, even if pruning deleted the lower ones,
+    # so a newer run never sorts as older than a survivor.
+    same = [_run_key(p)[1] for p in _run_dirs() if p.name.partition("-")[0] == base]
+    n = max(same) + 1 if same else 1
     while True:
         path = root / (base if n == 1 else "%s-%d" % (base, n))
         try:

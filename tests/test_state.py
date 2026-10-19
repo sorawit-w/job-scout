@@ -140,5 +140,14 @@ class QaFixesStateTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     state.resolve_run(bad)
 
+class CodexReviewRunOrderTest(unittest.TestCase):
+    def test_five_runs_in_one_second_keep_the_newest_three(self):
+        import tempfile
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": tempfile.mkdtemp()}):
+            made = [state.new_run(now=1760000000.0) for _ in range(5)]
+            self.assertEqual(state.latest_run(), made[-1])
+            kept = sorted(p.name for p in (state.home() / "runs").iterdir())
+            self.assertEqual(sorted(kept), sorted(p.name for p in made[-3:]))
+
 if __name__ == "__main__":
     unittest.main()
