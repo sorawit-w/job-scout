@@ -174,7 +174,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             since_short=_short_date(str(job.get("first_published") or "")[:10], (run_id or "")[:4]),
             scores={s: scores.get(s) for s in SCORES}, gates={g: gates.get(g) or "unknown" for g in GATES},
             why=_items(row.get("why")), risk=_items(row.get("risk")),
-            state=cand.get("state") if seen and cand.get("state") in ("new", "changed") else None,  # all new on a first run
+            state=cand.get("state") if rerun and cand.get("state") in ("new", "changed") else None,  # all new on a first run
             flags=[f for f in (job["flags"] if isinstance(job.get("flags"), list) else cand.get("flags") or [])
                    if isinstance(f, str)]))  # an empty live list means the live check cleared them
     summary = files.get("filter") if isinstance(files.get("filter"), dict) else {}

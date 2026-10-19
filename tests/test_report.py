@@ -201,11 +201,13 @@ class ReportTest(unittest.TestCase):
         self.assertIn("<h2>Closed since last time</h2>", html)
 
     def test_empty_history_still_counts_as_a_rerun(self):
-        make_run(self.home, [job("gh:a:1")], rows=None)
+        make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {})  # what record leaves after a zero-result first search
         run([], self.home)
-        self.assertIn("new or changed since last time", page(self.home))
+        html = page(self.home)
+        self.assertIn("new or changed since last time", html)
+        self.assertIn('<span class="tag">NEW</span>', html)
 
     def test_quotes_show_where_they_are_cut_but_stay_verbatim(self):
         self.assertEqual(report._clip("gap between design intent and the experience we"),
