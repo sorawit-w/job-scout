@@ -156,6 +156,21 @@ class SheetTest(unittest.TestCase):
             json.dump(["greenhouse:nope:1"], f)
         self.assertEqual(run(["sheet", "--snapshot", snap, "--only", only])[0], 1)
 
+    def test_sheet_shows_the_posting_a_us_person_can_take(self):
+        # Ashby lists one role per region; the first (EU) posting hid the Americas one on 2026-10-19.
+        eu = {"key": "ashby:a:1", "title": "Design Engineer - EU", "url": "https://jobs.ashbyhq.com/a/1",
+              "locations": ["Portugal", "Spain"], "countries": ["PT", "ES"], "remote": True, "remote_scope": ["PT", "ES"]}
+        us = {"key": "ashby:a:2", "title": "Design Engineer - Americas", "url": "https://jobs.ashbyhq.com/a/2",
+              "locations": ["Remote - US", "Austin"], "countries": ["US"], "remote": True, "remote_scope": ["US"]}
+        row = dict(eu, company="A", ats="ashby", slug="a", first_published="2026-10-01", workplace="remote",
+                   variants=[eu, us])
+        out = R.sheet_rows([row], {"ashby:a:1"}, 1)[0]
+        self.assertEqual(out["key"], "ashby:a:1")  # labels stay on the collapsed row
+        self.assertEqual(out["title"], "Design Engineer - Americas")
+        self.assertEqual(out["link"], "https://jobs.ashbyhq.com/a/2")
+        self.assertIn("Remote - US", out["location"])
+        self.assertIn("also posted in 1 other region", out["location"])
+
     def test_shuffle_is_deterministic(self):
         jobs = [{"key": "ashby:s:%d" % i, "title": "T%d" % i, "url": "javascript:alert(1)"} for i in range(12)]
         keys = [j["key"] for j in jobs]

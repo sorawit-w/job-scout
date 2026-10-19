@@ -247,12 +247,24 @@ def sheet_rows(jobs, keys, seed):
     random.Random(seed).shuffle(order)
     rows = []
     for n, k in enumerate(order, 1):
-        r = by_key[k]
-        rows.append({"n": n, "key": k, "company": r.get("company") or "", "title": r.get("title") or "",
-                     "location": _where(r), "mode": r.get("workplace") or "not stated",
-                     "posted": (r.get("first_published") or "")[:10], "link": _link(r.get("url")),
+        r, others = _us_posting(by_key[k])
+        where = _where(r) + (" · also posted in %d other region%s" % (others, "s" if others > 1 else "") if others else "")
+        rows.append({"n": n, "key": k, "company": by_key[k].get("company") or "", "title": r.get("title") or "",
+                     "location": where, "mode": r.get("workplace") or by_key[k].get("workplace") or "not stated",
+                     "posted": (by_key[k].get("first_published") or "")[:10], "link": _link(r.get("url")),
                      "label": "", "note": ""})
     return rows
+
+
+def _us_posting(row):
+    """(the posting a US-based person can take, number of other postings): a role posted once per
+    region shows its US or US-remote posting, not whichever region happened to be listed first."""
+    variants = row.get("variants") or []
+    for v in variants:
+        scope = set(v.get("remote_scope") or [])
+        if "US" in (v.get("countries") or []) or (v.get("remote") and scope & {"US", "AMER", "ANY"}):
+            return dict(row, **v), len(variants) - 1
+    return row, max(len(variants) - 1, 0)
 
 
 def write_csv(path, rows):
