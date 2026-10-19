@@ -31,10 +31,10 @@ Everything lives in `~/.job-scout/` (or the folder in `JOB_SCOUT_HOME`):
 
 | File | What it holds |
 |---|---|
-| `profile.json` | Your confirmed search brief. The schema rejects unknown fields, so protected traits can't be saved. |
+| `profile.json` | Your confirmed search brief. It has no field for protected traits and rejects unknown fields; the skill is told never to record a trait you mention, even in a free-text field. |
 | `seen.json` | Roles you have seen, saved, applied to or dismissed (with your reason), so reruns show what is new. |
 | `companies.csv` | Companies you added. |
-| `cache/` | Job lists from each board, kept 6 hours. Errors are never cached. |
+| `cache/` | Public job lists from each board. A list is reused for 6 hours, then fetched again; old files stay until you delete the folder. Errors are never cached. |
 | `runs/<id>/` | One folder per search: jobs, candidates, descriptions, results. Only the newest 3 are kept. |
 
 Your resume file is never copied into `~/.job-scout/`. To delete everything, delete the folder.

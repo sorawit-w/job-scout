@@ -10,8 +10,8 @@ All notable changes to `job-scout` are documented here. Format follows
 ### Added
 - **Confirmation gate (M2):** the skill shows a search brief with the source of every value and
   asks about work mode, pay and sponsorship before any search; "just go" uses labelled defaults
-  that filter nothing out. The profile schema rejects unknown fields, so protected traits can't
-  be saved.
+  that filter nothing out. The profile has no field for protected traits and rejects unknown
+  fields.
 - **Job boards (M1b, M5b):** Greenhouse, Ashby, Lever, SmartRecruiters and Workday adapters,
   plus opt-in USAJOBS with the user's own key. About 14,000 verified boards in
   `data/companies.csv`, checked weekly by a GitHub Action that opens a PR.
