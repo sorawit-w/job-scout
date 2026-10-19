@@ -450,17 +450,73 @@ class CountsTest(unittest.TestCase):
         out, cands = run(jobs)
         c = out["counts"]
         self.assertEqual(sorted(c["removed"]), sorted(["work_mode", "location", "remote_scope", "seniority", "track",
-                                                       "company", "title", "title_exclusion", "pay_floor"]))
+                                                       "company", "title", "title_exclusion", "pay_floor",
+                                                       "already_seen", "dismissed_or_applied"]))
         self.assertEqual(sum(c["removed"].values()) + c["candidates"], c["input"])
         self.assertEqual(c["input"], len(jobs))
         self.assertEqual(c["candidates"], 2)
-        self.assertTrue(all(v == 1 for v in c["removed"].values()), c["removed"])
+        first_run = {k: v for k, v in c["removed"].items() if k not in ("already_seen", "dismissed_or_applied")}
+        self.assertTrue(all(v == 1 for v in first_run.values()), c["removed"])
+        self.assertEqual((c["removed"]["already_seen"], c["removed"]["dismissed_or_applied"]), (0, 0))
 
     def test_input_not_mutated(self):
         j = job()
         before = json.dumps(j, sort_keys=True)
         run([j])
         self.assertEqual(json.dumps(j, sort_keys=True), before)
+
+
+def seen_entry(j, status="seen"):
+    return {"first_seen": "2026-10-01T00:00:00Z", "last_seen": "2026-10-01T00:00:00Z", "status": status,
+            "reason": None, "closed_at": None, "sig": state.job_sig(j), "aliases": []}
+
+
+class SeenStateTest(unittest.TestCase):
+    def setUp(self):
+        self.jobs = {s: job(key="ashby:acme:%s" % s) for s in ("new", "seen", "saved", "applied", "dismissed", "changed")}
+        self.seen = {j["key"]: seen_entry(j, s) for s, j in self.jobs.items() if s != "new"}
+        self.seen["ashby:acme:changed"] = seen_entry(dict(self.jobs["changed"], title="Old title"))
+
+    def filt(self, show_all=False, seen=None):
+        return jfilter.run_filter(list(self.jobs.values()), profile(), today=TODAY,
+                                  seen=self.seen if seen is None else seen, show_all=show_all)
+
+    def test_first_run_everything_new(self):
+        out, cands = self.filt(seen={})
+        self.assertEqual(len(cands), 6)
+        self.assertEqual({c["state"] for c in cands}, {"new"})
+        self.assertEqual({c["state"] for c in out["candidates"]}, {"new"})
+
+    def test_rerun_keeps_new_changed_saved_and_ranks_saved_last(self):
+        out, cands = self.filt()
+        self.assertEqual([(c["key"], c["state"]) for c in out["candidates"]],
+                         [("ashby:acme:new", "new"), ("ashby:acme:changed", "changed"), ("ashby:acme:saved", "saved")])
+        self.assertEqual([c["state"] for c in cands], ["new", "changed", "saved"])
+        c = out["counts"]
+        self.assertEqual((c["removed"]["already_seen"], c["removed"]["dismissed_or_applied"]), (1, 2))
+        self.assertEqual(sum(c["removed"].values()) + c["candidates"], c["input"])
+
+    def test_all_flag_shows_everything_tagged(self):
+        out, cands = self.filt(show_all=True)
+        self.assertEqual([c["state"] for c in cands], ["new", "changed", "saved", "seen", "applied", "dismissed"])
+        self.assertEqual(out["counts"]["candidates"], 6)
+        self.assertEqual(out["counts"]["removed"]["already_seen"], 0)
+
+    def test_hard_filter_reason_wins_over_seen(self):
+        bad = job("RTL Design Engineer", key="ashby:acme:rtl")
+        out, _ = jfilter.run_filter([bad], profile(), today=TODAY, seen={bad["key"]: seen_entry(bad)})
+        self.assertEqual(out["counts"]["removed"]["title_exclusion"], 1)
+        self.assertEqual(out["counts"]["removed"]["already_seen"], 0)
+
+    def test_state_uses_collapsed_job_not_display_variant(self):
+        # the display variant has a different title/key; the seen entry was signed on the collapsed row
+        v_local = {"key": "ashby:acme:v2", "title": "Senior Frontend Engineer (LA)", "locations": ["Los Angeles, CA"],
+                   "remote": False, "remote_scope": None, "workplace": "hybrid", "comp": USD, "countries": []}
+        j = job(key="ashby:acme:v1", locations=("Remote - Poland",), scope=("PL",))
+        j["variants"] = [dict(j["variants"][0], remote_scope=["PL"], locations=["Remote - Poland"]), v_local]
+        out, cands = jfilter.run_filter([j], profile(), today=TODAY, seen={j["key"]: seen_entry(j)}, show_all=True)
+        self.assertEqual(cands[0]["key"], "ashby:acme:v2")
+        self.assertEqual(cands[0]["state"], "seen")
 
 
 class CliTest(unittest.TestCase):
@@ -516,7 +572,7 @@ class CliTest(unittest.TestCase):
         self.assertEqual(sorted(out["counts"]), ["candidates", "input", "removed"])
         self.assertEqual(out["counts"]["input"], 3)
         row = out["candidates"][0]
-        self.assertEqual(sorted(row), ["company", "flags", "key", "match", "mode", "pay", "since", "title", "where"])
+        self.assertEqual(sorted(row), ["company", "flags", "key", "match", "mode", "pay", "since", "state", "title", "where"])
         self.assertEqual(row["mode"], "remote")
         self.assertEqual(row["since"], "2026-10-01")
         self.assertEqual(out["candidates"][1]["pay"], "pay not listed")
@@ -540,6 +596,18 @@ class CliTest(unittest.TestCase):
         self.make_run([local(workplace=None)])
         code, out = self.main([])
         self.assertEqual(out["candidates"][0]["mode"], "unknown")
+
+    def test_rerun_uses_seen_json_and_all_flag(self):
+        state.write_json_atomic(state.profile_path(), profile())
+        a, b = job(key="ashby:acme:a"), job(key="ashby:acme:b")
+        self.make_run([a, b])
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:a": seen_entry(a)})
+        code, out = self.main([])
+        self.assertEqual((code, [c["key"] for c in out["candidates"]]), (0, ["ashby:acme:b"]))
+        self.assertEqual(out["counts"]["removed"]["already_seen"], 1)
+        code, out = self.main(["--all"])
+        self.assertEqual(sorted((c["key"], c["state"]) for c in out["candidates"]),
+                         [("ashby:acme:a", "seen"), ("ashby:acme:b", "new")])
 
 
 if __name__ == "__main__":

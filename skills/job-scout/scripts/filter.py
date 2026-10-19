@@ -2,14 +2,15 @@
 """Hard filters and a title prefilter: turn a run's jobs.json into a ranked candidates.json.
 
 Usage (paths relative to the skill folder):
-  python3 scripts/filter.py [--run latest|<run-id>] [--limit 150]
+  python3 scripts/filter.py [--run latest|<run-id>] [--limit 150] [--all]
 
-Reads <run>/jobs.json (written by probe.py) and the saved profile (~/.job-scout/profile.json).
-Writes <run>/candidates.json (full job dicts plus match and flags, ranked, at most --limit) and
-prints one compact JSON object:
+Reads <run>/jobs.json (written by probe.py), the saved profile (~/.job-scout/profile.json) and
+seen.json (via state.py). Writes <run>/candidates.json (full job dicts plus match, flags and
+state, ranked, at most --limit) and prints one compact JSON object:
   {"counts": {"input", "removed": {reason: n}, "candidates"},
-   "candidates": [{key, company, title, where, mode, since, pay, match, flags}],
+   "candidates": [{key, company, title, where, mode, since, pay, match, flags, state}],
    "near_misses": [{key, company, title, reason}]}
+state is new | changed | saved | applied | seen | dismissed (no seen.json: all new).
 Exit codes: 0 ok · 2 no profile, no run, no jobs.json, or bad arguments.
 
 Rules, in order (the first rule a job fails is its removal reason): company exclude ->
@@ -18,6 +19,10 @@ or unknown-mode job elsewhere in the home or remote-scope countries, flagged) ->
 -> title exclusions -> title prefilter (strong / borderline) -> pay floor (structured pay only;
 Greenhouse lists no pay, so its pay is checked after fetch_jd).
 Old postings are flagged ("open over N days"), never removed.
+Rerun (seen.json has entries), after every rule above: unchanged seen roles are removed as
+"already_seen", applied and dismissed ones as "dismissed_or_applied"; new, changed and saved stay.
+--all keeps them all (still tagged). Ranking puts new and changed before saved (then the rest),
+keeping the usual order within each group. removed + candidates always equals input.
 
 What it does NOT do:
 - No judgment of fit. "strong" and "borderline" are word matches on the title only; the LLM
@@ -41,7 +46,10 @@ DEFAULT_LIMIT = 150
 MAX_LIMIT = 300
 MAX_NEAR_MISSES = 5
 REASONS = ("work_mode", "location", "remote_scope", "seniority", "track", "company", "title",
-           "title_exclusion", "pay_floor")
+           "title_exclusion", "pay_floor",
+           "already_seen", "dismissed_or_applied")
+_STATE_TIER = {"new": 0, "changed": 0, "saved": 1}  # everything else (only shown with --all) after
+_RERUN_DROP = {"seen": "already_seen", "applied": "dismissed_or_applied", "dismissed": "dismissed_or_applied"}
 SCOPE_NOT_STATED = "remote scope not stated"
 AMER_FLAG = "Americas — check US eligibility"
 MODE_NOT_STATED = "work mode not stated"
@@ -264,7 +272,7 @@ def _judge(job, p, ctx):
 def _rank_key(row):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
-    return (row["match"] != "strong", any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]), newest is None, newest or 0)
+    return (_STATE_TIER.get(row["state"], 2), row["match"] != "strong", any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]), newest is None, newest or 0)
 
 
 def _where(row):
@@ -274,8 +282,9 @@ def _where(row):
     return "; ".join(locs[:2]) + (" +%d more" % (len(locs) - 2) if len(locs) > 2 else "")
 
 
-def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None):
-    """Apply every rule. Returns (stdout summary dict, ranked full candidate dicts capped at limit)."""
+def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_all=False):
+    """Apply every rule. Returns (stdout summary dict, ranked full candidate dicts capped at limit).
+    seen is seen.json's content; empty or None is a first run (nothing dropped, all "new")."""
     p = state.with_profile_defaults(profile)
     limit = max(1, min(int(limit), MAX_LIMIT))
     home_city = (p.get("home_base") or "").split(",")[0].strip()
@@ -287,10 +296,15 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None):
            "manager": [x for x in _MANAGER
                        if not any(has_phrase(words(r), x) for r in p["target_roles"] + p["title_synonyms"])],
            "today": today or datetime.date.today()}
+    seen = seen or {}
+    index = state.seen_index(seen)
     removed = dict.fromkeys(REASONS, 0)
     kept, near = [], []
     for job in jobs:
         reason, row, miss = _judge(job, p, ctx)
+        if not reason:
+            row["state"] = state.job_state(job, seen, index)  # the collapsed job: same sig as record()
+            reason = None if show_all else _RERUN_DROP.get(row["state"])
         if reason:
             removed[reason] += 1
             if miss:
@@ -305,7 +319,7 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None):
         "candidates": [{"key": r.get("key"), "company": r.get("company"), "title": r.get("title"),
                         "where": _where(r), "mode": r.get("workplace") or "unknown",
                         "since": r.get("first_published"), "pay": pay_text(r.get("comp")),
-                        "match": r["match"], "flags": r["flags"]} for r in shown],
+                        "match": r["match"], "flags": r["flags"], "state": r["state"]} for r in shown],
         "near_misses": [{"key": r.get("key"), "company": r.get("company"), "title": r.get("title"), "reason": why}
                         for _, _, r, why in near[:MAX_NEAR_MISSES]],
     }
@@ -316,6 +330,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Filter a run's jobs against the saved profile.")
     ap.add_argument("--run", default="latest")
     ap.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
+    ap.add_argument("--all", action="store_true", help="on a rerun, also show seen, applied and dismissed roles")
     try:
         args = ap.parse_args(argv)
     except SystemExit:
@@ -333,7 +348,7 @@ def main(argv=None):
     if not isinstance(jobs, list):
         print(json.dumps({"error": "run %s has no jobs.json — run probe.py first" % run.name}))
         return 2
-    summary, candidates = run_filter(jobs, profile, args.limit)
+    summary, candidates = run_filter(jobs, profile, args.limit, seen=state.load_seen(), show_all=args.all)
     state.write_json_atomic(run / "candidates.json", candidates)
     print(json.dumps(summary, separators=(",", ":")))
     return 0
