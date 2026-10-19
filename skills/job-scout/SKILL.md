@@ -209,9 +209,10 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
 1. Run `python3 scripts/filter.py`. It applies the confirmed brief deterministically (work mode,
    location, remote scope, level, track, excluded companies and titles, pay floor) and prints
    `counts`, ranked `candidates` (each `strong` or `borderline`, with `flags`) and up to 5
-   `near_misses`. With **zero candidates**, stop and explain using `counts.removed` (see
-   `references/output-format.md` §4) — never pad. On a rerun, zero candidates usually means
-   nothing new: follow Phase 9 instead.
+   `near_misses`. With **zero candidates**, skip steps 2–3 and Phase 6, explain using
+   `counts.removed` (see `references/output-format.md` §4) — never pad — then still write the
+   report as in Phase 7. On a rerun, zero candidates usually means nothing new: follow Phase 9
+   instead.
 2. Choose **up to 40** candidates whose descriptions are worth reading: all plausible `strong`
    ones, then `borderline` titles that could be the target role in substance (a title like
    "Software Engineer, Product" may be exactly a design-engineering job). Skip ones the title

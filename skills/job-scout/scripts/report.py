@@ -349,7 +349,7 @@ if(announce)live.textContent='Showing '+btn(r).textContent.trim()+(r.dataset.com
 function visible(){return Array.prototype.filter.call(table.tBodies,function(r){return !r.hidden;});}
 function mode(){var want=wide.matches;if(want===split)return;split=want;
 if(split){root.classList.add('split');pane.hidden=false;rows.forEach(function(r){setOpen(r,false);});
-var v=visible();if(v.length)select(v[0],false);}
+var v=visible();pane.classList.toggle('is-empty',!v.length);if(v.length)select(v[0],false);}
 else{root.classList.remove('split');if(sel){var det=pane.querySelector('.detail');if(det)home[det.id].appendChild(det);}
 sel=null;pane.hidden=true;rows.forEach(function(r){setOpen(r,false);r.querySelector('tr.det').hidden=true;});}}
 rows.forEach(function(r){r.querySelector('tr.det').hidden=true;setOpen(r,false);});
