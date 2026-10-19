@@ -36,7 +36,8 @@ Under the table, one notes line per row, keyed by `#`:
   at the ends, never in the middle).
 - Add `Open since <first_published>` for every row and `(open over 90 days)` when flagged —
   long-open roles stay visible; they are often still hiring.
-- Add `NEW` for roles not seen on a previous run (M4).
+- Add `NEW` for roles whose `state` from filter.py is `new` on a rerun, and say what changed
+  for `changed` ones ("pay now listed", "title changed").
 
 ## 3. Close but excluded — 3 to 5 rows
 
@@ -62,9 +63,7 @@ Tell me what to do with any of these — "save 1", "applied 3", "dismiss 2: too 
 I'll remember them next time and show you only what's new.
 ```
 
-(Until memory ships in M4, say the feedback can't be saved yet instead of the second sentence.)
-
 ## 6. claude.ai only
 
-Files don't persist between conversations there. Offer the saved profile as a code block the
-user can paste next time.
+Files don't persist between conversations there. Offer the saved profile and the saved/applied
+roles (title, company, link) as one code block the user can paste next time.

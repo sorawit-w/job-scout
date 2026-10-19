@@ -77,7 +77,7 @@ it, comment on it, or record it. Visa status is different — the user may state
 used only as the sponsorship filter.
 
 If `python3 scripts/state.py profile show` returns a saved profile, start from it: this is a
-rerun. Show the brief with what changed since last time ("same as last time — change
+rerun (Phase 9). Show the brief with what changed since last time ("same as last time — change
 anything?") instead of re-deriving everything.
 
 ## Phase 2 — Search brief and confirmation gate (required)
@@ -246,17 +246,45 @@ Follow `references/output-format.md`: one coverage line, the six-column table (e
 only), one notes line per row with the quoted why/risk and "open since", 3–5 "close but
 excluded" lines, then the feedback prompt.
 
-## Phase 8 — Feedback
+## Phase 8 — Remember and take feedback
 
-Ask what to do with the roles ("save 1", "applied 3", "dismiss 2: too senior"). Remembering
-them across runs arrives in the next milestone; until then, say the feedback can't be saved yet.
-If feedback implies a brief change ("I keep dismissing hybrid roles"), propose the change and
-confirm it — never change the brief silently.
+Right after showing the results, run `python3 scripts/state.py seen record` so the shown roles
+count as seen next time. Then act on the user's feedback, one command per role (keys come
+from results.json):
 
-## Phase 9 — Reruns (not built yet)
+```
+python3 scripts/state.py seen mark <key> saved
+python3 scripts/state.py seen mark <key> applied
+python3 scripts/state.py seen mark <key> dismissed --reason "too senior"
+```
 
-Showing only what's new since last time arrives in the next milestone. For now a rerun is a
-fresh search from the saved brief (Phase 1 already starts from it).
+Confirm each in one line ("Saved #1 — Vercel, Design Engineer"). If feedback implies a brief
+change ("I keep dismissing hybrid roles", three dismissals for the same reason), propose the
+change and save it only after the user agrees — never change the brief silently.
+
+**Adding companies.** When the user names companies to always check ("also check Linear and
+Figma"), run `python3 scripts/companies.py add "Linear" "Figma"` (up to 5 names). Report what
+it found; a company with no hits stays unsaved — say so and offer to try a board address the
+user knows. If it prints a `suggest_row`, mention that the user can share it with the project
+so everyone gets that company.
+
+## Phase 9 — Reruns
+
+A saved profile means a rerun (Phase 1). Show the brief as "same as last time — change
+anything?", then after Phases 3–4 run `python3 scripts/state.py seen diff` and
+`python3 scripts/filter.py` (on a rerun it shows only new, changed and saved roles; `--all`
+shows everything). Lead with what moved:
+
+- **New** roles first (mark them `NEW`), then **changed** ones (say what changed).
+- **Saved or applied, still open** (`saved_open`, `applied_open`) — a short list, so nothing
+  they cared about is lost.
+- **Closed since last time** — saved or applied roles that are gone. Only boards checked
+  successfully this run can close a role; never call a role closed because a board failed.
+
+With nothing new, say so in one line and show the saved-or-applied list.
+
+**claude.ai:** files do not persist there. At the end, offer the profile and the saved/applied
+roles (title, company, link) as one block the user can paste next time.
 
 ## Cross-skill integration
 
