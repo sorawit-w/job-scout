@@ -136,8 +136,10 @@ def _excluded_reason(row):
     return "fit %s/8, below 5" % _fit(row) if _fit(row) is not None else "not a fit"
 
 
-def build_view(files, profile, seen, run_id, probed_ok=()):
-    """Everything the page shows, as plain data. Pure: same inputs, same view."""
+def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
+    """Everything the page shows, as plain data. Pure: same inputs, same view.
+    rerun: a history file exists (it can be empty after a zero-result first search); default bool(seen)."""
+    rerun = bool(seen) if rerun is None else rerun
     cands = {c.get("key"): c for c in files.get("candidates") or [] if isinstance(c, dict)}
     jds = files.get("jds") if isinstance(files.get("jds"), dict) else {}
     results = files.get("results") if isinstance(files.get("results"), dict) else None
@@ -187,6 +189,8 @@ def build_view(files, profile, seen, run_id, probed_ok=()):
     boards = files.get("boards") if isinstance(files.get("boards"), dict) else {}
     jobs = [j for j in files.get("jobs") or [] if isinstance(j, dict)]
     lists = state.diff(jobs, set(probed_ok), seen) if seen else {}
+    live_closed = {k for k, e in jds.items() if isinstance(e, dict) and e.get("status") == "closed"}
+    gone = [k for k in lists.get("saved_open", []) + lists.get("applied_open", []) if k in live_closed]
 
     by_key = {j.get("key"): j for j in jobs}
 
@@ -203,14 +207,15 @@ def build_view(files, profile, seen, run_id, probed_ok=()):
 
     return {
         "date": _run_date(run_id), "brief": _brief(profile), "roles": roles,
-        "excluded": excluded[:MAX_EXCLUDED], "skipped": skipped, "rerun": bool(seen),
+        "excluded": excluded[:MAX_EXCLUDED], "skipped": skipped, "rerun": rerun,
         "coverage": {"probed": boards.get("probed"), "available": boards.get("available"),
                      "moved": sum(1 for c in cands.values() if c.get("state") in ("new", "changed")),
                      "open": sum(1 for e in jds.values()
                                  if isinstance(e, dict) and e.get("status") == "open" and not e.get("dropped"))},
         "top_removed": {"reason": REASON_TEXT.get(top, top), "n": removed[top], "of": counts.get("input")} if top else None,
-        "still_open": listed(lists.get("saved_open", []), "saved") + listed(lists.get("applied_open", []), "applied"),
-        "closed": listed(lists.get("closed", [])),
+        "still_open": listed([k for k in lists.get("saved_open", []) if k not in live_closed], "saved")
+        + listed([k for k in lists.get("applied_open", []) if k not in live_closed], "applied"),
+        "closed": listed(lists.get("closed", []) + gone),  # the live check found these closed
     }
 
 
@@ -643,7 +648,7 @@ def main(argv=None):
     except ValueError as e:
         return _fail(str(e))
     view = build_view(files, state.read_json(state.profile_path(), {}), seen, run.name,
-                      state.probed_ok_boards(run))
+                      state.probed_ok_boards(run), rerun=state.seen_path().exists())
     out = Path(args.out).expanduser() if args.out else run / "report.html"
     state.write_text_atomic(out, render(view))
     opened = webbrowser.open(out.resolve().as_uri()) if args.open else None

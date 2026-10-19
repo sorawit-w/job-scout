@@ -190,6 +190,23 @@ class ReportTest(unittest.TestCase):
         self.assertIn("Closed since last time", html)
         self.assertIn("Gone Role", html)
 
+    def test_live_closed_saved_role_is_not_still_open(self):
+        make_run(self.home, [job("gh:a:1", state_="changed")], rows=None, jds={"gh:a:1": {"status": "closed"}})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {
+                "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
+        run([], self.home)
+        html = page(self.home)
+        self.assertNotIn("Saved or applied, still open", html)
+        self.assertIn("<h2>Closed since last time</h2>", html)
+
+    def test_empty_history_still_counts_as_a_rerun(self):
+        make_run(self.home, [job("gh:a:1")], rows=None)
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {})  # what record leaves after a zero-result first search
+        run([], self.home)
+        self.assertIn("new or changed since last time", page(self.home))
+
     def test_quotes_show_where_they_are_cut_but_stay_verbatim(self):
         self.assertEqual(report._clip("gap between design intent and the experience we"),
                          "…gap between design intent and the experience we…")
