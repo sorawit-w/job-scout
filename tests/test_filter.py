@@ -109,6 +109,19 @@ class WorkModeLocationTest(unittest.TestCase):
     def test_city_match_is_word_boundary(self):
         self.assertEqual(outcome(local(city="Orangeburg, SC"), commute_cities=["Orange"])[0], "location")
 
+    def test_commute_city_in_another_state_removed(self):
+        self.assertEqual(outcome(local(city="Burbank, WA"))[0], "location")
+        self.assertEqual(outcome(local(city="Burbank, Washington, United States"))[0], "location")
+
+    def test_commute_city_same_or_unstated_state_kept(self):
+        self.assertEqual(outcome(local(city="Burbank, California"))[0], "strong")
+        self.assertEqual(outcome(local(city="Burbank Medical Pavilion"))[0], "strong")
+
+    def test_commute_city_written_with_its_state_allows_that_state(self):
+        md = local(city="Bethesda, MD")
+        self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda"])[0], "location")
+        self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda, MD"])[0], "strong")
+
     def test_onsite_removed_when_only_remote_and_hybrid_wanted(self):
         self.assertEqual(outcome(local(workplace="onsite"))[0], "work_mode")
 

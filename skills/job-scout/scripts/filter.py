@@ -105,8 +105,10 @@ def _place_check(job, p, ctx):
             remote_fail = "remote_scope"
         else:
             remote_fail = "work_mode"
+    home = ctx["home_states"]
     if ("hybrid" in modes or "onsite" in modes) and any(
-            has_phrase(words(loc), c) for loc in job.get("locations") or [] for c in cities):
+            has_phrase(words(loc), c) and not (home and home.isdisjoint(normalize.us_states(loc) or home))  # "Lincoln, NE"
+            for loc in job.get("locations") or [] for c in cities):
         wp = job.get("workplace")
         if wp is None:
             return None, [MODE_NOT_STATED], "local"
@@ -313,6 +315,8 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_a
     home_city = (p.get("home_base") or "").split(",")[0].strip()
     ctx = {"excluded": {normalize.company_norm(c) for c in p["companies_exclude"]},
            "cities": [c for c in p["commute_cities"] + [home_city] if c.strip()],
+           # States a local job may name: the home base's, plus any written on a commute city ("Jersey City, NJ").
+           "home_states": set().union(*(normalize.us_states(c) for c in [p.get("home_base") or ""] + p["commute_cities"])),
            "senior_only": _senior_only(p["seniority"]),
            "relocate": _relocation_countries(p),
            # A "Product Manager" target keeps "manager" titles: only phrases not in their own roles count.

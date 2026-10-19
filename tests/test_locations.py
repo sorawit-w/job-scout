@@ -1,7 +1,7 @@
 import unittest
 import normalize
 
-from normalize import classify, place_codes, split_locations
+from normalize import classify, place_codes, split_locations, us_states
 
 
 class SplitLocationsTest(unittest.TestCase):
@@ -214,3 +214,11 @@ class CodexReviewLocationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UsStatesTest(unittest.TestCase):
+    def test_codes_after_a_comma_and_full_names(self):
+        for loc, expected in (("Lincoln, NE, United States", {"NE"}), ("Sacramento, California", {"CA"}),
+                              ("Davis Pavilion North - Pavilion D", set()), ("NE corner, Remote", set()),
+                              ("Toronto, ON", set()), ("", set())):
+            self.assertEqual(us_states(loc), expected, loc)

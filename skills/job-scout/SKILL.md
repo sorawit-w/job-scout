@@ -180,7 +180,8 @@ JSON
 - `remote_scope` uses two-letter country codes (`"US"`, `"CA"`) or a region (`"AMER"`, `"EU"`,
   `"ANY"`), never country names.
 - `commute_cities`: if they accept hybrid or onsite, list the cities within a reasonable commute
-  of their home base and include them in the brief so they can correct it.
+  of their home base and include them in the brief so they can correct it. Write a city in
+  another state with its state (`"Jersey City, NJ"`): a local job naming any other state is removed.
 - If `save` prints `errors`, fix the JSON and save again — never drop the user's answer to make
   it pass. Unknown fields are rejected on purpose.
 - **claude.ai:** files do not persist between conversations. After saving, tell the user once

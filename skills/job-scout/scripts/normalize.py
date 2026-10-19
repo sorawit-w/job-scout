@@ -150,6 +150,18 @@ def place_codes(loc):
     return sorted({c for c, k in hits if c and not (broad and k == "city")})
 
 
+_US_STATE_CODES = {name.lower(): code for code, name in (e.split(" ", 1) for e in _US_STATES.split("|"))}
+_US_STATE_RE = re.compile(r"(?<![A-Za-z])(?:%s)(?![A-Za-z])" % "|".join(
+    re.escape(n) for n in sorted(_US_STATE_CODES, key=len, reverse=True)), re.I)
+
+
+def us_states(loc):
+    """US state codes one location string names: a full state name, or a code after a comma."""
+    t = _fold(loc or "")
+    out = {_US_STATE_CODES[m.group(0).lower()] for m in _US_STATE_RE.finditer(t)}
+    return out | {m.group(1) for m in _COMMA_CODE_RE.finditer(t) if _SUBDIV.get(m.group(1)) == "US"}
+
+
 def _is_place(s, allow_mode=False):
     """True when s is only place names (plus work-mode words if allow_mode) and punctuation."""
     t = _fold(s or "")
