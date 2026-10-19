@@ -246,11 +246,15 @@ class ReportTest(unittest.TestCase):
         usd = [job("gh:a:%d" % i, comp={"min": 150000 + i, "max": None, "currency": "USD", "interval": "year"})
                for i in (1, 2)]
         jpy = job("gh:b:9", comp={"min": 12000000, "max": None, "currency": "JPY", "interval": "year"})
-        make_run(self.home, usd + [jpy], [row("gh:a:1"), row("gh:a:2"), row("gh:b:9")])
+        no_cur = job("gh:c:1", comp={"min": 12000000, "max": None, "currency": None, "interval": "year"})
+        no_per = job("gh:c:2", comp={"min": 90000, "max": None, "currency": "USD", "interval": None})
+        make_run(self.home, usd + [jpy, no_cur, no_per],
+                 [row("gh:a:1"), row("gh:a:2"), row("gh:b:9"), row("gh:c:1"), row("gh:c:2")])
         run([], self.home)
         html = page(self.home)
         self.assertIn('data-pay="150001"', html)
-        self.assertIn('data-rank="3" data-fit="7" data-top="1" data-flags="0" data-pay=""', html)
+        for rank in (3, 4, 5):  # another currency, no currency, no pay period: no sort key, so they sort last
+            self.assertIn('data-rank="%d" data-fit="7" data-top="1" data-flags="0" data-pay=""' % rank, html)
 
     def test_empty_history_still_counts_as_a_rerun(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])

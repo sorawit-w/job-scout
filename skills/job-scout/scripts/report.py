@@ -168,7 +168,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
         comp = entry["comp"] if "comp" in entry else job.get("comp")  # the live check wins, even "none"
         comp = comp if isinstance(comp, dict) else {}
         pay_sort = comp.get("min") if comp.get("min") is not None else comp.get("max")
-        per_year = YEARLY.get(comp.get("interval") or "year")  # an unknown interval sorts last
+        per_year = YEARLY.get(comp.get("interval"))  # an unknown or unstated interval sorts last
         pay_sort = pay_sort * per_year if isinstance(pay_sort, (int, float)) and per_year else None
         roles.append(dict(
             base, rank=len(roles) + 1, url=_safe_url(job.get("url")), where=_where(job),
@@ -185,7 +185,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     curs = collections.Counter(r["pay_cur"] for r in roles if r["pay_sort"] is not None and r["pay_cur"])
     main_cur = curs.most_common(1)[0][0] if curs else ""
     for r in roles:  # no exchange rates offline: other currencies sort after the main one, like unknown pay
-        if r["pay_cur"] and r["pay_cur"] != main_cur:
+        if r["pay_cur"] != main_cur or not main_cur:  # an unstated currency sorts last too
             r["pay_sort"] = None
     summary = files.get("filter") if isinstance(files.get("filter"), dict) else {}
     for nm in summary.get("near_misses") or []:
@@ -340,7 +340,8 @@ td.det-cell{padding:0}
 .mini{width:100%;table-layout:fixed;border-collapse:collapse;background:var(--table);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .mini td{border-top:1px solid var(--line);color:var(--muted);overflow-wrap:anywhere}.mini tr:first-child td{border-top:0}.mini td:first-child{color:var(--ink);font-weight:600}
 .empty{background:var(--table);border:1px solid var(--line);border-radius:10px;padding:16px;margin:20px 0 0}
-.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--canvas);border-radius:6px;padding:6px 12px;font-size:13px}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--canvas);border-radius:6px;padding:6px 12px;font-size:13px;max-width:calc(100vw - 32px)}
+.toast input{margin-left:8px;min-width:0;width:22em;max-width:100%;background:var(--canvas);color:var(--ink);border:0;border-radius:4px;padding:3px 6px}
 footer{margin-top:32px;font-size:13px;color:var(--muted)}footer p{margin:0 0 4px}
 @media (max-width:767px){main{padding:16px}.c-where,.c-pay,.c-since{display:none}td{padding:10px 8px}.c-rank{width:28px}
 .c-fit{width:96px}.segs span{width:3px}.detail{grid-template-columns:minmax(0,1fr);padding:4px 12px 16px}
@@ -430,10 +431,14 @@ d.querySelectorAll('button[data-quick]').forEach(function(b){b.addEventListener(
 var on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on?'true':'false');quick[b.dataset.quick]=on;apply();});});
 function toast(msg){var t=d.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;
 d.body.appendChild(t);setTimeout(function(){t.remove();},1800);}
-function fallback(text){var a=d.createElement('textarea');a.value=text;a.setAttribute('readonly','');a.style.position='fixed';a.style.opacity='0';
-d.body.appendChild(a);a.select();var ok=false;try{ok=d.execCommand('copy');}catch(e){}a.remove();toast(ok?'Copied: '+text:'Press Cmd/Ctrl+C to copy: '+text);}
+function fallback(text,b){var a=d.createElement('textarea');a.value=text;a.setAttribute('readonly','');a.style.position='fixed';a.style.opacity='0';
+d.body.appendChild(a);a.select();var ok=false;try{ok=d.execCommand('copy');}catch(e){}a.remove();if(ok)toast('Copied: '+text);else manual(text,b);}
+function manual(text,b){var t=d.createElement('div'),l=d.createElement('label'),i=d.createElement('input');t.className='toast';
+l.textContent='Press Cmd/Ctrl+C to copy';i.readOnly=true;i.value=text;l.appendChild(i);t.appendChild(l);d.body.appendChild(t);i.focus();i.select();
+i.addEventListener('blur',function(){t.remove();});i.addEventListener('copy',function(){setTimeout(function(){b.focus();toast('Copied: '+text);},0);});
+i.addEventListener('keydown',function(e){if(e.key==='Escape')b.focus();});}
 d.addEventListener('click',function(e){var b=e.target.closest('button[data-copy]');if(!b)return;var text=b.dataset.copy;
-if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(function(){toast('Copied: '+text);},function(){fallback(text);});}else{fallback(text);}});
+if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(function(){toast('Copied: '+text);},function(){fallback(text,b);});}else{fallback(text,b);}});
 addEventListener('beforeprint',function(){var det=pane.querySelector('.detail');if(det)home[det.id].appendChild(det);
 rows.forEach(function(r){r.querySelector('tr.det').hidden=false;});});
 addEventListener('afterprint',function(){rows.forEach(function(r){r.querySelector('tr.det').hidden=split||!r.classList.contains('is-open');});
