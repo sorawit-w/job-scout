@@ -6,3 +6,12 @@ Commit: 10d9b18
 Status: DONE
 Notes: protect-git blocked a chained "checkout && commit" because it checks the branch before the command runs; split into two commands, no override used. Branch not pushed.
 Observations: .claude/settings.local.json is hidden by the global git ignore. git pre-commit hook ran on the commit with no block.
+
+[2026-10-19T00:05:52Z]
+Task: M1a — setup (implementation-plan.yaml setup-repo, tasks S1–S9)
+Action: scaffolded the stdlib-Python skill repo: agent-context.yaml, CONTEXT.md, ROADMAP.md, implementation-plan.yaml, adapter port + contract test (test-first), compat check copied from kerby (VERSION path changed), manifests at 0.0.1, CHANGELOG, README stub, .gitignore/.env.example, CI matrix 3.9 + 3.13, STATUS.md, DEVELOPER_TODO.md
+Files: see commits dd48034..9b8645b on feature/initial-setup
+Commit: 9b8645b
+Status: DONE
+Notes: implementation-plan.yaml first failed to parse (commas inside flow-mapping task names); all 73 names quoted, re-parsed with Ruby's YAML. Compat edge case verified on a scratch copy: one manifest at 0.0.2 → FAIL version parity, exit 1.
+Observations: Standard gate green on Python 3.14.7 and /usr/bin/python3 3.9.6 (5 tests). CI not yet run — first run happens on the PR.
