@@ -115,5 +115,73 @@ class SeedCheckTest(unittest.TestCase):
         self.assertIn("possible aggregator", out)
 
 
+POSTING = {"title": "Clinical Nurse RN", "externalPath": "/job/San-Diego-CA/Clinical-Nurse-RN_JR1",
+           "locationsText": "San Diego, CA"}
+
+
+def fake_workday(answers, calls=None):
+    """A stand-in for workday.fetch_board: answers[slug] is a list, or an exception to raise; else None."""
+    def fetch_board(slug, budget=None, terms=None):
+        if calls is not None:
+            calls.append(slug)
+        got = answers.get(slug)
+        if isinstance(got, Exception):
+            raise got
+        return got
+    return fetch_board
+
+
+def run_workday(path, answers, calls=None):
+    with mock.patch.object(seed_check.workday, "fetch_board", fake_workday(answers, calls)):
+        return run(["--companies", path])
+
+
+class WorkdayCheckTest(unittest.TestCase):
+    def test_statuses_and_moved_host(self):
+        path = make_csv([("Sharp", "workday", "sharp.wd1.External", "unchecked"),
+                         ("Empty", "workday", "empty.wd5.careers", "unchecked"),
+                         ("Gone", "workday", "gone.wd1.x", "live"),
+                         ("Kohl's", "workday", "kohls.wd1.kohlscareers", "unchecked")])
+        calls = []
+        code, out = run_workday(path, {"sharp.wd1.External": [POSTING, dict(POSTING, externalPath="/job/x/y_JR2")],
+                                       "empty.wd5.careers": [],
+                                       "kohls.wd504.kohlscareers": [POSTING]}, calls)
+        self.assertEqual(code, 0)
+        rows = read(path)
+        sharp = rows[("workday", "sharp.wd1.External")]
+        self.assertEqual((sharp["status"], sharp["jobs"], sharp["us_share"], sharp["remote_share"]),
+                         ("live", "2", "1.0", "0.0"))
+        self.assertEqual(rows[("workday", "empty.wd5.careers")]["status"], "unverified")
+        self.assertEqual(rows[("workday", "gone.wd1.x")]["status"], "dead")
+        self.assertNotIn(("workday", "kohls.wd1.kohlscareers"), rows)  # the row's slug was rewritten
+        self.assertEqual(rows[("workday", "kohls.wd504.kohlscareers")]["status"], "live")
+        # a dead board is tried on its own host, then once on each other host in the fixed list
+        gone = [s for s in calls if s.startswith("gone.")]
+        self.assertEqual(len(gone), len(seed_check.WORKDAY_HOSTS))
+        self.assertEqual(len(set(gone)), len(gone))
+        self.assertIn("seed-check: 4 boards · live 2 · unverified 1 · dead 1 · errors 0 (0%) · moved 1", out)
+
+    def test_network_error_keeps_previous_status(self):
+        rows = [("A%d" % i, "workday", "a%d.wd1.jobs" % i, "unverified") for i in range(9)]
+        path = make_csv(rows + [("Err", "workday", "err.wd1.jobs", "live")])
+        answers = {"a%d.wd1.jobs" % i: [POSTING] for i in range(9)}
+        answers["err.wd1.jobs"] = seed_check.net.NetError("boom")
+        code, out = run_workday(path, answers)
+        self.assertEqual(code, 0)  # 1 error in 10 = 10%, not above the limit
+        got = read(path)
+        self.assertEqual(got[("workday", "err.wd1.jobs")]["status"], "live")
+        self.assertEqual(got[("workday", "a0.wd1.jobs")]["status"], "live")
+
+    def test_too_many_workday_errors_abort(self):
+        path = make_csv([("A", "workday", "a.wd1.jobs", "unchecked"), ("B", "workday", "b.wd1.jobs", "unchecked")])
+        with open(path, "rb") as f:
+            before = f.read()
+        code, out = run_workday(path, {"a.wd1.jobs": [POSTING], "b.wd1.jobs": seed_check.net.NetError("boom")})
+        self.assertEqual(code, 1)
+        with open(path, "rb") as f:
+            self.assertEqual(f.read(), before)
+        self.assertIn("aborted", out)
+
+
 if __name__ == "__main__":
     unittest.main()
