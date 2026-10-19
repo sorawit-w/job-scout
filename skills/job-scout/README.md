@@ -64,8 +64,10 @@ nothing else from your brief. No telemetry.
 
 ## Install
 
-- **Claude Code / Codex:** `/plugin marketplace add sorawit-w/job-scout`, then
-  `/plugin install job-scout@job-scout`. Codex needs network access on.
+- **Claude Code:** `/plugin marketplace add sorawit-w/job-scout`, then
+  `/plugin install job-scout@job-scout`.
+- **Codex:** `codex plugin marketplace add sorawit-w/job-scout` in your shell, then `/plugins` in
+  Codex to install it, then a new session. Codex needs network access on.
 - **Any agent:** `npx skills add sorawit-w/job-scout`.
 - **claude.ai:** upload the release zip under Settings → Capabilities → Skills, with code
   execution on and the job-board hosts allowed.

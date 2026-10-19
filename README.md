@@ -100,8 +100,14 @@ The scripts use only the Python 3.9+ standard library: nothing to install.
 /plugin install job-scout@job-scout
 ```
 
-**Codex** (0.133.0 or newer): run the same two commands, then `/reload-plugins`. Codex blocks
-network access by default, so start it with network access on:
+**Codex:** add the marketplace from your shell, then install from inside Codex:
+
+```bash
+codex plugin marketplace add sorawit-w/job-scout
+```
+
+In Codex, run `/plugins`, pick the job-scout marketplace, install job-scout, and start a new
+session. Codex blocks network access by default, so start it with network access on:
 
 ```bash
 codex --sandbox workspace-write -c sandbox_workspace_write.network_access=true

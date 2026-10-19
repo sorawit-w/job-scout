@@ -24,8 +24,8 @@ Actions only the maintainer can take. Remove an entry once it is done.
 Each one: install, then say "find me roles that fit" with any resume. Expected: the search brief
 appears and nothing is searched until you confirm.
 - **Claude Code:** `/plugin marketplace add sorawit-w/job-scout` then `/plugin install job-scout@job-scout`.
-- **Codex (0.133.0+):** the same two commands, `/reload-plugins`, and start Codex with
-  `-c sandbox_workspace_write.network_access=true`.
+- **Codex:** `codex plugin marketplace add sorawit-w/job-scout`, then `/plugins` in Codex to
+  install it, then a new session started with `-c sandbox_workspace_write.network_access=true`.
 - **npx:** `npx skills add sorawit-w/job-scout`.
 - **claude.ai:** upload `job-scout-0.1.0.zip` under Settings → Capabilities → Skills (code
   execution on, job-board hosts allowed). This also answers the old G8 question: the zip's
