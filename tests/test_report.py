@@ -316,6 +316,15 @@ class ReportTest(unittest.TestCase):
         self.assertIn('data-rank="1" data-fit="6" data-top="0" data-flags="0"', html)
         self.assertIn("<span>Work style: async-first · no travel · startup</span>", html)  # brief chip
 
+    def test_an_old_run_keeps_the_work_style_it_was_judged_with(self):
+        run_dir = make_run(self.home, [job("gh:a:1")], [row("gh:a:1", style=[
+            {"topic": "travel", "verdict": "conflict", "text": "x", "quote": "Travel up to 25%"}])])
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(os.path.join(run_dir, "profile.json"), {"work_style": {"travel": "none"}})
+            state.write_json_atomic(state.profile_path(), {"work_style": {"travel": "lots"}})  # changed later
+        run([], self.home)
+        self.assertIn('<span class="want"> (you want no travel)</span>', page(self.home))
+
     def test_empty_history_still_counts_as_a_rerun(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):

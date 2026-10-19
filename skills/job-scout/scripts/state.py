@@ -283,6 +283,13 @@ def profile_path():
     return home() / "profile.json"
 
 
+def run_profile(run_dir):
+    """The brief a run was searched with (filter.py saves a copy), else the saved profile: a later
+    "change my work style" must not relabel an older run's verdicts."""
+    p = read_json(Path(run_dir) / "profile.json")
+    return p if isinstance(p, dict) else read_json(profile_path(), {})
+
+
 # --- seen memory (seen.json) ---------------------------------------------------
 # {job_key: {first_seen, last_seen, status, reason, closed_at, sig, aliases, [snap, title, company, url]}}
 # snap = job_snap(): the readable fields behind sig, so `seen diff` can say what changed.

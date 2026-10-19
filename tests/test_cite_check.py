@@ -167,6 +167,17 @@ class StyleCheckTest(unittest.TestCase):
         payload["rows"][0]["show"] = False
         self.assertEqual(run(payload, home)[0], 0)
 
+    def test_the_run_copy_of_the_brief_wins_over_a_later_profile(self):
+        home = make_home()
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "async", "travel": "none"}}, f)  # changed after the run
+        with open(os.path.join(home, "runs", RUN_ID, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "async"}}, f)
+        payload = results(why=self.WHY)
+        payload["rows"][0].update(show=True, style=[
+            {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}])
+        self.assertEqual(run(payload, home)[0], 0)
+
     def test_style_never_counts_as_the_reason_a_role_is_shown(self):
         payload = results()
         payload["rows"][0].update(show=True, style=[

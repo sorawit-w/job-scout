@@ -724,7 +724,7 @@ def main(argv=None):
         seen = state.load_seen()
     except ValueError as e:
         return _fail(str(e))
-    view = build_view(files, state.read_json(state.profile_path(), {}), seen, run.name,
+    view = build_view(files, state.run_profile(run), seen, run.name,
                       state.probed_ok_boards(run), rerun=state.seen_path().exists())
     out = Path(args.out).expanduser() if args.out else run / "report.html"
     state.write_text_atomic(out, render(view))

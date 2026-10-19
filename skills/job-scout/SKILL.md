@@ -168,7 +168,7 @@ Every topic is optional; offer exactly these choices: 1. Meetings: async-first /
 5. Company stage: startup / growth / established. Say once that these never change fit, rank or
 what is shown — each role shows what its posting says (matches / doesn't match / not stated).
 Save the picks as `work_style` (`{}` for "skip"), so it is never asked again; "change my work
-style" edits it any time. The questions are about the job, not the person: if the user gives a
+style" edits it any time (from the next search on). The questions are about the job, not the person: if the user gives a
 personal reason ("no travel — I have kids"), store only the choice; never record or repeat the
 reason. "Only show async companies" is a dealbreaker, not a signal: offer `dealbreakers` instead.
 On "just go", list it as an optional follow-up. On a rerun without it, offer it once after the

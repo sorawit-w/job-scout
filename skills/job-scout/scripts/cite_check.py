@@ -15,7 +15,7 @@ Usage (paths relative to the skill folder):
                              "style": [{"topic", "verdict", "text", "quote"}]}]}
     A style item's topic is a work_style topic and its verdict match / conflict / not_stated;
     match and conflict need a quote, not_stated has quote null (rubric §4). Each shown row needs
-    exactly one style item per topic in the saved profile's work_style, and none for other topics.
+    exactly one style item per topic in the run's work_style (state.run_profile), and none for others.
     Each row's key must have an open job description in jds.json, and a row with show: true
     needs at least one why item; each failing row is reported once, with quote null.
     Stdout: {"ok": bool, "checked": n, "failed": [{"key", "quote", "why"}]}
@@ -123,7 +123,7 @@ def main(argv=None):
     jds = state.read_json(run / "jds.json", {})
     if not isinstance(jds, dict):
         jds = {}
-    profile = state.read_json(state.profile_path(), {})
+    profile = state.run_profile(run)  # the work_style this run was judged against
     saved = profile.get("work_style") if isinstance(profile, dict) else None
     wanted = {t for t in saved if t in state.WORK_STYLE} if isinstance(saved, dict) else set()
 
