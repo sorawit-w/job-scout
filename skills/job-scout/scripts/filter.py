@@ -58,8 +58,10 @@ MODE_NOT_STATED = "work mode not stated"
 RELOCATE_FLAG = "relocation: %s in %s"
 DESC_FLAG = "title is generic — matched on the description"
 MODE_ON_DETAIL_FLAG = "work mode unknown — checked on the live job"
-LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED, MODE_ON_DETAIL_FLAG)
-# Hiring tools whose board list never states a work mode (adapters with MODE_ON_DETAIL).
+LOCATION_ON_DETAIL_FLAG = "location not listed — checked on the live job"
+LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED, MODE_ON_DETAIL_FLAG, LOCATION_ON_DETAIL_FLAG)
+# Hiring tools whose board list never states a work mode, and may give only a location count
+# (adapters with MODE_ON_DETAIL): fetch_jd.py re-filters their rows on the detail record.
 _MODE_ON_DETAIL = {name for name, m in adapters.REGISTRY.items() if getattr(m, "MODE_ON_DETAIL", False)}
 
 _ALIASES = {"sr": "senior", "jr": "junior", "swe": "software engineer", "eng": "engineer"}
@@ -126,6 +128,8 @@ def _place_check(job, p, ctx):
             return None, [MODE_NOT_STATED, RELOCATE_FLAG % ("onsite or hybrid", where)], "local"
         if wp in ("hybrid", "onsite") and wp in modes:
             return None, [RELOCATE_FLAG % (wp, where)], "local"
+    if job.get("ats") in _MODE_ON_DETAIL and job.get("remote") is None and not job.get("locations"):
+        return None, [LOCATION_ON_DETAIL_FLAG], "local"  # "3 Locations": the detail record lists them
     if ("remote" in modes and job.get("ats") in _MODE_ON_DETAIL and job.get("remote") is None
             and wp is None and _scope_could_fit(job, p["remote_scope"])):
         return None, [MODE_ON_DETAIL_FLAG], "remote"
@@ -309,7 +313,8 @@ def _judge(job, p, ctx):
 def _rank_key(row, p):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
-    return (_STATE_TIER.get(row["state"], 2), row["match"] != "strong",
+    on_detail = any(f in (MODE_ON_DETAIL_FLAG, LOCATION_ON_DETAIL_FLAG) for f in row["flags"])  # unconfirmed fit: last
+    return (_STATE_TIER.get(row["state"], 2), on_detail, row["match"] != "strong",
             any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]),
             -_desc_hits(row, p), newest is None, newest or 0)
 

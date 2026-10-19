@@ -220,7 +220,10 @@ def classify(locations, remote_flag=None, workplace_hint=None):
     scope = None
     if remote:
         # Places named with the remote evidence; if it names none ("Remote | US | Poland"), all places.
-        found = {c for loc in remote_locs for c in codes[loc]} or {c for loc in locs for c in codes[loc]}
+        def narrowed(loc):  # "Anywhere in the U.S." is the US, not the world
+            cs = set(codes[loc])
+            return cs - {"ANY"} if len(cs) > 1 else cs
+        found = set().union(*(narrowed(loc) for loc in remote_locs)) or set().union(*(narrowed(loc) for loc in locs))
         scope = sorted(found) or None
 
     workplace = hint or ("hybrid" if any(_HYBRID_RE.search(loc) for loc in locs) else None)

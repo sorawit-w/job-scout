@@ -223,3 +223,9 @@ class UsStatesTest(unittest.TestCase):
                               ("Toronto, ON", set()), ("", set()),
                               ("Washington, PA", {"PA"}), ("Washington, DC", {"DC"}), ("Washington", {"WA"})):
             self.assertEqual(us_states(loc), expected, loc)
+
+
+class AnywhereInACountryTest(unittest.TestCase):
+    def test_anywhere_with_a_country_is_that_country(self):
+        self.assertEqual(classify(["Anywhere in the U.S. (remote job)"], True)["remote_scope"], ["US"])
+        self.assertEqual(classify(["Remote - Anywhere"], True)["remote_scope"], ["ANY"])
