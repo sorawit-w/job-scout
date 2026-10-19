@@ -71,7 +71,10 @@ manager), home base (city), current employer, and core skills.
 
 **Never infer protected attributes** — age, race, gender, religion, nationality, disability,
 family status — not from names, photos, dates, schools or anything else, and never ask about
-them. The profile has no field for them, and `state.py` rejects any it is given.
+them. The profile has no field for them, and `state.py` rejects any it is given. If the user
+volunteers one ("I'm 52", "I'm originally from Nigeria"), leave it out silently: do not repeat
+it, comment on it, or record it. Visa status is different — the user may state it, and it is
+used only as the sponsorship filter.
 
 If `python3 scripts/state.py profile show` returns a saved profile, start from it: this is a
 rerun. Show the brief with what changed since last time ("same as last time — change
