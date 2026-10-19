@@ -4,7 +4,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 1: v0 (M1–M6)
 
-- [ ] M6 — Launch 0.1.0: README, PRIVACY, CONTRIBUTING, NOTICE, release zip, install smoke tests (going public is the maintainer's call)
+- [!] M6 — Launch 0.1.0: docs, release zip, version and offline zip smoke test done (in review); blocked on the maintainer: make the repo public, publish the release, run the four install smoke tests (DEVELOPER_TODO)
 
 ## Follow-ups
 

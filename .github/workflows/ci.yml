@@ -27,3 +27,25 @@ jobs:
         run: python scripts/check-skill-compat.py
       - name: test (offline)
         run: python -m unittest discover -s tests -t . -v
+
+  new-boards:
+    # A PR that adds companies: each new board must answer live (network; runs only when the CSV changed).
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: live-check new boards in companies.csv
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          CSV=skills/job-scout/data/companies.csv
+          if git diff --quiet "origin/$BASE_REF"...HEAD -- "$CSV"; then
+            echo "companies.csv unchanged"; exit 0
+          fi
+          git show "origin/$BASE_REF:$CSV" > "$RUNNER_TEMP/base.csv"
+          python scripts/check_new_rows.py --base "$RUNNER_TEMP/base.csv"

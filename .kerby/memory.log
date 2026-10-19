@@ -91,3 +91,11 @@ Commit: 977d7ab..HEAD (branch feature/more-hiring-tools)
 Status: DONE
 Notes: skill-evaluator: clean (28/28) at cdff553 — 2026-10-19 (N1–N5 16/16 on the coverage text; N6–N7 8/8 on the zero-result and commute-state text; N2 re-run 4/4 after the Codex fix to the `skipped` field)
 Observations: Sacramento's large hospital systems use Phenom, iCIMS and Taleo — none readable yet (ROADMAP).
+
+Task: M6 — launch 0.1.0 (implementation-plan.yaml deploy-launch, L1–L11)
+Action: root README in agent-skills order (why, what, limits, install on four surfaces, privacy, credits); skill README in the ghostwriter shape; PRIVACY.md (hosts, what each request carries, local files); CONTRIBUTING.md (add one CSV row) + CI job new-boards (scripts/check_new_rows.py live-checks boards a PR adds); Codex marketplace file; manifests describe all five hiring tools; build_release.py (zip with job-scout/ root, no evals/caches, LICENSE+NOTICE, claude.ai-safe frontmatter: name/description/metadata only); SKILL.md 329 → 297 lines (profile format → references/profile.md, add-a-company → references/companies.md); removed the unused USAJOBS LocationName parameter so only titles can leave; version 0.1.0 + CHANGELOG. Offline smoke test: the built zip runs health/probe/filter/profile on Python 3.9 against the day1 replay world.
+Files: README.md, PRIVACY.md, CONTRIBUTING.md, CHANGELOG.md, DEVELOPER_TODO.md, .agents/plugins/marketplace.json, .claude-plugin/*, .codex-plugin/plugin.json, .github/workflows/ci.yml, scripts/{build_release,check_new_rows}.py, skills/job-scout/{SKILL.md,README.md,VERSION,references/{profile,companies}.md,scripts/adapters/usajobs.py}, tests/{test_build_release,test_check_new_rows,test_usajobs}.py
+Commit: f5a2014..HEAD (branch feature/launch-0.1.0)
+Status: DONE (maintainer steps pending: public, release, four install smoke tests)
+Notes: skill-evaluator: clean (11/11) at 2a6b75a — 2026-10-19 (N1 4/4 incl. profile save from references/profile.md; N4 3/3 add-a-company from references/companies.md; N7 4/4 commute states). Description unchanged since the M5b verdict.
+Observations: N7's executor set relocation "no" from the user's commute wording instead of asking; it was shown in the brief as `you`, so the user can correct it — watch for it in a future eval.

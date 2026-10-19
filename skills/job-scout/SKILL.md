@@ -161,31 +161,10 @@ anyway; never pad the results with weak matches to compensate.
 
 ### Save the confirmed brief
 
-Write the confirmed profile as JSON and save it:
-
-```
-python3 scripts/state.py profile save --stdin <<'JSON'
-{"schema": 1, "target_roles": [...], "title_synonyms": [...], "title_exclusions": [...],
- "seniority": [...], "track": "ic", "home_base": "...", "work_modes": ["remote", "hybrid"],
- "commute_cities": ["Los Angeles", "Pasadena", ...], "remote_scope": ["US"],
- "open_to_relocation": false, "needs_sponsorship": "no",
- "base_pay_floor": {"amount": 180000, "currency": "USD", "interval": "year"},
- "hide_no_pay": false, "industries_prefer": [...], "industries_exclude": [], "companies_include": [],
- "companies_exclude": ["Acme"], "must_haves": [], "dealbreakers": [], "recency_flag_days": 90,
- "result_count": 15, "sources": {"target_roles": "resume", "work_modes": "you", ...}}
-JSON
-```
-
-- `needs_sponsorship` is `yes`, `no`, or `undisclosed`; `base_pay_floor` is `null` for "no floor".
-- `remote_scope` uses two-letter country codes (`"US"`, `"CA"`) or a region (`"AMER"`, `"EU"`,
-  `"ANY"`), never country names.
-- `commute_cities`: if they accept hybrid or onsite, list the cities within a reasonable commute
-  of their home base and include them in the brief so they can correct it. Write a city in
-  another state with its state (`"Jersey City, NJ"`): a local job naming any other state is removed.
-- If `save` prints `errors`, fix the JSON and save again — never drop the user's answer to make
-  it pass. Unknown fields are rejected on purpose.
-- **claude.ai:** files do not persist between conversations. After saving, tell the user once
-  and offer the profile as a code block they can paste next time.
+Save it with `python3 scripts/state.py profile save --stdin`, in the format and with the field
+rules in `references/profile.md` (read it before saving). **claude.ai:** files do not persist
+between conversations. After saving, tell the user once and offer the profile as a code block
+they can paste next time.
 
 ## Phase 3 — Check the network
 
@@ -280,19 +259,8 @@ change ("I keep dismissing hybrid roles", three dismissals for the same reason),
 change and save it only after the user agrees — never change the brief silently.
 
 **Adding companies.** When the user names companies to always check ("also check Linear and
-Figma"), run `python3 scripts/companies.py add "Linear" "Figma"` (up to 5 names). Report what
-it found:
-
-- A **guessed** board (`"from": "guess"`) may belong to a different company with the same
-  name. Show its `sample_titles` and ask "is this the right company?"; if not, run
-  `python3 scripts/companies.py remove "<name>"`.
-- No hits → nothing is saved; say so. If the user knows the company's board address (a
-  Greenhouse, Ashby or Lever jobs page), run `companies.py add "<name>" --board ats:slug`; for a
-  Workday careers site, pass its URL: `--board https://<tenant>.wd5.myworkdayjobs.com/<site>`.
-- Exit 4 → the request cap stopped it; what was found is saved — say the rest wasn't checked.
-  Exit 3 → the job boards can't be reached (Phase 3).
-- If it prints a `suggest_row`, mention that the user can share it with the project so
-  everyone gets that company. `companies.py list` shows the saved companies.
+Figma"), follow `references/companies.md`: it runs `scripts/companies.py add`, confirms guessed
+boards with the user, and takes a Workday careers URL with `--board`.
 
 ## Phase 9 — Reruns
 
