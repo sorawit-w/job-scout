@@ -1,0 +1,5 @@
+{
+ "url": "https://boards-api.greenhouse.io/v1/boards/zzqx/jobs?content=true",
+ "status": 404,
+ "body": "{\"status\":404,\"error\":\"Job not found\"}"
+}
