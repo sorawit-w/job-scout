@@ -326,6 +326,19 @@ class SearchSourceLiveCheckTest(unittest.TestCase):
         self.assertEqual(read_jds(home)[sharp["key"]]["status"], "open")
         self.assertTrue(out["unverified"][0]["error"].startswith("changed since the search"), out["unverified"])
 
+    def test_workday_place_still_unknown_after_the_live_check_is_not_shown(self):
+        # "3 Locations" in the list, and a detail record with an empty location: the fit is never confirmed.
+        r = row("workday", SHARP, "RN_JR1", "Far Health", title="Registered Nurse", locations=[], workplace=None,
+                remote=None, remote_scope=None, description_text="Duties\nPatient care.")
+        detail = {"jobPostingInfo": {"jobPostingId": "RN_JR1", "title": "Registered Nurse", "location": "",
+                                     "jobDescription": "<p>Patient care.</p>"}}
+        home = make_home([r])
+        save_profile(home, target_roles=["Registered Nurse"], work_modes=["onsite"], commute_cities=["Sacramento"])
+        with mock.patch.object(adapters.REGISTRY["workday"], "fetch_job", return_value=detail):
+            code, out = run(["--top", "1"], home, replay_dir=WORKDAY)
+        self.assertEqual((code, out["jobs"]), (0, []))
+        self.assertIn("still unknown after the live check", out["unverified"][0]["error"])
+
     def test_usajobs_live_record_without_description_keeps_the_board_description(self):
         # The Historic JOA live check has no description; the search result the row came from does.
         text = "Duties\nProvide nursing care to veterans.\n\nRequirements\n- Active RN license"

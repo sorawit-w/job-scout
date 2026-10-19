@@ -20,6 +20,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 - [ ] More hiring tools after M5b: iCIMS, Taleo and Phenom first (Sacramento's large hospital systems use them), then SuccessFactors, TalentBrew, JazzHR, Recruitee
 - [ ] Location-aware board order: boards near the user's home base before far ones (Workday locations often name a building, not a city or state)
 - [ ] Workday jobs carry no remote/onsite field: a "Remote … California Residents Only" role reads as onsite
+- [ ] Workday rows with no place or mode spend live-check reads (21 of 40 in the nurse run, none shown): read their detail records outside the 40-description budget, or cap them
 - [ ] claude.ai Team/Enterprise egress test
 
 ## Shipped

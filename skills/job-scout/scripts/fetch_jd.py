@@ -208,6 +208,9 @@ def main(argv=None):
             if removed_by:
                 unverified.append({"key": row["key"], "error": "changed since the search: now removed by %s" % removed_by})
                 continue
+            if set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
+                unverified.append({"key": row["key"], "error": "location or work mode still unknown after the live check"})
+                continue
             job = {k: fresh.get(k) for k in ("key", "company", "title", "url", "locations", "workplace",
                                              "remote_scope", "first_published")}
             job.update(comp=entry["comp"], status="open", jd=entry["trimmed"], flags=fresh.get("flags") or [])
