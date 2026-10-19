@@ -118,3 +118,24 @@ Undocumented public "CXS" JSON behind each employer's `myworkdayjobs.com` career
 User-Agent `job-scout/<version> (+https://github.com/sorawit-w/job-scout)`; 20 s timeout; ≤8
 concurrent requests; one retry on timeout/429/5xx; per-run request caps; successful board lists
 cached 6 h in `~/.job-scout/cache/`. All through `scripts/net.py`.
+
+## USAJOBS (verified 2026-10-19)
+
+One opt-in, cross-agency keyword search — not a per-company board. Slug is always `all`; key
+`usajobs:all:<control number>`; `company` is the hiring agency. Adapter: `adapters/usajobs.py`.
+
+| | |
+|---|---|
+| Key | Search needs a **free key per user** (form: https://developer.usajobs.gov/apirequest/). Keys "may not be shared or transferred", so job-scout ships none. Read **only** from `JOB_SCOUT_USAJOBS_KEY` + `JOB_SCOUT_USAJOBS_EMAIL`; both unset → `fetch_board` returns `None` with no request, and the caller says "USAJOBS skipped: no key" once. Never in a URL, a log line or a fixture. |
+| Search | `GET https://data.usajobs.gov/api/Search?Keyword=…&ResultsPerPage=100&Page=N&SortField=opendate&SortDirection=Desc[&LocationName=…]` with headers `Host: data.usajobs.gov`, `User-Agent: <registered email>`, `Authorization-Key: <key>` (sent through `net.get_json(headers=…)`). Without a key → **401** (checked live 2026-10-19). Docs: https://developer.usajobs.gov/api-reference/get-api-search |
+| Limits | `ResultsPerPage` ≤ 500, ≤ 10,000 rows per query. Adapter: ≤ 3 terms, ≤ 2 pages of 100 each (≤ 6 requests), de-duplicated by control number. No terms → `[]`. |
+| Response | `SearchResult.SearchResultItems[]` = `{MatchedObjectId (control number), MatchedObjectDescriptor, RelevanceRank}`; paging from `SearchResult.UserArea.NumberOfPages` (a string). `fetch_board` returns these items as-is. |
+| Title / URL | `PositionTitle`; `PositionURI` (the usajobs.gov job page — the government's own hiring site). A `:443` some responses add is stripped (reported by an open-source client, not seen here). |
+| Location | `PositionLocation[].LocationName` (all of them), fallback `PositionLocationDisplay`; `CountryCode` is a country **name** ("United States") |
+| Remote / workplace | `UserArea.Details.RemoteIndicator` → remote; else `TeleworkEligible` → hybrid; **both explicitly false → onsite**; absent → not said. These two field names come from open-source client models, not the official example — unverified. |
+| Date / dept | `PublicationStartDate` → `first_published`; `DepartmentName` → `department` |
+| Pay | `PositionRemuneration[0]`: `MinimumRange`/`MaximumRange` (strings in the official example), `RateIntervalCode` from the official code list (`/api/codelist/remunerationRateIntervalCodes`): `PA` year, `PM` month, `PD` day, `PH` hour; `BW` bi-weekly, `PW` **piece work** (not weekly), `FB`, `ST`, `SY`, `WC` → interval `null`. Currency USD. |
+| Description | `UserArea.Details.JobSummary` + `MajorDuties` (string or list) + `QualificationSummary` |
+| Single job | **Historic JOA, no key**: `GET https://data.usajobs.gov/api/historicjoa?USAJOBSControlNumbers=<n>` → `{data:[{usajobsControlNumber, positionOpeningStatus, positionCloseDate, positionExpireDate, positionTitle, hiringAgencyName, minimumSalary, maximumSalary, salaryType, teleworkEligible "Y"/"N", positionlocations[]…}]}`. Live check = "still accepting applications per USAJOBS": status `Accepting applications` **and** close/expire date not before today (a close date of today is still open). `Applications under review` (seen) or any other status → closed. **Unknown control number → 204 with an empty body** (checked live), which net.py reads as invalid JSON; the adapter maps exactly that case to `None`. JOA has no description, so `normalize(fetch_job(…))` has `description_text: null`. |
+| Tests | Historic JOA fixtures are real recordings (open, under review, 204). **Search fixtures are synthetic**, hand-built from the documented shape — see `tests/fixtures/http/usajobs/README.md`. |
+| Terms | Do not suggest OPM endorses job-scout; attribution encouraged, not required. |
