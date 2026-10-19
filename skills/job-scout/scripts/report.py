@@ -61,7 +61,7 @@ def load_run(run_dir):
 
 def _run_date(run_id):
     m = re.match(r"(\d{4})(\d{2})(\d{2})T", run_id or "")
-    return "%s %d, %s" % (MONTHS[int(m.group(2)) - 1], int(m.group(3)), m.group(1)) if m else ""
+    return "%s %d, %s" % (MONTHS[int(m.group(2)) - 1], int(m.group(3)), m.group(1)) if m and _valid(m) else ""
 
 
 def _where(job):
@@ -115,11 +115,18 @@ def _pay_short(comp):
     return k(lo) + "+" if lo is not None else "up to " + k(hi)
 
 
+def _valid(m):
+    """Month 1–12 and day 1–31 in a (year, month, day) match: ATS dates can be malformed."""
+    return 1 <= int(m.group(2)) <= 12 and 1 <= int(m.group(3)) <= 31
+
+
 def _short_date(iso, run_year):
     """'Oct 1' (or 'Oct 1, 2025' outside the run's year) from 'YYYY-MM-DD'."""
     m = re.match(r"(\d{4})-(\d{2})-(\d{2})", iso or "")
     if not m:
         return iso or ""
+    if not _valid(m):
+        return ""  # an impossible month or day is an unknown date
     day = "%s %d" % (MONTHS[int(m.group(2)) - 1], int(m.group(3)))
     return day if m.group(1) == run_year else "%s, %s" % (day, m.group(1))
 

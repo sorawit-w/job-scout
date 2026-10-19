@@ -330,3 +330,6 @@ class ShortFormsTest(unittest.TestCase):
         self.assertEqual(report._pay_short({}), "pay not listed")
         self.assertEqual(report._short_date("2026-10-01", "2026"), "Oct 1")
         self.assertEqual(report._short_date("2025-12-10", "2026"), "Dec 10, 2025")
+        self.assertEqual(report._short_date("2026-99-01", "2026"), "")  # malformed ATS date: unknown, no crash
+        self.assertEqual(report._short_date("2026-02-40", "2026"), "")
+        self.assertEqual(report._run_date("20269901T120000Z"), "")
