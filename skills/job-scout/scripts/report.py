@@ -81,6 +81,30 @@ def _items(items):
             for i in items or [] if isinstance(i, dict)]
 
 
+STYLE_TOPIC = {"meetings": "Meetings", "on_call": "On-call", "travel": "Travel", "autonomy": "Autonomy",
+               "stage": "Company stage"}
+STYLE_WORD = {"match": "matches", "conflict": "doesn't match", "not_stated": "not stated"}
+
+
+def _wants(profile):
+    """{topic: label} for the work-style choices the user saved (display only; rubric §4)."""
+    style = profile.get("work_style") if isinstance(profile, dict) else None
+    style = style if isinstance(style, dict) else {}
+    return {t: choices[style[t]] for t, choices in state.WORK_STYLE.items()  # fixed order, same page every time
+            if isinstance(style.get(t), str) and style[t] in choices}
+
+
+def _style(items, wants):
+    """One work-style item per known topic, in WORK_STYLE order, with what the user picked."""
+    by = {}
+    for i in items or []:
+        if isinstance(i, dict) and i.get("topic") in state.WORK_STYLE and i.get("verdict") in STYLE_WORD:
+            by.setdefault(i["topic"], {"topic": i["topic"], "verdict": i["verdict"], "text": str(i.get("text") or ""),
+                                       "quote": i["quote"] if isinstance(i.get("quote"), str) else None,
+                                       "want": wants.get(i["topic"], "")})
+    return [by[t] for t in state.WORK_STYLE if t in by]
+
+
 def _brief(profile):
     p = profile if isinstance(profile, dict) else {}
     chips = []
@@ -99,6 +123,8 @@ def _brief(profile):
                  if isinstance(floor, dict) and floor.get("amount") else "No pay floor")
     if p.get("needs_sponsorship") in SPONSOR_TEXT:
         chips.append(SPONSOR_TEXT[p["needs_sponsorship"]])
+    if _wants(p):
+        chips.append("Work style: " + " · ".join(_wants(p).values()))
     return chips
 
 
@@ -156,6 +182,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     rerun = bool(seen) if rerun is None else rerun
     cands = {c.get("key"): c for c in files.get("candidates") or [] if isinstance(c, dict)}
     jds = files.get("jds") if isinstance(files.get("jds"), dict) else {}
+    wants = _wants(profile)
     results = files.get("results") if isinstance(files.get("results"), dict) else None
     rows = [r for r in (results or {}).get("rows") or [] if isinstance(r, dict)]
     roles, excluded, skipped, used = [], [], [], set()
@@ -192,7 +219,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             since=pub if since_short and re.match(r"\d{4}-\d{2}-\d{2}$", pub) else "", total=_fit(row),
             since_short=since_short,
             scores={s: scores.get(s) for s in SCORES}, gates={g: gates.get(g) or "unknown" for g in GATES},
-            why=_items(row.get("why")), risk=_items(row.get("risk")),
+            why=_items(row.get("why")), risk=_items(row.get("risk")), style=_style(row.get("style"), wants),
             state=cand.get("state") if rerun and cand.get("state") in ("new", "changed") else None,  # all new on a first run
             flags=[f for f in (job["flags"] if isinstance(job.get("flags"), list) else cand.get("flags") or [])
                    if isinstance(f, str)]))  # an empty live list means the live check cleared them
@@ -331,6 +358,8 @@ td.det-cell{padding:0}
 .quotes li{display:flex;gap:8px;margin:0 0 10px;overflow-wrap:anywhere}
 .quotes .i{margin-top:2px}
 .why .i{color:var(--ok)}.risk .i{color:var(--warn)}
+.style .s-match .i{color:var(--ok)}.style .s-conflict .i{color:var(--bad)}.style .s-not_stated .i{color:var(--faint)}
+.style .want{color:var(--muted)}.style .s-not_stated{color:var(--muted)}
 .quotes q{display:block;margin-top:3px;padding-left:10px;border-left:1px solid var(--line-strong);color:var(--muted);font-style:normal}
 .facts{display:flex;flex-direction:column}
 .meters,.gates{list-style:none;margin:0;padding:0;display:grid;gap:5px}.gates{gap:0}
@@ -493,6 +522,21 @@ def _quotes(items, cls, icon, label):
 
 
 GATE_ICON = {"pass": "check", "fail": "x", "unknown": "question"}
+STYLE_ICON = {"match": "check", "conflict": "x", "not_stated": "question"}
+
+
+def _style_list(items):
+    """The "Work style" section: topic, a visible verdict word (color is never the only cue), the quote."""
+    if not items:
+        return ""
+    lis = "".join(
+        '<li class="s-%s">%s<div><span class="verdict"><b>%s</b>: %s</span>%s%s%s</div></li>' % (
+            i["verdict"], _icon(STYLE_ICON[i["verdict"]]), STYLE_TOPIC[i["topic"]], STYLE_WORD[i["verdict"]],
+            '<span class="want"> (you want %s)</span>' % _e(i["want"]) if i["want"] else "",
+            ' <span dir="auto">%s</span>' % _e(i["text"]) if i["text"] and i["verdict"] != "not_stated" else "",
+            '<q dir="auto">%s</q>' % _e(_clip(i["quote"])) if i["quote"] else "")
+        for i in items)
+    return '<h3>Work style</h3><ul class="quotes style">%s</ul>' % lis
 
 
 def _gate_label(gate, value):
@@ -513,6 +557,9 @@ def _detail(r):
     checks = ['<li class="g-%s">%s<span>%s</span></li>' % (_e(v), _icon(GATE_ICON.get(v, "question")), _e(_gate_label(g, v)))
               for g, v in ((g, r["gates"][g]) for g in GATES) if v != "pass"]
     checks += ["<li>%s<span>%s</span></li>" % (_icon("alert"), _e(f)) for f in r["flags"]]
+    checks += ["<li>%s<span>Work style: %s doesn't match%s</span></li>" % (
+        _icon("x"), _e(STYLE_TOPIC[i["topic"]].lower()), _e(" (you want %s)" % i["want"]) if i["want"] else "")
+        for i in r["style"] if i["verdict"] == "conflict"]
     check = '<div class="check"><h3>Check first</h3><ul>%s</ul></div>' % "".join(checks) if checks else ""
     link = ('<a class="btn-primary" href="%s" target="_blank" rel="noopener noreferrer">Open posting%s</a>' % (
         _e(r["url"]), _icon("out")) if r["url"] else "")
@@ -524,7 +571,7 @@ def _detail(r):
     return (
         '<div class="detail" id="d%d" role="region" aria-labelledby="b%d">'
         '<div class="dhead"><h2 dir="auto">%s</h2><p dir="auto">%s</p></div>'
-        '<div class="main">%s<h3>Why it fits</h3>%s%s%s</div>'
+        '<div class="main">%s<h3>Why it fits</h3>%s%s%s%s</div>'
         '<div class="facts"><div><h3>Scores</h3><ul class="meters">%s</ul></div>'
         '<div><h3>Gates</h3><ul class="gates">%s</ul></div></div>'
         '<div class="actions">%s<div class="copy" role="group" aria-labelledby="c%d">'
@@ -532,7 +579,7 @@ def _detail(r):
         '</div>'
     ) % (r["rank"], r["rank"], _e(r["title"]), meta, check,
          _quotes(r["why"], "why", "check", "Why"),
-         '<h3>Watch for</h3>' if r["risk"] else "", _quotes(r["risk"], "risk", "alert", "Risk"),
+         '<h3>Watch for</h3>' if r["risk"] else "", _quotes(r["risk"], "risk", "alert", "Risk"), _style_list(r["style"]),
          meters, gates, link, r["rank"], r["rank"], copies)
 
 

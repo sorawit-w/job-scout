@@ -21,6 +21,7 @@ every link is the employer's own page and every reason quotes the posting.
 - Checks up to 400 boards from about 14,000 verified ones, plus companies you add.
 - Live-checks up to 40 roles and shows about 15, with quoted fit reasons and labelled unknowns.
 - Writes the results as one self-contained HTML report (sort, filter, print, copy-a-reply buttons).
+- Optional work-style match: quoted "matches / doesn't match / not stated" signals per role, display only.
 - Remembers saved, applied and dismissed roles, so reruns show what is new.
 
 ## What it doesn't do

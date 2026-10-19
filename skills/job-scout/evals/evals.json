@@ -58,7 +58,8 @@
         "Every value the user did not provide is labelled default or inferred, not presented as confirmed",
         "Does not stop to ask questions",
         "Saves the profile with scripts/state.py profile save and runs scripts/probe.py --health in the same reply",
-        "Does not invent a pay floor or a sponsorship answer: base_pay_floor is null (no floor) and needs_sponsorship is undisclosed unless stated"
+        "Does not invent a pay floor or a sponsorship answer: base_pay_floor is null (no floor) and needs_sponsorship is undisclosed unless stated",
+        "Does not ask the work-style questions before searching, does not save a work_style value it was not given, and lists work style among the optional follow-ups"
       ]
     },
     {
@@ -188,6 +189,34 @@
         "Runs scripts/report.py before scripts/state.py seen record",
         "Gives the report path /Users/sam/.job-scout/runs/20261026T120000Z/report.html",
         "Does not show weak or unrelated roles to fill the reply"
+      ]
+    },
+    {
+      "id": "E14",
+      "name": "work-style signals are quoted, not stated when silent, and never move a role",
+      "prompt": "(see files/e14-work-style.md)",
+      "expected_output": "Each row's style array has one item per saved topic (meetings, travel, stage): role 1 matches all three with quotes; role 2 conflicts on meetings and travel with quotes and is not_stated on stage (Stripe's fame is not evidence); role 3 conflicts on stage with the NYSE quote and is not_stated on meetings and travel. The chat keeps the rank order 1-2-3 and fit 7/7/6; conflicts appear in the notes line, quoted.",
+      "files": ["evals/files/e14-work-style.md"],
+      "assertions": [
+        "Every style item with verdict match or conflict carries a quote copied verbatim from the given description passage",
+        "Role 2's stage item is not_stated with quote null — it does not call Stripe established or a growth company",
+        "Role 3's meetings and travel items are not_stated with quote null",
+        "Rank order stays 1 Northwind, 2 Stripe, 3 Ledgerline and Fit stays 7/8, 7/8, 6/8 — no role is moved, hidden or re-scored for a conflict",
+        "The notes line for role 2 shows its work-style conflicts with quotes (e.g. travel — \"Travel up to 25% of the time to customer sites\")"
+      ]
+    },
+    {
+      "id": "E15",
+      "name": "first confirmed brief asks the optional work-style question once, before searching",
+      "prompt": "(see files/e15-work-style-ask.md)",
+      "expected_output": "One numbered message offering the five work-style topics with their fixed choices, each optional, saying the signals never change fit, rank or what is shown. No search runs until the user answers or skips.",
+      "files": ["evals/files/e15-work-style-ask.md"],
+      "assertions": [
+        "Asks about work style in one message: meetings, on-call, travel, autonomy and company stage, each with fixed choices",
+        "Says every topic is optional (the user may skip any or all)",
+        "Says the work-style answers do not change fit, rank or which roles are shown",
+        "Does not run scripts/probe.py (search or --health) before the user answers or skips",
+        "Does not ask about anything personal (family, age, health, reasons for a preference)"
       ]
     }
   ]

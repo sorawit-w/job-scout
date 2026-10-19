@@ -117,6 +117,43 @@ class CiteCheckTest(unittest.TestCase):
         self.assertEqual(code, 2)
 
 
+class StyleCheckTest(unittest.TestCase):
+    WHY = [("knows React", "years building   React applications")]
+
+    def check(self, *style):
+        payload = results(why=self.WHY)
+        payload["rows"][0]["style"] = list(style)
+        return run(payload)
+
+    def test_quoted_match_and_conflict_and_unquoted_not_stated_pass(self):
+        code, out = self.check(
+            {"topic": "autonomy", "verdict": "match", "text": "mentors others", "quote": "mentor “junior” engineers"},
+            {"topic": "meetings", "verdict": "conflict", "text": "long lunches", "quote": "We like long lunches."},
+            {"topic": "travel", "verdict": "not_stated", "text": "not stated", "quote": None})
+        self.assertEqual((code, out), (0, {"ok": True, "checked": 4, "failed": []}))
+
+    def test_bad_style_items_fail(self):
+        cases = [
+            ({"topic": "travel", "verdict": "conflict", "text": "x", "quote": "travel up to 50% of the time"},
+             "not found"),
+            ({"topic": "travel", "verdict": "match", "text": "x", "quote": None}, "needs a quote"),
+            ({"topic": "travel", "verdict": "not_stated", "text": "x", "quote": "We like long lunches."}, "no quote"),
+            ({"topic": "family", "verdict": "match", "text": "x", "quote": "We like long lunches."}, "style item must be"),
+            ({"topic": "travel", "verdict": "maybe", "text": "x", "quote": None}, "style item must be"),
+            ("travel", "style item must be")]
+        for item, reason in cases:
+            code, out = self.check(item)
+            self.assertEqual(code, 1, item)
+            self.assertIn(reason, out["failed"][0]["why"], item)
+
+    def test_style_never_counts_as_the_reason_a_role_is_shown(self):
+        payload = results()
+        payload["rows"][0].update(show=True, style=[
+            {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}])
+        code, out = run(payload)
+        self.assertEqual((code, out["failed"][0]["why"]), (1, "shown row has no quoted reason"))
+
+
 class NormalizeTest(unittest.TestCase):
     def test_norm(self):
         self.assertEqual(cite_check.norm("A  “B”\n‘c’ – d — e"), "a \"b\" 'c' - d - e")

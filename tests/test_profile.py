@@ -72,6 +72,17 @@ class ValidateTest(unittest.TestCase):
         self.assertIs(p["open_to_relocation"], False)
         self.assertEqual(p["companies_exclude"], [])
 
+    def test_work_style_takes_fixed_choices_only(self):
+        for ok in ({}, {"meetings": "async", "travel": "none"}, {k: next(iter(v)) for k, v in state.WORK_STYLE.items()}):
+            self.assertEqual(state.validate_profile(good(work_style=ok, sources={"work_style": "you"})), [], ok)
+        for bad in ({"family": "kids"},  # no topic for a personal reason: the protected-trait guard
+                    {"travel": "never, I have kids"}, {"travel": "NONE"}, ["async"], "async", None):
+            errors = state.validate_profile(good(work_style=bad))
+            self.assertTrue(any(e.startswith("work_style must map") for e in errors), (bad, errors))
+
+    def test_work_style_stays_absent_until_asked(self):
+        self.assertNotIn("work_style", state.with_profile_defaults(good()))  # absent = never asked; {} = skipped
+
     def test_open_to_relocation_must_be_a_bool(self):
         self.assertEqual(state.validate_profile(good(open_to_relocation=True)), [])
         self.assertTrue(state.validate_profile(good(open_to_relocation="yes")))

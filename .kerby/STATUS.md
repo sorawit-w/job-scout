@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | v0.2 — HTML report in review; launch smoke tests still open |
-| **Milestone** | v02-report (M7); deploy-launch (M6) open until the smoke tests pass |
-| **Milestone Goal** | report.html per run, network-free and escaped; chat output unchanged |
+| **Phase** | v0.3 — work-style match in review; launch smoke tests still open |
+| **Milestone** | v03-work-style (M8); deploy-launch (M6) open until the smoke tests pass |
+| **Milestone Goal** | optional fixed-choice work style; quoted match / conflict / not-stated signals per role; display only |
 
 ---
 
@@ -23,9 +23,9 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M7 PR — review findings fixed, squash-merged | skill-evaluator recorded |
-| 2 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | release published |
-| 3 | M8 — work-style match (plan after M7 merges) | M7 merged |
+| 1 | M8 PR — Codex review findings fixed, squash-merged | skill-evaluator recorded (E4, E14, E15, N8, N9: 24/24) |
+| 2 | Publishing the work-style release (maintainer's call after merge) | M8 merged |
+| 3 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | release published |
 
 ---
 

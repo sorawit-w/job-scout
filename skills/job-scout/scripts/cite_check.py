@@ -11,7 +11,10 @@ Usage (paths relative to the skill folder):
     python3 scripts/cite_check.py [--run latest] < results.json
 
     results.json: {"rows": [{"key", "show", "gates", "scores", "total",
-                             "why": [{"text", "quote"}], "risk": [{"text", "quote"}]}]}
+                             "why": [{"text", "quote"}], "risk": [{"text", "quote"}],
+                             "style": [{"topic", "verdict", "text", "quote"}]}]}
+    A style item's topic is a work_style topic and its verdict match / conflict / not_stated;
+    match and conflict need a quote, not_stated has quote null (rubric §4).
     Each row's key must have an open job description in jds.json, and a row with show: true
     needs at least one why item; each failing row is reported once, with quote null.
     Stdout: {"ok": bool, "checked": n, "failed": [{"key", "quote", "why"}]}
@@ -36,6 +39,7 @@ import state  # noqa: E402
 UNKNOWN_LABELS = ("pay not listed", "sponsorship not stated", "location unclear")
 NO_JD = "no live job description for this key"
 MIN_QUOTE = 12
+VERDICTS = ("match", "conflict", "not_stated")
 _TRANS = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', " ": " ",
                         "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "―": "-"})
 
@@ -71,6 +75,19 @@ def problem(item, jd):
     return None
 
 
+def style_problem(item, jd):
+    """Why this work-style item fails, or None: match/conflict need a verified quote, not_stated none."""
+    if not live(jd):
+        return NO_JD
+    if not (isinstance(item, dict) and item.get("topic") in state.WORK_STYLE and item.get("verdict") in VERDICTS):
+        return "style item must be {topic: %s, verdict: %s, text, quote}" % ("/".join(state.WORK_STYLE), "/".join(VERDICTS))
+    if item["verdict"] == "not_stated":
+        return None if item.get("quote") is None else "a not_stated item has no quote"
+    if not item.get("quote"):
+        return "a %s item needs a quote from the job description" % item["verdict"]
+    return problem(item, jd)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Check results.json quotes against the live job descriptions.")
     ap.add_argument("--run", default="latest")
@@ -101,14 +118,15 @@ def main(argv=None):
         key = row.get("key")
         jd = jds.get(key) if isinstance(key, str) else None
         items = list(row.get("why") or []) + list(row.get("risk") or [])
-        checked += len(items)
+        style = list(row.get("style") or [])
+        checked += len(items) + len(style)
         if not live(jd):  # one failure per row, even with no items to check
             failed.append({"key": key, "quote": None, "why": NO_JD})
             continue
         if row.get("show") is True and not row.get("why"):
             failed.append({"key": key, "quote": None, "why": "shown row has no quoted reason"})
-        for item in items:
-            why = problem(item, jd)
+        for item, check in [(i, problem) for i in items] + [(i, style_problem) for i in style]:
+            why = check(item, jd)
             if why:
                 failed.append({"key": key, "quote": item.get("quote") if isinstance(item, dict) else None, "why": why})
     print(json.dumps({"ok": not failed, "checked": checked, "failed": failed}, ensure_ascii=False))

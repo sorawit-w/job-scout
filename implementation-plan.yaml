@@ -235,6 +235,31 @@ phases:
             - {case: edge, input: "rerun with nothing new", expected: "'Nothing new since last time.' plus saved/applied-still-open and closed lists"}
             - {case: failure, input: "posting title containing <script>", expected: "escaped text; CSP allows only the page's own script"}
 
+  - id: v0-3
+    exit: "optional work-style signals per role, quoted and display only"
+    milestones:
+      - id: v03-work-style
+        name: "M8 — Work-style match"
+        branch: feature/work-style
+        complexity: 4
+        tasks:
+          - {id: W1, name: "state.py WORK_STYLE + profile validation (fixed choices only)", area: scripts, depends_on: [], complexity: 1}
+          - {id: W2, name: "cite_check.py validates and quote-checks style items", area: scripts, depends_on: [W1], complexity: 2}
+          - {id: W3, name: "rubric §4 work-style signals (display only, description only)", area: skill, depends_on: [], complexity: 2}
+          - {id: W4, name: "output-format: conflicts in notes, report section", area: skill, depends_on: [W3], complexity: 1}
+          - {id: W5, name: "report.py Work style section, Check first conflicts, brief chip", area: scripts, depends_on: [W1], complexity: 2}
+          - {id: W6, name: "SKILL.md optional step after brief, protected-trait guard", area: skill, depends_on: [W3], complexity: 2}
+          - {id: W7, name: "profile.md, PRIVACY", area: docs, depends_on: [W1], complexity: 1}
+          - {id: W8, name: "evals E14, E15 (+E4 assertion)", area: evals, depends_on: [W6], complexity: 2}
+          - {id: W9, name: "skill-evaluator E4/E14/E15/N8/N9", area: release, depends_on: [W8], complexity: 2}
+          - {id: W10, name: "version 0.3.0, docs, PR", area: release, depends_on: [W9], complexity: 2}
+        expected_outcomes:
+          end_state: "with work_style saved, each shown role lists quoted match/conflict/not-stated signals; rank and fit unchanged"
+          cases:
+            - {case: happy path, input: "work_style {meetings: async, travel: none, stage: startup}", expected: "quoted signals per topic; conflicts in notes and Check first"}
+            - {case: edge, input: "famous company whose posting doesn't state its stage", expected: "stage: not stated, never inferred"}
+            - {case: failure, input: "user gives a personal reason for a choice", expected: "only the fixed choice is saved; the reason is never recorded or repeated"}
+
   - id: deployment
     exit: "release zip built, every surface smoke-tested; going public is the maintainer's call"
     milestones:

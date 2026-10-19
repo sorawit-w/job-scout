@@ -3,6 +3,23 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [0.3.0] — 2026-10-19
+
+**Work-style match (M8).** Each role now shows what its posting says about how you like to work.
+
+### Added
+- An optional question after you confirm the brief: meetings (async-first or meetings OK),
+  on-call, travel, autonomy, and company stage, each with fixed choices and each skippable. It is
+  asked once and saved as `work_style` in the profile; "change my work style" edits it. Existing
+  users are offered it once on their next search.
+- Per role, every topic you set shows **matches**, **doesn't match** or **not stated**, with a
+  quote from the job description that `cite_check.py` verifies. The posting is the only evidence:
+  a company's fame or size never counts.
+- Conflicts appear in the chat notes and in the report's "Check first" box; the report's role
+  detail lists every signal in a new "Work style" section, and the brief shows your choices.
+- The signals never change fit, rank, or which roles are shown. To hide roles, use a dealbreaker.
+- The profile keeps only the fixed choices, never a reason given for one. Evals E14 and E15.
+
 ## [0.2.0] — 2026-10-19
 
 **HTML report (M7).** Every search can now be opened as one self-contained page.

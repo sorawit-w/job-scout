@@ -31,7 +31,7 @@ Everything lives in `~/.job-scout/` (or the folder in `JOB_SCOUT_HOME`):
 
 | File | What it holds |
 |---|---|
-| `profile.json` | Your confirmed search brief. It has no field for protected traits and rejects unknown fields; the skill is told never to record a trait you mention, even in a free-text field. |
+| `profile.json` | Your confirmed search brief. It has no field for protected traits and rejects unknown fields; the skill is told never to record a trait you mention, even in a free-text field. Work-style answers are fixed job choices (e.g. "no travel"), never the reason behind them. |
 | `seen.json` | Roles you have seen, saved, applied to or dismissed (with your reason), so reruns show what is new. |
 | `companies.csv` | Companies you added. |
 | `cache/` | Public job lists from each board. A list is reused for 6 hours, then fetched again; old files stay until you delete the folder. Errors are never cached. |

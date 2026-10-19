@@ -41,6 +41,10 @@ Under the table, one notes line per row, keyed by `#`:
   long-open roles stay visible; they are often still hiring.
 - Add `NEW` for roles whose `state` from filter.py is `new` on a rerun, and say what changed
   for `changed` ones ("pay now listed", "title changed").
+- With a saved `work_style`, add each **conflict** before "Open since", quoted:
+  `· Work style: travel — "Travel up to 25% of the time"`. Matches and "not stated" stay out of the
+  notes line (they are in the report); list every signal for a row when the user asks ("work style
+  for 3"). A conflict never moves, hides or re-scores a role, and it is not a flag.
 
 ## 3. Close but excluded — 3 to 5 rows
 
@@ -81,7 +85,8 @@ roles (title, company, link) as one code block the user can paste next time.
 After the chat output, run `python3 scripts/report.py --open` (SKILL.md Phase 7, and at the end
 of every rerun). It writes `report.html` in the run folder: the brief, the coverage line, a
 table with one row per shown role (the same ranks as the chat table) whose details open on
-click (quotes, score meters, gates, copy buttons) — inline, or in a side pane on wide screens —
+click (quotes, score meters, gates, work-style signals, copy buttons) — inline, or in a side pane
+on wide screens —
 the saved/applied and closed lists on a rerun, and the close-but-excluded lines. It reads the run
 files, so it needs `results.json` from Phase 6 when roles were judged; with none (nothing new,
 or zero candidates) it still writes the "nothing new" or zero-results page.
@@ -94,3 +99,6 @@ or zero candidates) it still writes the "nothing new" or zero-results page.
 - **claude.ai:** leave out `--open`; share the file as a download if the environment offers one.
 - The page makes no network requests and keeps no state; the copy buttons only copy a line such
   as `save 3 (Vercel, Design Engineer)` for the user to paste back here.
+- Work style: each role's detail lists every signal (matches, doesn't match, not stated, with the
+  quote), and conflicts also appear in its "Check first" box. The "No flags" filter ignores
+  conflicts on purpose: they are information, not flags.
