@@ -8,6 +8,9 @@ Open the results with this line — no summary sentence before it. (On a "just g
 comes first in the same reply, then this line.)
 
 `Checked N of M company job boards (K jobs open today). Best for tech and startup roles.`
+
+On a rerun, count what moved instead, so a short list doesn't read as "only K jobs exist":
+`Checked N of M company job boards — K new or changed since last time.`
 Use `boards.probed` and `boards.available` from probe.py and the number of open jobs from
 fetch_jd.py. If the user's field is mostly outside tech, say coverage was thin here too.
 
@@ -51,6 +54,9 @@ Pick the closest misses from filter.py's `near_misses` and from rows you scored 
 One line each, one reason each, so the user can spot a filter that's too tight.
 
 ## 4. When nothing matches
+
+On a rerun, zero candidates usually means nothing new: follow SKILL.md Phase 9 (say so in one
+line, show the saved and applied roles still open) instead of the explanation below.
 
 Say so plainly and name the filter that removed the most jobs, using filter.py's
 `counts.removed` (e.g. "Most roles were removed by your remote scope (US only) — 212 of 640.
