@@ -127,6 +127,10 @@ class WorkModeLocationTest(unittest.TestCase):
         self.assertEqual(outcome(local(city="Portland, OR"), home_base="Pasadena, CA",
                                  commute_cities=["Portland, OR"])[0], "strong")
 
+    def test_home_without_a_comma_turns_the_state_check_off(self):
+        dc = local(city="Washington, DC")
+        self.assertEqual(outcome(dc, home_base="Washington DC", commute_cities=["Washington"])[0], "strong")
+
     def test_commute_city_written_with_its_state_allows_that_state(self):
         md = local(city="Bethesda, MD")
         self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda"])[0], "location")

@@ -156,11 +156,15 @@ _US_STATE_RE = re.compile(r"(?<![A-Za-z])(?:%s)(?![A-Za-z])" % "|".join(
 
 
 def us_states(loc):
-    """US state codes one location string names: codes after a comma win ("Washington, PA" is PA,
-    not WA); with none, full state names count."""
+    """US state codes named after the first comma, where a state is written ("Lincoln, NE",
+    "Sacramento, California"). The city part never counts, so "Washington, PA" is PA and a bare
+    "Washington" or "Washington DC" names no state (callers then skip the state check)."""
     t = _fold(loc or "")
-    codes = {m.group(1) for m in _COMMA_CODE_RE.finditer(t) if _SUBDIV.get(m.group(1)) == "US"}
-    return codes or {_US_STATE_CODES[m.group(0).lower()] for m in _US_STATE_RE.finditer(t)}
+    if "," not in t:
+        return set()
+    rest = t[t.index(","):]
+    codes = {m.group(1) for m in _COMMA_CODE_RE.finditer(rest) if _SUBDIV.get(m.group(1)) == "US"}
+    return codes or {_US_STATE_CODES[m.group(0).lower()] for m in _US_STATE_RE.finditer(rest)}
 
 
 def _is_place(s, allow_mode=False):
