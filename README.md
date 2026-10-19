@@ -7,7 +7,7 @@ today, links straight to the employer, and explains its fit with quotes from the
 - **Works in:** Claude Code, Codex, claude.ai (Pro/Max), and any agent that reads `SKILL.md`.
 - **Reads:** Greenhouse, Ashby, Lever, SmartRecruiters and Workday boards, plus USAJOBS with
   your own free key.
-- **Status:** Current release: `0.1.0`. See [Status](#status).
+- **Status:** Current release: `0.2.0`. See [Status](#status).
 
 job-scout is not affiliated with any job board or employer.
 
@@ -35,6 +35,8 @@ by people. Every shown role was open on a live check and linked to the employer
   role is still open.
 - Shows about 15 roles in one table, each with a direct employer link, quoted fit reasons, and
   honest unknowns ("pay not listed", "sponsorship not stated").
+- Writes the same results as one HTML report you can open, sort, filter and print. It has a score
+  breakdown per role and buttons that copy a reply ("save 3") to paste back into the chat.
 - Remembers what you saved, applied to or dismissed, so the next run shows only what is new.
 
 ## What it doesn't do
@@ -73,7 +75,10 @@ by people. Every shown role was open on a live check and linked to the employer
    dropped, and a role that changed since the search is checked against the brief again.
 6. **Judge and cite.** The agent scores each role with a fixed rubric and quotes the job
    description for every reason. `cite_check.py` rejects any quote that is not in the text.
-7. **Remember.** Your feedback is stored locally, and the next run shows new and changed roles
+7. **Report.** `report.py` writes a self-contained `report.html` in the run folder. It loads
+   nothing from the network and works with JavaScript off. The agent opens it when your setup has
+   a browser.
+8. **Remember.** Your feedback is stored locally, and the next run shows new and changed roles
    first.
 
 The scripts use only the Python 3.9+ standard library: nothing to install.

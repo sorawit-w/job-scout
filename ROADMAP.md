@@ -6,6 +6,11 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 - [!] M6 — Launch 0.1.0: repo public and v0.1.0 released (2026-10-19); listed on the agent-skills shelf; open until the maintainer runs the four install smoke tests (DEVELOPER_TODO)
 
+### Phase 2: v0.2
+
+- [~] M7 — HTML report: self-contained report.html per run (Signal theme, sort/filter, copy-a-reply, score grid)
+- [ ] M8 — Work-style match: optional preference questions, quoted signals per role (planned after M7)
+
 ## Follow-ups
 
 - [ ] Lever EU host (`api.eu.lever.co`) — not needed in v0: every sampled seed slug answered on `api.lever.co`

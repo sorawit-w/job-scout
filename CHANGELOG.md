@@ -3,6 +3,24 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [0.2.0] — 2026-10-19
+
+**HTML report (M7).** Every search can now be opened as one self-contained page.
+
+### Added
+- `scripts/report.py` writes `report.html` in the run folder: the brief, the coverage line, one
+  card per shown role (fixed rank, employer link, quoted reasons and risks, a score grid and the
+  four gates), saved/applied and closed roles on a rerun, and the close-but-excluded lines.
+  Sort, filter and copy-a-reply buttons work in the page; it reads fully with JavaScript off and
+  prints cleanly. The "Signal" theme has light and dark modes and a phone layout.
+- The page loads nothing: inline CSS and JS under a Content-Security-Policy that allows only its
+  own script, every value HTML-escaped, `http(s)` links only.
+- SKILL.md runs the report after the chat results and before `seen record`, and opens it when a
+  local browser exists. A pasted `save 3 (Company, Title)` line acts on the named role.
+- probe.py, filter.py and fetch_jd.py save the numbers the report needs (`boards.json` counts,
+  `filter.json`, and the live row or drop reason in `jds.json`).
+- Evals E12 and E13; design tokens in `docs/report-design.md`.
+
 ## [0.1.0] — 2026-10-19
 
 **First release.** job-scout finds open roles that fit a resume, from employer job boards.

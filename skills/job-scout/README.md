@@ -20,6 +20,7 @@ every link is the employer's own page and every reason quotes the posting.
   mode, pay and sponsorship instead of guessing.
 - Checks up to 400 boards from about 14,000 verified ones, plus companies you add.
 - Live-checks up to 40 roles and shows about 15, with quoted fit reasons and labelled unknowns.
+- Writes the results as one self-contained HTML report (sort, filter, print, copy-a-reply buttons).
 - Remembers saved, applied and dismissed roles, so reruns show what is new.
 
 ## What it doesn't do
@@ -46,7 +47,7 @@ every link is the employer's own page and every reason quotes the posting.
 Brief → network check → probe the boards (`scripts/probe.py`) → filter by the brief
 (`scripts/filter.py`) → live check and descriptions (`scripts/fetch_jd.py`) → score with the
 rubric and quote the description (`scripts/cite_check.py` rejects any quote not in the text) →
-remember feedback (`scripts/state.py`). Standard-library Python 3.9+, nothing to install.
+write the HTML report (`scripts/report.py`) → remember feedback (`scripts/state.py`). Standard-library Python 3.9+, nothing to install.
 
 ## Privacy — where your data lives
 
