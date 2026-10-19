@@ -273,6 +273,12 @@ class ReplayRecordTest(NetTestCase):
         with mock.patch.dict(os.environ, {"JOB_SCOUT_REPLAY_DIR": rec}):
             self.assertEqual(net.get_json(URL, body={"searchText": "nurse", "limit": 20}), {"jobPostings": []})
 
+    def test_204_empty_body_is_an_empty_object(self):
+        # USAJOBS's keyless JOA endpoint answers an unknown control number with 204 and no body.
+        net.write_fixture(self.dir, URL, 204, "")
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_REPLAY_DIR": self.dir}):
+            self.assertEqual(net.get_json(URL), {})
+
     def test_record_skips_network_exceptions(self):
         self.opener(urllib.error.URLError(socket.gaierror(8, "x")))
         with mock.patch.dict(os.environ, {"JOB_SCOUT_RECORD_DIR": self.dir}):

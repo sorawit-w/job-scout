@@ -87,12 +87,7 @@ def fetch_board(slug="all", budget=None, terms=None, location=None):
 def fetch_job(slug, job_id, budget=None):
     """Historic JOA record while it is still accepting applications; None when closed,
     cancelled, past its close date, or unknown. Network errors raise."""
-    try:
-        data = net.get_json(JOA % urllib.parse.quote(str(job_id), safe=""), budget)
-    except net.NetError as e:
-        if type(e) is not net.NetError:  # Blocked, HTTPStatusError, BudgetExceeded: raise like other adapters
-            raise
-        return None  # an unknown control number answers 204 with no body, which net.py reads as invalid JSON
+    data = net.get_json(JOA % urllib.parse.quote(str(job_id), safe=""), budget)  # unknown number: 204 → {}
     row = next((r for r in (data or {}).get("data") or [] if str(r.get("usajobsControlNumber")) == str(job_id)), None)
     if row is None or row.get("positionOpeningStatus") != OPEN:
         return None

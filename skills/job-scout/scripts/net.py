@@ -186,6 +186,8 @@ def get_json(url, budget=None, body=None, headers=None):
             _sleep(_retry_wait(resp_headers))
             continue
         break
+    if status == 204:  # "no content": an empty result, not a malformed one
+        return {}
     if 200 <= status < 300:
         try:
             return json.loads(text)
