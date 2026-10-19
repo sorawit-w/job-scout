@@ -226,6 +226,19 @@ class ReportTest(unittest.TestCase):
             self.assertEqual(("Saved or applied, still open" in html, "Closed since last time" in html),
                              (still_open, not still_open), closed)
 
+    def test_still_open_links_to_a_live_variant_when_the_main_one_closed(self):
+        grouped = job("gh:a:1", state_="changed", variants=[
+            {"key": "gh:a:1", "url": "https://jobs.example.com/gh:a:1"},
+            {"key": "gh:a:2", "url": "https://jobs.example.com/still-live"}])
+        make_run(self.home, [grouped], rows=None, jds={"gh:a:1": {"status": "closed"}})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {
+                "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
+        run([], self.home)
+        still = page(self.home).split("<h2>Saved or applied, still open</h2>")[1]
+        self.assertIn('href="https://jobs.example.com/still-live"', still)
+        self.assertNotIn("gh:a:1", still)
+
     def test_live_closed_alias_keeps_its_saved_status(self):
         grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
         make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]},

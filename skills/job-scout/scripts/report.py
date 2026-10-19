@@ -218,6 +218,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     applied = [k for k in lists.get("applied_open", []) if k not in saved]  # saved wins, as in job_state
 
     by_key = {j.get("key"): j for j in jobs}
+    by_key.update((j.get("key"), j) for j in open_jobs)  # a promoted variant links to the live posting
 
     def listed(keys, status=None):
         """Saved/applied/closed roles: this run's job fields when listed, else what seen.json kept."""

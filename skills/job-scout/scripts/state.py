@@ -393,7 +393,16 @@ def live_split(jobs, jds):
     closed = {k for k, e in (jds if isinstance(jds, dict) else {}).items()
               if isinstance(e, dict) and e.get("status") == "closed"}
     flags = [closed.issuperset(job_keys(j)) for j in jobs]
-    return [j for j, f in zip(jobs, flags) if not f], [j for j, f in zip(jobs, flags) if f]
+    return [_live_face(j, closed) for j, f in zip(jobs, flags) if not f], [j for j, f in zip(jobs, flags) if f]
+
+
+def _live_face(job, closed):
+    """When the job's own posting is closed, a still-listed variant takes over the shown fields (key,
+    url, places) so nothing links to the gone posting. The variants stay, so history still matches."""
+    if job.get("key") not in closed:
+        return job
+    live = next(v for v in job.get("variants") or [] if isinstance(v, dict) and v.get("key") not in closed)
+    return dict(job, **live)
 
 
 def diff(jobs, probed_ok, seen, gone=()):

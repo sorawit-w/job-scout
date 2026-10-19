@@ -262,12 +262,13 @@ class RecordTest(HomeCase):
         self.assertEqual(state.load_seen()[key]["closed_at"], state.now_iso(NOW))
 
     def test_one_closed_variant_leaves_the_grouped_role_open(self):
-        state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
-        grouped = dict(job(), variants=[{"key": "ashby:acme:1"}, {"key": "ashby:acme:2"}])
-        run = self.make_run([grouped], [])
-        state.write_json_atomic(run / "jds.json", {"ashby:acme:2": {"status": "closed"}})
-        self.assertEqual(state.record(run, now=NOW)["closed"], 0)
-        self.assertIsNone(state.load_seen()["ashby:acme:1"]["closed_at"])
+        for gone in ("ashby:acme:2", "ashby:acme:1"):  # another variant, or the job's own posting
+            state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
+            grouped = dict(job(), variants=[{"key": "ashby:acme:1"}, {"key": "ashby:acme:2"}])
+            run = self.make_run([grouped], [])
+            state.write_json_atomic(run / "jds.json", {gone: {"status": "closed"}})
+            self.assertEqual(state.record(run, now=NOW)["closed"], 0, gone)
+            self.assertIsNone(state.load_seen()["ashby:acme:1"]["closed_at"])
 
     def test_empty_board_never_closes_a_role(self):
         state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
