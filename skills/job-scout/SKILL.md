@@ -194,12 +194,62 @@ Run `python3 scripts/probe.py --health`.
   **Do not fall back to web search.** A web-search list is exactly what job-scout exists to
   replace: aggregator links, closed roles, wrong dates.
 
-## Phases 4–9 — Search, judge, report, remember (not built yet)
+## Phase 4 — Probe the job boards
 
-The search, fit judgment, results table and memory of seen roles arrive in the next
-milestones. Until they do: after Phase 3 passes, tell the user the brief is saved and the
-network check passed, and that the search step of job-scout is not built yet. Do not improvise
-a search with other tools.
+Run `python3 scripts/probe.py`. It picks up to 400 company boards (the user's named companies
+first), fetches them politely with a cache, merges regional duplicates, and prints one JSON
+summary: `run` (the run id), `boards.probed` / `boards.available`, `jobs`, `collapsed`.
+The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<run>/`).
+
+- Exit 3 → the network is blocked: give the Phase 3 stop message.
+- Exit 4 → the request cap was hit: continue with the partial results and say so.
+
+## Phase 5 — Narrow, then read the job descriptions
+
+1. Run `python3 scripts/filter.py`. It applies the confirmed brief deterministically (work mode,
+   location, remote scope, level, track, excluded companies and titles, pay floor) and prints
+   `counts`, ranked `candidates` (each `strong` or `borderline`, with `flags`) and up to 5
+   `near_misses`. With **zero candidates**, stop and explain using `counts.removed` (see
+   `references/output-format.md` §4) — never pad.
+2. Choose **up to 40** candidates whose descriptions are worth reading: all plausible `strong`
+   ones, then `borderline` titles that could be the target role in substance (a title like
+   "Software Engineer, Product" may be exactly a design-engineering job). Skip ones the title
+   already rules out.
+3. Run `python3 scripts/fetch_jd.py --keys <key1>,<key2>,...`. It re-checks each job on the
+   employer's board (the live check) and returns `jobs` (open, with a trimmed `jd`), `closed`,
+   and `unverified`. **Show only `open` jobs**; never present a closed or unverified job as open.
+
+## Phase 6 — Judge fit, with quotes
+
+Read `references/rubric.md` and follow it: three pass/fail gates (location, sponsorship, pay),
+four 0–2 scores, a quote from the job description for every claim. Write the result to
+`<run dir>/results.json`, then run:
+
+```
+python3 scripts/cite_check.py < <run dir>/results.json
+```
+
+If it reports `failed` claims, re-read the description and fix or delete each one, then run it
+again until `"ok": true`. Why: a confident claim the description doesn't support is exactly the
+failure job-scout exists to prevent.
+
+## Phase 7 — Show the results
+
+Follow `references/output-format.md`: one coverage line, the six-column table (employer links
+only), one notes line per row with the quoted why/risk and "open since", 3–5 "close but
+excluded" lines, then the feedback prompt.
+
+## Phase 8 — Feedback
+
+Ask what to do with the roles ("save 1", "applied 3", "dismiss 2: too senior"). Remembering
+them across runs arrives in the next milestone; until then, say the feedback can't be saved yet.
+If feedback implies a brief change ("I keep dismissing hybrid roles"), propose the change and
+confirm it — never change the brief silently.
+
+## Phase 9 — Reruns (not built yet)
+
+Showing only what's new since last time arrives in the next milestone. For now a rerun is a
+fresh search from the saved brief (Phase 1 already starts from it).
 
 ## Cross-skill integration
 
