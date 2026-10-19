@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Setup — repo scaffold |
-| **Milestone** | setup-repo (M1a) |
-| **Milestone Goal** | Scaffold a stdlib-Python skill repo with a green gate locally and in CI on Python 3.9 and 3.13 |
+| **Phase** | Foundation — data layer complete; implementation next |
+| **Milestone** | impl-confirmation-gate (M2) |
+| **Milestone Goal** | Profile schema, DOCX text, SKILL.md phases 0–3 (route check, ingest, brief + confirmation gate, health check), trigger fixtures, gate evals |
 
 ---
 
@@ -23,9 +23,9 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M1b D1 — `net.py`: UA, timeout, retry, request budget, health check, record/replay | M1a merged |
-| 2 | M1b D3/D4 — location parsing, remote scope, variant collapse (test-first) | M1a merged |
-| 3 | M1b D2 — record HTTP fixtures; verify pay fields per ATS | D1 |
+| 1 | M2 G1 — profile validate/save/show in `state.py` (unknown keys rejected) | data layer merged |
+| 2 | M2 G3 — SKILL.md frontmatter + phases 0–3; re-add manifest skill declarations | G1 |
+| 3 | M2 G5/G6 — trigger fixtures and gate evals E1/E4/E7/E9 | G3 |
 
 ---
 
@@ -37,4 +37,5 @@ None.
 
 ## Notes for Human Review
 
-- None.
+- Seed check flagged six boards with more than 2,000 jobs as possible aggregators (ashby:bjakcareer, greenhouse:andurilindustries, greenhouse:spacex, lever:aogarciaagency, lever:boxlunch, lever:tsmg). SpaceX and Anduril are real employers; none were added to the denylist without verification.
+- Branch protection on `main` is a repo setting only the maintainer can turn on (the seed-check workflow token has write access).

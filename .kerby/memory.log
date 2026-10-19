@@ -24,3 +24,12 @@ Commit: 819af45, a447b0b
 Status: DONE
 Notes: chose not to fail on zero skills outright (SKILL.md lands in M2; a stub would trip the skill-authoring evaluator gate); declared-path validation catches the same failure. Marketplace entry 'version' duplicating plugin.json only warns in claude plugin validate — left as is because the compat check reads it.
 Observations: gate green on 3.14.7 and 3.9.6 (11 tests). CI has not reported on this PR yet.
+
+[2026-10-19T00:55:38Z]
+Task: M1b — data layer (implementation-plan.yaml foundation-data-layer, D1–D14)
+Action: recorded the maintainer's merge policy in agent-context.yaml; delegated net.py, normalize.py, state.py, seed_import.py to 4 parallel sub-agents (test-first) and reviewed each; verified live ATS fields (Ashby includeCompensation, Greenhouse pay_transparency, Lever salaryRange/country, SmartRecruiters) into references/ats-notes.md; recorded HTTP fixtures; wrote Greenhouse/Ashby/Lever adapters, probe.py, seed_check.py, seed-check.yml, NOTICE; imported + live-checked the seed; QA sub-agent review → 2 major + 7 minor fixed test-first.
+Files: skills/job-scout/scripts/**, scripts/{seed_import,seed_check,record_fixtures}.py, skills/job-scout/data/*, references/ats-notes.md, tests/**, .github/workflows/seed-check.yml, NOTICE, ROADMAP.md
+Commit: b6643e9..6023f71
+Status: DONE
+Notes: lever_eu dropped (every sampled seed slug answers on api.lever.co) — ROADMAP follow-up. Greenhouse pay exists only on the single-job endpoint, so GH comp is null at list time and filled for the shortlist. collapse_variants now groups by department too (QA major). CSV writers switched to LF.
+Observations: seed-check 5,689 boards in 2m45s: live 5,358 · unverified 193 · dead 138 · errors 0; 176,570 open jobs; 4,429 boards with US roles. Live 60-board probe: 60 requests, 5.5 s, 8,432 postings → 6,913 roles. Suite 170 tests OK on 3.14.7 and 3.9.6.

@@ -1,0 +1,16 @@
+job-scout
+MIT License — copyright holder and terms in LICENSE
+
+This project includes or builds on the following third-party work:
+
+corpHuntingMCP — https://github.com/ZmoleCristian/corpHuntingMCP
+  License: 0BSD (no attribution required; credited anyway)
+  Used: the Greenhouse, Ashby and Lever board slugs and company names in
+  skills/job-scout/data/companies.csv were imported from src/tenants/*.rs at commit
+  92fab3600f36d470f1bd4f1e84c06fcf5609ac86 by scripts/seed_import.py, then checked
+  live by scripts/seed_check.py.
+
+jobscope — https://github.com/canmenzo/jobscope
+  License: MIT
+  Used as a reference only: its known location-parsing edge cases became test inputs
+  in tests/test_locations.py. No code was copied.

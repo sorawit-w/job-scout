@@ -63,3 +63,17 @@ agentNotes:
     - "No tomllib, no match statements, no runtime X | Y unions (Python 3.9 floor)."
     - "Never name a module after a stdlib package (e.g. net.py, not http.py)."
   plan: "implementation-plan.yaml (phases → milestones → tasks)"
+  mergePolicy:
+    # Granted by the maintainer in session on 2026-10-19. This overrides swe's
+    # "Do NOT merge — leave for human review" for milestone PRs in this repo only.
+    authorizedBy: "maintainer, in session, 2026-10-19"
+    scope: "milestone PRs from implementation-plan.yaml (M1b–M6), into main"
+    method: "squash merge, then delete the head branch"
+    when: "agent's judgement once satisfied with the code: CI green on 3.9 + 3.13; every Codex review finding fixed or answered with a reason, threads resolved; a fresh skill-evaluator verdict recorded for any PR touching SKILL.md or files it loads; the milestone's case table has evidence per row"
+    waitForCodex: "agent's judgement; Codex suggestions are applied only when verified correct"
+    stopAndAsk:
+      - "a task that needs the maintainer (G8 claude.ai upload, V4 ground-truth labelling, M6 going public / release / surface smoke tests)"
+      - "the approved plan would change (a plan amendment voids prior grade-7 approval)"
+      - "the same review or eval failure class recurs after a fix round (skill-authoring circuit breaker)"
+      - "skill-evaluator is unavailable (an unverified skill change needs the maintainer's acceptance)"
+    neverWithoutAsking: "making the repo public, publishing a release, force-pushing, rewriting main's history"
