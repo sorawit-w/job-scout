@@ -48,6 +48,9 @@ TECH_WORDS = re.compile(r"\b(?:software|engineer|engineering|developer|programme
 # brief's titles, while a SmartRecruiters board returns its whole list whatever the field.
 FAMILY_RANK = {"tech": {"greenhouse": 0, "ashby": 0, "lever": 0, "smartrecruiters": 1, "workday": 2},
                "general": {"workday": 0, "smartrecruiters": 1}}
+# Words in industries_prefer too generic to pick an employer by name ("health systems" -> "health").
+INDUSTRY_STOP = {"and", "the", "for", "with", "other", "system", "service", "company", "companies", "industry",
+                 "industries", "group", "organization", "sector", "business", "firm"}
 
 
 def load_csv(path):
@@ -93,16 +96,32 @@ def brief_field(profile):
     return "tech" if any(TECH_WORDS.search(t) for t in titles) else "general"
 
 
+def industry_pattern(profile):
+    """A regex for company names that start a word from industries_prefer ("hospitals" -> "hospital",
+    which also matches "Hospitals"), or None. shortcut: names stand in for sector tags, which only
+    the 49 eval boards have; replace with real sector tags when the seed gets them (ROADMAP)."""
+    words = set()
+    for pref in profile.get("industries_prefer") or []:
+        for w in re.findall(r"[a-z]+", pref.lower() if isinstance(pref, str) else ""):
+            w = w[:-1] if len(w) > 4 and w.endswith("s") else w
+            if len(w) >= 4 and w not in INDUSTRY_STOP:
+                words.add(w)
+    return re.compile(r"\b(?:%s)" % "|".join(sorted(words)), re.I) if words else None
+
+
 def select_boards(rows, profile=None, user_rows=(), max_boards=DEFAULT_MAX_BOARDS, usajobs=False):
-    """Ordered, deduped [(ats, slug, company)] — user companies, seed49, preferred sectors, then the
-    rest by hiring tool for the brief's field (FAMILY_RANK), US/remote share and job count. Seed rows
-    must be live or unchecked; user rows always count. usajobs=True adds the USAJOBS search: right
-    after user companies for a general brief, in the last slot for a tech brief."""
+    """Ordered, deduped [(ats, slug, company)] — user companies, seed49 (tech briefs only: they are
+    the tech eval boards), preferred industries (sector tag or company name), then the rest; both
+    of the last two tiers sort by hiring tool for the brief's field (FAMILY_RANK), US/remote share
+    and job count. Seed rows must be live or unchecked; user rows always count. usajobs=True adds
+    the USAJOBS search: right after user companies for a general brief, in the last slot for a tech
+    brief."""
     profile = profile or {}
     field = brief_field(profile)
     include = {c.lower() for c in profile.get("companies_include") or []}
     exclude = {c.lower() for c in profile.get("companies_exclude") or []}
-    sectors = {s.lower() for s in profile.get("industries_prefer") or []}
+    sectors = {s.lower() for s in profile.get("industries_prefer") or [] if isinstance(s, str)}
+    names = industry_pattern(profile)
     picked, seen = [], set()
 
     def add(row):
@@ -123,15 +142,16 @@ def select_boards(rows, profile=None, user_rows=(), max_boards=DEFAULT_MAX_BOARD
     for row in eligible:
         if row.get("company", "").lower() in include or row["slug"].lower() in include:
             add(row)
-    for row in eligible:
-        if row.get("source") == "seed49":
-            add(row)
-    for row in eligible:
-        if sectors and row.get("sector", "").lower() in sectors:
-            add(row)
+    if field == "tech":
+        for row in eligible:
+            if row.get("source") == "seed49":
+                add(row)
     rank = FAMILY_RANK[field]
     rest = sorted(eligible, key=lambda r: (rank.get(r.get("ats"), len(FAMILY_RANK["tech"])),
                                            -(_num(r.get("us_share")) + _num(r.get("remote_share"))), -_num(r.get("jobs"))))
+    for row in rest:
+        if row.get("sector", "").lower() in sectors or (names and names.search(row.get("company", ""))):
+            add(row)
     for row in rest:
         add(row)
     picked = picked[:max_boards]

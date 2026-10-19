@@ -37,7 +37,7 @@ class SelectBoardsTest(unittest.TestCase):
 
     def test_priority_order_and_dead_excluded(self):
         user = [{"company": "Mine", "ats": "lever", "slug": "mine"}]
-        picked = probe.select_boards(self.ROWS, {"industries_prefer": ["fintech"]}, user, 10)
+        picked = probe.select_boards(self.ROWS, {"target_roles": ["Frontend Engineer"], "industries_prefer": ["fintech"]}, user, 10)
         self.assertEqual([p[1] for p in picked], ["mine", "eval", "fin", "big", "small"])
 
     def test_cap_and_exclude(self):
@@ -224,12 +224,23 @@ class FieldSelectionTest(unittest.TestCase):
                          ["mine", "seed.wd5.Careers", "gh", "ash", "lev", "sr", "acme.wd1.External"])
 
     def test_general_rest_tier_prefers_workday_then_smartrecruiters(self):
+        # the tech eval boards (seed49) get no head start for a general brief
         self.assertEqual(self.slugs({"target_roles": ["Registered Nurse"]}),
-                         ["mine", "seed.wd5.Careers", "acme.wd1.External", "sr", "gh", "ash", "lev"])
+                         ["mine", "acme.wd1.External", "seed.wd5.Careers", "sr", "gh", "ash", "lev"])
 
     def test_usajobs_follows_user_companies_for_a_general_brief(self):
         self.assertEqual(self.slugs({"target_roles": ["Registered Nurse"]}, max_boards=3, usajobs=True),
-                         ["mine", "all", "seed.wd5.Careers"])
+                         ["mine", "all", "acme.wd1.External"])
+
+    def test_preferred_industry_words_match_company_names(self):
+        def r(company, ats="workday", us="0.9"):
+            return {"company": company, "ats": ats, "slug": company.lower().replace(" ", "-"), "sector": "unknown",
+                    "status": "live", "jobs": "10", "us_share": us, "remote_share": "0", "source": "corphunting"}
+        rows = [r("Acme Retail"), r("Valley Systems"), r("Sharp HealthCare", us="0.1"), r("Mercy Hospital", "greenhouse"),
+                r("Denver Health", us="0.2")]
+        brief = {"target_roles": ["Registered Nurse"], "industries_prefer": ["hospitals and health systems"]}
+        self.assertEqual([p[2] for p in probe.select_boards(rows, brief)],
+                         ["Denver Health", "Sharp HealthCare", "Mercy Hospital", "Acme Retail", "Valley Systems"])
 
     def test_usajobs_takes_the_last_slot_for_a_tech_brief(self):
         picked = probe.select_boards(self.rows(), {"target_roles": ["Frontend Engineer"]}, (), 3, usajobs=True)
