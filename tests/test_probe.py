@@ -111,5 +111,29 @@ class ProbeRunTest(unittest.TestCase):
         self.assertEqual(code, 2)
 
 
+class QaFixesProbeTest(unittest.TestCase):
+    def test_traversal_slug_is_a_usage_error(self):
+        code, out = run(["--boards", "greenhouse:../../x"])
+        self.assertEqual(code, 2)
+
+    def test_malformed_user_company_rows_are_skipped(self):
+        rows = [{"company": "Mine"}, {"ats": "lever", "slug": ""}, {"company": "Ok", "ats": "lever", "slug": "ok"}]
+        picked = probe.select_boards([], {}, rows, 10)
+        self.assertEqual([p[1] for p in picked], ["ok"])
+
+    def test_cap_hit_still_writes_partial_jobs_file(self):
+        home = tempfile.mkdtemp()
+        with mock.patch.object(probe, "RETRY_ALLOWANCE", -1):
+            code, out = run(["--boards", "greenhouse:airtable,ashby:attention"], home=home)
+        self.assertEqual(code, 4)
+        with open(os.path.join(home, "runs", out["run"], "jobs.json"), encoding="utf-8") as f:
+            self.assertTrue(json.load(f))
+
+    def test_dead_and_errored_boards_are_not_cached(self):
+        home = tempfile.mkdtemp()
+        run(["--boards", "lever:job-scout-no-such-board,ashby:no-fixture-board"], home=home)
+        self.assertFalse(os.path.exists(os.path.join(home, "cache", "lever", "job-scout-no-such-board.json")))
+        self.assertFalse(os.path.exists(os.path.join(home, "cache", "ashby", "no-fixture-board.json")))
+
 if __name__ == "__main__":
     unittest.main()

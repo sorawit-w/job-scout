@@ -69,6 +69,8 @@ def select_boards(rows, profile=None, user_rows=(), max_boards=DEFAULT_MAX_BOARD
     picked, seen = [], set()
 
     def add(row):
+        if not row.get("ats") or not row.get("slug"):
+            return  # malformed row (e.g. a hand-edited ~/.job-scout/companies.csv)
         key = (row["ats"], row["slug"])
         if key in seen or row.get("company", "").lower() in exclude or row["slug"].lower() in exclude:
             return
@@ -98,7 +100,10 @@ def _probe_one(board, budget, refresh):
     module = adapters.REGISTRY.get(ats)
     if module is None:
         return board, "error", None, "unknown ats %s" % ats, False
-    raws = None if refresh else state.cache_get(ats, slug)
+    try:
+        raws = None if refresh else state.cache_get(ats, slug)
+    except ValueError as e:  # unsafe slug from a data file: report it, never crash the run
+        return board, "error", None, str(e), False
     if raws is not None:
         return board, ("live" if raws else "empty"), raws, None, True
     try:
@@ -167,7 +172,7 @@ def parse_boards(spec):
     out = []
     for item in items:
         ats, _, slug = item.partition(":")
-        if not ats or not slug:
+        if not ats or not slug or "/" in slug or "\\" in slug or ".." in slug or slug.startswith("."):
             raise ValueError("bad board %r (want ats:slug)" % item)
         out.append((ats, slug, slug))
     return out

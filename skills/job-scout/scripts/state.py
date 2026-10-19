@@ -32,6 +32,7 @@ from pathlib import Path
 
 CACHE_TTL = 6 * 3600
 _ATS_RE = re.compile(r"^[a-z_]+$")
+_RUN_ID_RE = re.compile(r"^\d{8}T\d{6}Z(-\d+)?$")  # what new_run() creates; nothing else resolves
 
 
 def home():
@@ -102,10 +103,10 @@ def cache_age(ats, slug, now=None):
 
 def cache_get(ats, slug, ttl=CACHE_TTL, now=None):
     """Return cached data if younger than ``ttl`` seconds, else None (also for corrupt files)."""
-    age = cache_age(ats, slug, now)
-    if age is None or age >= ttl:
+    entry = _cache_entry(ats, slug)  # read once: a second read could race a concurrent delete
+    if entry is None or (time.time() if now is None else now) - entry["fetched_at"] >= ttl:
         return None
-    return _cache_entry(ats, slug)["data"]
+    return entry["data"]
 
 
 # --- run directories -------------------------------------------------------
@@ -152,7 +153,7 @@ def resolve_run(spec):
         if run is None:
             raise FileNotFoundError("no runs yet")
         return run
-    if not spec or "/" in spec or "\\" in spec or ".." in spec:
+    if not spec or not _RUN_ID_RE.match(spec):
         raise ValueError("bad run id: %r" % (spec,))
     path = _runs_dir() / spec
     if not path.is_dir():

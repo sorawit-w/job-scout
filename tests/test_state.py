@@ -132,5 +132,13 @@ class NowIsoTest(unittest.TestCase):
         self.assertRegex(state.now_iso(), r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 
 
+class QaFixesStateTest(unittest.TestCase):
+    def test_resolve_run_rejects_dot_and_non_run_ids(self):
+        import tempfile
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": tempfile.mkdtemp()}):
+            for bad in (".", "runs", "20261019T000000Z/x", "latestish"):
+                with self.assertRaises(ValueError):
+                    state.resolve_run(bad)
+
 if __name__ == "__main__":
     unittest.main()
