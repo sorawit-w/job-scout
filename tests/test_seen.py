@@ -441,6 +441,19 @@ class SeenCliTest(HomeCase):
         self.assertEqual(out["counts"]["closed"], 1)
         self.assertNotIn("closed_details", out["counts"])
 
+    def test_diff_details_a_promoted_variant(self):
+        # The job's own posting is live-closed; the still-listed variant takes over and reads changed.
+        old = job("ashby:acme:1")
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:1": dict(entry(old, status="saved"),
+                                                                         snap=state.job_snap(old))})
+        grouped = dict(old, variants=[{"key": "ashby:acme:1"},
+                                      {"key": "ashby:acme:2", "title": "Staff Frontend Engineer"}])
+        run = self.make_run([grouped], [])
+        state.write_json_atomic(run / "jds.json", {"ashby:acme:1": {"status": "closed"}})
+        code, out = self.cli(["seen", "diff", "--run", run.name])
+        self.assertEqual((code, out["changed"], out["saved_open"]), (0, ["ashby:acme:2"], ["ashby:acme:2"]))
+        self.assertEqual(out["changed_details"][0]["after"]["title"], "Staff Frontend Engineer")
+
     def test_diff_lists_changed_details(self):
         old, new = job("ashby:acme:1"), job("ashby:acme:1", comp=dict(USD, max=300000))
         nosnap = job("ashby:acme:2", title="Staff Frontend Engineer")

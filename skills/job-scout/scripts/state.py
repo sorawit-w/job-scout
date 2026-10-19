@@ -551,7 +551,7 @@ def _seen_cli(args):
                 seen = load_seen()
                 open_jobs, gone = live_split(jobs, read_json(run / "jds.json", {}))
                 out = diff(open_jobs, probed_ok_boards(run), seen, gone)
-                index, by_key = seen_index(seen), {j.get("key"): j for j in jobs}
+                index, by_key = seen_index(seen), {j.get("key"): j for j in open_jobs}  # promoted keys too
                 out = dict(out, counts={k: len(v) for k, v in out.items()},
                            changed_details=[{"key": k, "before": _deciding_entry(by_key[k], seen, index).get("snap"),
                                              "after": job_snap(by_key[k])} for k in out["changed"]],
