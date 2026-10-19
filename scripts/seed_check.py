@@ -6,9 +6,13 @@ Usage:
                                 [--only ats:slug,...] [--changed-only] [--workers 8]
 
   live        200 with at least one job  → jobs, us_share, remote_share filled
-  unverified  200 with zero jobs (wrong slug or the company moved ATS) — never coverage
+  unverified  200 with zero jobs (wrong slug or the company moved ATS) — never coverage;
+              SmartRecruiters answers this way for an unknown company too (it never 404s a company)
   dead        404/410
   error       network/HTTP failure → the row keeps its previous status
+
+  jobs is what the adapter's list returned, so a SmartRecruiters board stops at its page cap
+  (adapters/smartrecruiters.py MAX_JOBS) and is never flagged as a possible aggregator.
 
 If more than 10% of the checked boards error, nothing is written (exit 1), so a bad
 network day can't wipe the seed. --changed-only checks only rows whose status is

@@ -56,6 +56,18 @@ class SeedCheckTest(unittest.TestCase):
         self.assertTrue(rows[("ashby", "attention")]["checked_at"])
         self.assertIn("seed-check: 4 boards · live 2 · unverified 1 · dead 1 · errors 0 (0%)", out)
 
+    def test_smartrecruiters_live_and_unknown_company(self):
+        path = make_csv([("BryceTech", "smartrecruiters", "BryceTech", "unchecked"),
+                         ("Nobody", "smartrecruiters", "job-scout-no-such-board", "unchecked")])
+        code, out = run(["--companies", path, "--changed-only"])
+        self.assertEqual(code, 0)
+        rows = read(path)
+        bryce = rows[("smartrecruiters", "BryceTech")]
+        self.assertEqual((bryce["status"], bryce["jobs"], bryce["us_share"]), ("live", "3", "1.0"))
+        # an unknown SmartRecruiters company answers 200 with no postings: unverified, never dead
+        self.assertEqual(rows[("smartrecruiters", "job-scout-no-such-board")]["status"], "unverified")
+        self.assertIn("live 1 · unverified 1 · dead 0 · errors 0", out)
+
     def test_error_keeps_previous_status_below_threshold(self):
         # 10 boards, one without a fixture (a replay miss = a network error)
         path = make_csv([("A", "greenhouse", "airtable", "live"), ("W", "greenhouse", "webflow", "live"),

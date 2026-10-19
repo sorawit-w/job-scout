@@ -22,6 +22,10 @@ LEVER_1 = (
     '    Tenant { ats: Ats::Lever, slug: "jobgether", company: "Jobgether", host: "", site: "" },\n'
     '    Tenant { ats: Ats::Lever, slug: "acme", company: "Acme", host: "", site: "" },\n'
 )
+SR_1 = (
+    '    Tenant { ats: Ats::SmartRecruiters, slug: "BryceTech", company: "BryceTech", host: "", site: "" },\n'
+    '    Tenant { ats: Ats::SmartRecruiters, slug: "AECOM2", company: "AECOM", host: "", site: "" },\n'
+)
 WORKDAY_1 = '    Tenant { ats: Ats::Workday, slug: "bigco", company: "BigCo", host: "x", site: "y" },\n'
 SEED49 = (
     "company,ats,slug,status_2026_10_18,open_jobs_2026_10_18,note\n"
@@ -45,6 +49,10 @@ class ParseTest(unittest.TestCase):
             ("greenhouse", "affinity.co", "Affinity"),
             ("greenhouse", "affirm", "Affirm"),
         ])
+
+    def test_parse_smartrecruiters(self):
+        self.assertEqual(seed_import.parse_tenants(SR_1), [
+            ("smartrecruiters", "BryceTech", "BryceTech"), ("smartrecruiters", "AECOM2", "AECOM")])
 
     def test_parse_skips_other_ats(self):
         self.assertEqual(seed_import.parse_tenants(WORKDAY_1), [])
@@ -111,6 +119,7 @@ class CliTest(unittest.TestCase):
         _write(os.path.join(src, "greenhouse_1.rs"), GH_1)
         _write(os.path.join(src, "ashby_1.rs"), ASHBY_1)
         _write(os.path.join(src, "lever_1.rs"), LEVER_1)
+        _write(os.path.join(src, "smartrecruiters_1.rs"), SR_1)
         _write(os.path.join(src, "workday_1.rs"), WORKDAY_1.replace("Workday", "Greenhouse"))  # file filter must skip it
         self.seed = os.path.join(self.d, "seed.csv")
         self.deny = os.path.join(self.d, "deny.txt")
@@ -128,8 +137,8 @@ class CliTest(unittest.TestCase):
     def test_end_to_end_from_repo_root(self):
         code, out = self._run(os.path.join(self.d, "repo"))
         self.assertEqual(code, 0)
-        self.assertEqual(out.strip(), "seed-import: 6 boards (greenhouse 3, ashby 2, lever 1) · seed49 2 "
-                                      "(overlapping 1) · denylisted 1 · source 92fab36")
+        self.assertEqual(out.strip(), "seed-import: 8 boards (greenhouse 3, ashby 2, lever 1, smartrecruiters 2) · "
+                                      "seed49 2 (overlapping 1) · denylisted 1 · kept checks 0 · source 92fab36")
         with open(self.out, encoding="utf-8", newline="") as f:
             rows = list(csv.reader(f))
         self.assertEqual(rows[0], HEADER)
@@ -137,6 +146,26 @@ class CliTest(unittest.TestCase):
         self.assertNotIn("bigco", slugs)
         self.assertIn("Noïa Labs", [r[0] for r in rows[1:]])
         self.assertEqual(os.listdir(os.path.dirname(self.out)), ["companies.csv"])  # no temp file left
+
+    def test_reimport_keeps_existing_check_results(self):
+        self._run(os.path.join(self.d, "repo"))
+        with open(self.out, encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
+        for r in rows:
+            if r["slug"] == "affirm":
+                r.update(status="live", jobs="214", us_share="0.9", remote_share="0.1", checked_at="2026-10-19")
+        with open(self.out, "w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=HEADER)
+            w.writeheader()
+            w.writerows(rows)
+        code, out = self._run(os.path.join(self.d, "repo"))
+        self.assertEqual(code, 0)
+        self.assertIn("kept checks 1", out)
+        with open(self.out, encoding="utf-8", newline="") as f:
+            got = {r["slug"]: r for r in csv.DictReader(f)}
+        self.assertEqual([got["affirm"][k] for k in ("status", "jobs", "us_share", "remote_share", "checked_at")],
+                         ["live", "214", "0.9", "0.1", "2026-10-19"])
+        self.assertEqual(got["BryceTech"]["status"], "unchecked")
 
     def test_flat_dir_works(self):
         code, _ = self._run(os.path.join(self.d, "repo", "src", "tenants"))

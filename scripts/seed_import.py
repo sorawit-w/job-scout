@@ -2,11 +2,12 @@
 """Build skills/job-scout/data/companies.csv from corpHuntingMCP + the 49 eval boards.
 
 Purpose:
-  Import the Greenhouse, Ashby and Lever tenant slugs from corpHuntingMCP
-  (github.com/ZmoleCristian/corpHuntingMCP, 0BSD, src/tenants/*.rs), merge the 49
-  hand-checked eval boards from docs/reference/companies_seed.csv (with a
-  hand-tagged sector), drop denylisted aggregators, dedupe on (ats, slug) exactly,
-  and write one sorted CSV with every board marked status "unchecked".
+  Import the Greenhouse, Ashby, Lever and SmartRecruiters tenant slugs from
+  corpHuntingMCP (github.com/ZmoleCristian/corpHuntingMCP, 0BSD, src/tenants/*.rs),
+  merge the 49 hand-checked eval boards from docs/reference/companies_seed.csv (with
+  a hand-tagged sector), drop denylisted aggregators, dedupe on (ats, slug) exactly,
+  and write one sorted CSV. New boards are marked status "unchecked"; a board already
+  checked in the existing --out file keeps its status, jobs, shares and checked_at.
 
 Usage:
   python3 scripts/seed_import.py --fetch [--sha SHA]
@@ -32,10 +33,11 @@ import urllib.request
 PINNED_SHA = "92fab3600f36d470f1bd4f1e84c06fcf5609ac86"
 REPO = "ZmoleCristian/corpHuntingMCP"
 USER_AGENT = "job-scout-seed-import (+https://github.com/sorawit-w/job-scout)"
-ATS_MAP = {"Greenhouse": "greenhouse", "Ashby": "ashby", "Lever": "lever"}
+ATS_MAP = {"Greenhouse": "greenhouse", "Ashby": "ashby", "Lever": "lever", "SmartRecruiters": "smartrecruiters"}
 TENANT_RE = re.compile(r'Tenant \{ ats: Ats::(\w+), slug: "([^"]*)", company: "([^"]*)"')
-FILE_RE = re.compile(r"^(greenhouse|ashby|lever)_[^/]*\.rs$")
+FILE_RE = re.compile(r"^(greenhouse|ashby|lever|smartrecruiters)_[^/]*\.rs$")
 HEADER = ["company", "ats", "slug", "sector", "status", "jobs", "us_share", "remote_share", "checked_at", "source"]
+CHECK_COLS = ("status", "jobs", "us_share", "remote_share", "checked_at")  # written by seed_check.py
 
 # Hand-tagged sectors for the 49 eval boards, keyed by slug.
 SEED49_SECTORS = {
@@ -55,7 +57,7 @@ SEED49_SECTORS = {
 
 
 def parse_tenants(text):
-    """Return [(ats, slug, company)] for Greenhouse/Ashby/Lever tenant lines in a .rs file."""
+    """Return [(ats, slug, company)] for the ATS_MAP tenant lines in a .rs file."""
     return [(ATS_MAP[a], s, c) for a, s, c in TENANT_RE.findall(text) if a in ATS_MAP]
 
 
@@ -127,6 +129,21 @@ def build_rows(tenants, seed49, denylist):
     return out, stats
 
 
+def keep_checks(rows, path):
+    """Copy seed_check results from the existing CSV at `path` onto matching rows; returns how many."""
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8", newline="") as f:
+        old = {(r.get("ats"), r.get("slug")): r for r in csv.DictReader(f)}
+    kept = 0
+    for row in rows:
+        prev = old.get((row["ats"], row["slug"]))
+        if prev and prev.get("status", "unchecked") != "unchecked":
+            row.update({k: prev.get(k, "") for k in CHECK_COLS})
+            kept += 1
+    return kept
+
+
 def write_csv(rows, path):
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(os.path.abspath(path)), suffix=".tmp")
     try:
@@ -163,11 +180,13 @@ def main(argv=None):
         return 1
 
     rows, stats = build_rows(tenants, read_seed49(a.seed49), read_denylist(a.denylist))
+    kept = keep_checks(rows, a.out)
     write_csv(rows, a.out)
-    n = {k: sum(r["ats"] == k for r in rows) for k in ("greenhouse", "ashby", "lever")}
-    print("seed-import: %d boards (greenhouse %d, ashby %d, lever %d) · seed49 %d (overlapping %d) · "
-          "denylisted %d · source %s" % (len(rows), n["greenhouse"], n["ashby"], n["lever"],
-                                        stats["seed49"], stats["overlap"], stats["denylisted"], a.sha[:7]))
+    n = {k: sum(r["ats"] == k for r in rows) for k in ATS_MAP.values()}
+    print("seed-import: %d boards (greenhouse %d, ashby %d, lever %d, smartrecruiters %d) · seed49 %d "
+          "(overlapping %d) · denylisted %d · kept checks %d · source %s" % (
+              len(rows), n["greenhouse"], n["ashby"], n["lever"], n["smartrecruiters"],
+              stats["seed49"], stats["overlap"], stats["denylisted"], kept, a.sha[:7]))
     return 0
 
 
