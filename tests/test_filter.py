@@ -424,6 +424,14 @@ class RecencyTest(unittest.TestCase):
 
 
 class RankTest(unittest.TestCase):
+    def test_description_relevance_breaks_ties_before_date(self):
+        old = job("React Developer", key="relevant-old", date="2026-08-01")
+        old["description_text"] = "Own our React frontend and the design system."
+        new = job("React Developer", key="vague-new", date="2026-10-15")
+        new["description_text"] = "Join our team."
+        out, _ = run([new, old], title_keywords=["react", "frontend", "design system"])
+        self.assertEqual([c["key"] for c in out["candidates"]], ["relevant-old", "vague-new"])
+
     def test_order(self):
         jobs = [
             job("React Developer", key="border-new", date="2026-10-15"),

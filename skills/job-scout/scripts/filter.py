@@ -189,13 +189,14 @@ def _description_match(ws, row, p):
     """An engineering title that matched nothing ("Staff Software Engineer, Product") whose description
     names at least three of the brief's title keywords. Keywords under 4 letters ("ui", "web") are too
     common in descriptions to count; two keywords let in too many backend roles that mention React."""
-    if not ({"engineer", "developer"} & set(ws)):
-        return False
-    text = " ".join(words(row.get("description_text") or ""))
-    found = {" ".join(words(k)) for k in p["title_keywords"] if len(k) >= 4}
-    found = {t for t in found if " %s " % t in " %s " % text}
-    # "design system" and "design systems" are one signal, not two.
-    return len({t for t in found if not any(t != o and t in o for o in found)}) >= 3
+    return bool({"engineer", "developer"} & set(ws)) and _desc_hits(row, p) >= 3
+
+
+def _desc_hits(row, p):
+    """How many distinct title keywords (4+ letters) the description names — a relevance signal."""
+    text = " %s " % " ".join(words(row.get("description_text") or ""))
+    found = {t for t in (" ".join(words(k)) for k in p["title_keywords"] if len(k) >= 4) if " %s " % t in text}
+    return len({t for t in found if not any(t != o and t in o for o in found)})  # "design system(s)" counts once
 
 
 def _pay_check(comp, p, ats=None):
@@ -289,10 +290,12 @@ def _judge(job, p, ctx):
     return None, row, None
 
 
-def _rank_key(row):
+def _rank_key(row, p):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
-    return (_STATE_TIER.get(row["state"], 2), row["match"] != "strong", any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]), newest is None, newest or 0)
+    return (_STATE_TIER.get(row["state"], 2), row["match"] != "strong",
+            any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]),
+            -_desc_hits(row, p), newest is None, newest or 0)
 
 
 def _where(row):
@@ -331,7 +334,7 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_a
                 near.append((miss[0], len(near), row, miss[1]))
         else:
             kept.append(row)
-    kept.sort(key=_rank_key)
+    kept.sort(key=lambda r: _rank_key(r, p))
     shown = kept[:limit]
     near.sort(key=lambda n: n[:2])
     summary = {
