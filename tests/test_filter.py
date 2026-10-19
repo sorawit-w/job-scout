@@ -325,6 +325,19 @@ class NearMissTest(unittest.TestCase):
         self.assertEqual(out["near_misses"][4]["reason"], "remote, but only in PL")
         self.assertEqual(sorted(out["near_misses"][0]), ["company", "key", "reason", "title"])
 
+    def test_excluded_borderline_title_ranks_after_scope_misses(self):
+        # Live run 2026-10-19: "...First Party Hardware" (borderline) outranked Affirm frontend roles.
+        jobs = [job("Electrical React Tooling Lead", key="weak"),
+                job("Frontend Engineer", locations=("Remote - Poland",), scope=("PL",), key="scope")]
+        out, _ = run(jobs)
+        self.assertEqual([n["key"] for n in out["near_misses"]], ["scope", "weak"])
+
+    def test_strong_title_outside_commute_is_a_near_miss(self):
+        out, _ = run([job("Design Engineer", locations=("San Francisco",), remote=False, workplace="hybrid",
+                          scope=None, key="sf")])
+        self.assertEqual(out["counts"]["removed"]["location"], 1)
+        self.assertEqual(out["near_misses"][0]["reason"], "hybrid in San Francisco — outside your commute cities")
+
     def test_remote_scope_miss_needs_a_strong_title(self):
         out, _ = run([job("Senior Accountant", locations=("Remote - Poland",), scope=("PL",))])
         self.assertEqual(out["near_misses"], [])

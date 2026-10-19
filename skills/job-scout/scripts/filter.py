@@ -204,8 +204,12 @@ def _judge(job, p, ctx):
     excluded = next((x for x in p["title_exclusions"] if has_phrase(ws, x)), None)
     if reason:
         near = None
-        if reason == "remote_scope" and not excluded and title_match(ws, p) == "strong":
+        strong = not excluded and title_match(ws, p) == "strong"
+        if reason == "remote_scope" and strong:
             near = (2, "remote, but only in %s" % ", ".join(row.get("remote_scope") or []))
+        elif reason == "location" and strong and row.get("locations"):
+            near = (2, "%s in %s — outside your commute cities" % (row.get("workplace") or "onsite",
+                                                                   row["locations"][0]))
         return reason, row, near
     if ctx["senior_only"] and _too_junior(title, ws):
         return "seniority", row, None
@@ -214,7 +218,9 @@ def _judge(job, p, ctx):
     match = title_match(ws, p)
     if excluded:
         # Only a title that would otherwise match is "close"; "Mechanical Technician" is just noise.
-        return "title_exclusion", row, ((0, "title excluded: %s" % excluded) if match else None)
+        # A borderline match ranks after scope misses: it is a weaker signal than a strong title.
+        rank = 0 if match == "strong" else 3
+        return "title_exclusion", row, ((rank, "title excluded: %s" % excluded) if match else None)
     if not match:
         return "title", row, None
     removed, pay_flags, close = _pay_check(row.get("comp"), p)
