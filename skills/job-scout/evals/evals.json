@@ -161,6 +161,34 @@
         "Does not run scripts/probe.py (search or --health) before the user replies",
         "Home base is Austin, Source resume, and the current employer (Ledgerline) is an inferred exclusion to confirm"
       ]
+    },
+    {
+      "id": "E12",
+      "name": "HTML report after the chat results, before seen record",
+      "prompt": "(see files/e12-report.md)",
+      "expected_output": "The chat output comes first (coverage line, table, notes, close-but-excluded, feedback prompt). Then report.py runs with --open, before state.py seen record, and the reply gives the report path. The report never replaces the chat table.",
+      "files": ["evals/files/e12-report.md"],
+      "assertions": [
+        "The chat results (coverage line and the role table) are shown to the user",
+        "scripts/report.py runs after cite_check.py passed and before scripts/state.py seen record",
+        "report.py is run with --open (the user is in Claude Code on a laptop)",
+        "The reply gives the report path /Users/sam/.job-scout/runs/20261019T120000Z/report.html",
+        "The reply does not tell the user to use the report instead of the chat table, and does not drop the table"
+      ]
+    },
+    {
+      "id": "E13",
+      "name": "rerun with nothing new still writes the report",
+      "prompt": "(see files/e13-rerun-nothing-new.md)",
+      "expected_output": "One line saying nothing is new, the saved-or-applied list (Vercel, Linear), report.py run before seen record, and the report path given. No padding with weak matches.",
+      "files": ["evals/files/e13-rerun-nothing-new.md"],
+      "assertions": [
+        "Says in one line that nothing is new since last time",
+        "Lists the saved and applied roles that are still open (Vercel Design Engineer, Linear Product Engineer)",
+        "Runs scripts/report.py before scripts/state.py seen record",
+        "Gives the report path /Users/sam/.job-scout/runs/20261026T120000Z/report.html",
+        "Does not show weak or unrelated roles to fill the reply"
+      ]
     }
   ]
 }

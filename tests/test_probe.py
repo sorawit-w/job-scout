@@ -58,6 +58,13 @@ class ProbeRunTest(unittest.TestCase):
         self.assertEqual(out["jobs"], 3 + 2 + 3)
         self.assertLessEqual(out["collapsed"], out["jobs"])
 
+    def test_boards_file_keeps_the_coverage_numbers(self):
+        home = tempfile.mkdtemp()
+        code, out = run(["--boards", "greenhouse:airtable,ashby:attention"], home=home)
+        b = boards_file(home, out)
+        self.assertEqual((b["selected"], b["available"], b["requests"]),
+                         (out["boards"]["selected"], out["boards"]["available"], out["requests"]))
+
     def test_jobs_file_has_employer_urls_and_variants(self):
         home = tempfile.mkdtemp()
         code, out = run(["--boards", "greenhouse:airtable,ashby:attention"], home=home)

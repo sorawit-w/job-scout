@@ -402,6 +402,7 @@ def main(argv=None):
         return 2
     summary, candidates = run_filter(jobs, profile, args.limit, seen=seen, show_all=args.all)
     state.write_json_atomic(run / "candidates.json", candidates)
+    state.write_json_atomic(run / "filter.json", summary)  # counts and near misses, for report.py
     print(json.dumps(summary, separators=(",", ":")))
     return 0
 

@@ -209,6 +209,32 @@ phases:
             - {case: edge, input: "USAJOBS key not set", expected: "USAJOBS skipped and said once; the run continues"}
             - {case: failure, input: "Workday changes its response shape", expected: "those boards are errors/unverified; never shown as open; run continues"}
 
+  - id: v0-2
+    exit: "report.html per run, network-free and escaped; chat output unchanged"
+    milestones:
+      - id: v02-report
+        name: "M7 — HTML report"
+        branch: feature/html-report
+        complexity: 5
+        tasks:
+          - {id: H1, name: "boards.json keeps selected/available/requests", area: scripts, depends_on: [], complexity: 1}
+          - {id: H2, name: "filter.py saves filter.json", area: scripts, depends_on: [], complexity: 1}
+          - {id: H3, name: "jds.json keeps the live row (job) and drop reason (dropped)", area: scripts, depends_on: [], complexity: 2}
+          - {id: H4, name: "state.write_text_atomic", area: scripts, depends_on: [], complexity: 1}
+          - {id: H5, name: "report.py: load_run, build_view, render, CLI (--run, --out, --open)", area: scripts, depends_on: [H1, H2, H3, H4], complexity: 4}
+          - {id: H6, name: "Signal theme via screenwright (axe, light/dark/375/320, CSP)", area: design, depends_on: [H5], complexity: 3}
+          - {id: H7, name: "tests/test_report.py", area: tests, depends_on: [H5], complexity: 3}
+          - {id: H8, name: "SKILL.md Phases 7-9 + output-format §7", area: skill, depends_on: [H5], complexity: 2}
+          - {id: H9, name: "evals E12, E13", area: evals, depends_on: [H8], complexity: 2}
+          - {id: H10, name: "docs, PRIVACY, version 0.2.0, CHANGELOG", area: docs, depends_on: [H8], complexity: 2}
+          - {id: H11, name: "live run, screenwright audit, skill-evaluator, PR", area: release, depends_on: [H6, H9, H10], complexity: 3}
+        expected_outcomes:
+          end_state: "report.py writes report.html for every run; 0 axe violations in light/dark/375; chat output unchanged"
+          cases:
+            - {case: happy path, input: "day1 replay run with results.json", expected: "cards in results order, quotes, score grid, copy buttons; opens in browser"}
+            - {case: edge, input: "rerun with nothing new", expected: "'Nothing new since last time.' plus saved/applied-still-open and closed lists"}
+            - {case: failure, input: "posting title containing <script>", expected: "escaped text; CSP allows only the page's own script"}
+
   - id: deployment
     exit: "release zip built, every surface smoke-tested; going public is the maintainer's call"
     milestones:

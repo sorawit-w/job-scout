@@ -243,6 +243,33 @@ class RecordTest(HomeCase):
         self.assertEqual(state.record(run, now=NOW)["closed"], 1)
         self.assertEqual(state.load_seen()["ashby:acme:1"]["closed_at"], state.now_iso(NOW))
 
+    def test_live_check_closure_is_recorded_though_the_board_list_lags(self):
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
+        run = self.make_run([job()], [])  # still on the board list, but fetch_jd found the posting gone
+        state.write_json_atomic(run / "jds.json", {"ashby:acme:1": {"status": "closed"}})
+        counts = state.record(run, now=NOW)
+        self.assertEqual((counts["closed"], counts["reopened"]), (1, 0))
+        self.assertEqual(state.load_seen()["ashby:acme:1"]["closed_at"], state.now_iso(NOW))
+
+    def test_live_check_closes_a_role_on_a_partially_searched_board(self):
+        # A Workday list is a keyword search, so its board never counts as probed whole; the live check
+        # finding the posting gone is direct evidence all the same.
+        key = "workday:acme.wd1.External:Nurse_JR1-1"
+        state.write_json_atomic(state.seen_path(), {key: entry(job(key), status="saved")})
+        run = self.make_run([job(key)], [], live=())
+        state.write_json_atomic(run / "jds.json", {key: {"status": "closed"}})
+        self.assertEqual(state.record(run, now=NOW)["closed"], 1)
+        self.assertEqual(state.load_seen()[key]["closed_at"], state.now_iso(NOW))
+
+    def test_one_closed_variant_leaves_the_grouped_role_open(self):
+        for gone in ("ashby:acme:2", "ashby:acme:1"):  # another variant, or the job's own posting
+            state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
+            grouped = dict(job(), variants=[{"key": "ashby:acme:1"}, {"key": "ashby:acme:2"}])
+            run = self.make_run([grouped], [])
+            state.write_json_atomic(run / "jds.json", {gone: {"status": "closed"}})
+            self.assertEqual(state.record(run, now=NOW)["closed"], 0, gone)
+            self.assertIsNone(state.load_seen()["ashby:acme:1"]["closed_at"])
+
     def test_empty_board_never_closes_a_role(self):
         state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
         run = self.make_run([], [], live=(), empty=("ashby:acme",))  # board briefly returned {"jobs": []}
@@ -413,6 +440,19 @@ class SeenCliTest(HomeCase):
                                                   "status": "saved", "url": "https://x/9"}])
         self.assertEqual(out["counts"]["closed"], 1)
         self.assertNotIn("closed_details", out["counts"])
+
+    def test_diff_details_a_promoted_variant(self):
+        # The job's own posting is live-closed; the still-listed variant takes over and reads changed.
+        old = job("ashby:acme:1")
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:1": dict(entry(old, status="saved"),
+                                                                         snap=state.job_snap(old))})
+        grouped = dict(old, variants=[{"key": "ashby:acme:1"},
+                                      {"key": "ashby:acme:2", "title": "Staff Frontend Engineer"}])
+        run = self.make_run([grouped], [])
+        state.write_json_atomic(run / "jds.json", {"ashby:acme:1": {"status": "closed"}})
+        code, out = self.cli(["seen", "diff", "--run", run.name])
+        self.assertEqual((code, out["changed"], out["saved_open"]), (0, ["ashby:acme:2"], ["ashby:acme:2"]))
+        self.assertEqual(out["changed_details"][0]["after"]["title"], "Staff Frontend Engineer")
 
     def test_diff_lists_changed_details(self):
         old, new = job("ashby:acme:1"), job("ashby:acme:1", comp=dict(USD, max=300000))

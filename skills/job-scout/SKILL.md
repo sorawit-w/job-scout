@@ -209,9 +209,10 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
 1. Run `python3 scripts/filter.py`. It applies the confirmed brief deterministically (work mode,
    location, remote scope, level, track, excluded companies and titles, pay floor) and prints
    `counts`, ranked `candidates` (each `strong` or `borderline`, with `flags`) and up to 5
-   `near_misses`. With **zero candidates**, stop and explain using `counts.removed` (see
-   `references/output-format.md` §4) — never pad. On a rerun, zero candidates usually means
-   nothing new: follow Phase 9 instead.
+   `near_misses`. With **zero candidates**, skip steps 2–3 and Phase 6, explain using
+   `counts.removed` (see `references/output-format.md` §4) — never pad — then still write the
+   report as in Phase 7. On a rerun, zero candidates usually means nothing new: follow Phase 9
+   instead.
 2. Choose **up to 40** candidates whose descriptions are worth reading: all plausible `strong`
    ones, then `borderline` titles that could be the target role in substance (a title like
    "Software Engineer, Product" may be exactly a design-engineering job). Skip ones the title
@@ -238,9 +239,14 @@ failure job-scout exists to prevent.
 
 ## Phase 7 — Show the results
 
-Follow `references/output-format.md`: one coverage line, the six-column table (employer links
+Follow `references/output-format.md`: one coverage line, the seven-column table (employer links
 only), one notes line per row with the quoted why/risk and "open since", 3–5 "close but
 excluded" lines, then the feedback prompt.
+
+Then write the HTML report, **before** Phase 8's `seen record`: `python3 scripts/report.py --open`
+(leave out `--open` on claude.ai, in Codex, or with no local browser). Give the user the `report`
+path it prints. The report is an extra: the chat table above always comes first. Details:
+`references/output-format.md` §7.
 
 ## Phase 8 — Remember and take feedback
 
@@ -254,7 +260,9 @@ python3 scripts/state.py seen mark <key> applied
 python3 scripts/state.py seen mark <key> dismissed --reason="too senior"
 ```
 
-Confirm each in one line ("Saved #1 — Vercel, Design Engineer"). If feedback implies a brief
+Confirm each in one line ("Saved #1 — Vercel, Design Engineer"). A line pasted from the report,
+like `save 3 (Vercel, Design Engineer)`, names its role: act on the named role, and ask if the
+number points at a different one. If feedback implies a brief
 change ("I keep dismissing hybrid roles", three dismissals for the same reason), propose the
 change and save it only after the user agrees — never change the brief silently.
 
@@ -275,13 +283,14 @@ shows everything). Lead with what moved:
   `changed_details` (`before` → `after`: title, pay or locations).
 - **Saved or applied, still open** (`saved_open`, `applied_open`) — a short list, so nothing
   they cared about is lost.
-- **Closed since last time** — the saved or applied roles in `closed_details` that are gone.
-  Only boards checked successfully this run can close a role; never call a role closed
-  because a board failed.
+- **Closed since last time** — the saved or applied roles in `closed_details` that are gone (from
+  the board, or found gone by the live check).
+  A role closes only when a board checked successfully this run no longer lists it, or its
+  live check found the posting gone; never call a role closed because a board failed.
 
 With nothing new, say so in one line and show the saved-or-applied list. End every rerun with
-`python3 scripts/state.py seen record` — also when nothing was new — so closures are remembered
-and not reported again next time.
+`python3 scripts/report.py --open` (as in Phase 7), then `python3 scripts/state.py seen record` —
+also when nothing was new — so closures are remembered and not reported again next time.
 
 **claude.ai:** files do not persist there. At the end, offer the profile and the saved/applied
 roles (title, company, link) as one block the user can paste next time.

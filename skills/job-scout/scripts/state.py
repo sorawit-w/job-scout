@@ -51,14 +51,15 @@ def home():
     return path
 
 
-def write_json_atomic(path, data):
-    """Write UTF-8 JSON via temp file + fsync + os.replace, so readers never see half a file."""
+def _write_atomic(path, write):
+    """Run write(file) on a temp file next to path, fsync, then os.replace, so readers never see
+    half a file."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix="." + path.name + ".", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=1, ensure_ascii=False)
+            write(f)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, str(path))
@@ -66,6 +67,16 @@ def write_json_atomic(path, data):
         if os.path.exists(tmp):
             os.unlink(tmp)
         raise
+
+
+def write_json_atomic(path, data):
+    """Write UTF-8 JSON atomically (see _write_atomic)."""
+    _write_atomic(path, lambda f: json.dump(data, f, indent=1, ensure_ascii=False))
+
+
+def write_text_atomic(path, text):
+    """Write UTF-8 text atomically (see _write_atomic)."""
+    _write_atomic(path, lambda f: f.write(text))
 
 
 def read_json(path, default=None):
@@ -375,10 +386,31 @@ def probed_ok_boards(run_dir):
     return set(b.get("live_boards") or []) - bad
 
 
-def diff(jobs, probed_ok, seen):
+def live_split(jobs, jds):
+    """(open, gone): jobs split by their live check in jds.json. A job is gone when the live check
+    found every one of its variants closed, even while the board list (which can lag) still shows
+    it; one closed variant leaves the group open while another may still be available."""
+    closed = {k for k, e in (jds if isinstance(jds, dict) else {}).items()
+              if isinstance(e, dict) and e.get("status") == "closed"}
+    flags = [closed.issuperset(job_keys(j)) for j in jobs]
+    return [_live_face(j, closed) for j, f in zip(jobs, flags) if not f], [j for j, f in zip(jobs, flags) if f]
+
+
+def _live_face(job, closed):
+    """When the job's own posting is closed, a still-listed variant takes over the shown fields (key,
+    url, places) so nothing links to the gone posting. The variants stay, so history still matches."""
+    if job.get("key") not in closed:
+        return job
+    live = next(v for v in job.get("variants") or [] if isinstance(v, dict) and v.get("key") not in closed)
+    return dict(job, **live)
+
+
+def diff(jobs, probed_ok, seen, gone=()):
     """Lists of keys: new / changed / saved_open / applied_open (current job keys) and closed
-    (seen.json keys whose boards were all probed ok this run but no current job matches)."""
+    (seen.json keys whose boards were all probed ok this run but no current job matches, or that
+    match a job in `gone`: a live check is direct evidence, even on a partially searched board)."""
     index = seen_index(seen)
+    direct = {k for job in gone for k in _matches(job, index)}
     out = {"new": [], "changed": [], "saved_open": [], "applied_open": [], "closed": []}
     matched = set()
     for job in jobs:
@@ -395,7 +427,7 @@ def diff(jobs, probed_ok, seen):
                 out[status + "_open"].append(job.get("key"))
     for key, e in seen.items():
         if (key not in matched and e.get("status") in _OPEN_STATUSES and not e.get("closed_at")
-                and all(_board(k) in probed_ok for k in [key] + list(e.get("aliases") or []))):
+                and (key in direct or all(_board(k) in probed_ok for k in [key] + list(e.get("aliases") or [])))):
             out["closed"].append(key)
     return out
 
@@ -414,7 +446,8 @@ def _shown_url(job, row_key):
 def record(run_dir, now=None):
     """Mark results.json rows with show true as seen (sig, title and url refreshed on every matching
     entry); for every job in jobs.json that matches an entry, refresh aliases and last_seen but not
-    sig, so an unshown job can still read "changed"; set or clear closed_at; return counts.
+    sig, so an unshown job can still read "changed"; set or clear closed_at; return counts. A job whose
+    live check in jds.json found the posting gone counts as absent, even while the board still lists it.
     A run with no results.json (a rerun with nothing new) records closures only.
     Raises FileNotFoundError when the run has no jobs.json or an unreadable results.json,
     ValueError (nothing written) when seen.json is unreadable."""
@@ -447,6 +480,7 @@ def record(run_dir, now=None):
             seen[key].update(last_seen=stamp, sig=job_sig(job), snap=job_snap(job), title=job.get("title"),
                              company=job.get("company"), url=_shown_url(job, row.get("key")))
     index = seen_index(seen)
+    jobs, gone = live_split(jobs, read_json(run_dir / "jds.json", {}))  # a live-closed role closes, not reopens
     for job in jobs:  # unshown too: filter drops unchanged roles, and their variants keep moving
         keys = job_keys(job)
         for key in _matches(job, index):
@@ -456,7 +490,7 @@ def record(run_dir, now=None):
             if e.get("closed_at"):
                 e["closed_at"] = None
                 counts["reopened"] += 1
-    for key in diff(jobs, probed_ok_boards(run_dir), seen)["closed"]:
+    for key in diff(jobs, probed_ok_boards(run_dir), seen, gone)["closed"]:
         seen[key]["closed_at"] = stamp
         counts["closed"] += 1
     write_json_atomic(seen_path(), seen)
@@ -515,8 +549,9 @@ def _seen_cli(args):
                     print(json.dumps({"error": "run %s has no jobs.json — run probe.py first" % run.name}))
                     return 2
                 seen = load_seen()
-                out = diff(jobs, probed_ok_boards(run), seen)
-                index, by_key = seen_index(seen), {j.get("key"): j for j in jobs}
+                open_jobs, gone = live_split(jobs, read_json(run / "jds.json", {}))
+                out = diff(open_jobs, probed_ok_boards(run), seen, gone)
+                index, by_key = seen_index(seen), {j.get("key"): j for j in open_jobs}  # promoted keys too
                 out = dict(out, counts={k: len(v) for k, v in out.items()},
                            changed_details=[{"key": k, "before": _deciding_entry(by_key[k], seen, index).get("snap"),
                                              "after": job_snap(by_key[k])} for k in out["changed"]],
