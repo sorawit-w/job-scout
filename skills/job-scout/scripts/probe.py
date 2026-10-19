@@ -320,6 +320,7 @@ def main(argv=None):
 
     budget = net.Budget(request_cap(boards, terms))
     summary, jobs = probe(boards, budget, refresh=args.refresh, denylist=load_denylist(), terms=terms)
+    summary.update(selected=len(boards), available=available, requests=budget.used)  # for report.py
     run = state.new_run()
     state.write_json_atomic(run / "jobs.json", jobs)
     state.write_json_atomic(run / "boards.json", summary)

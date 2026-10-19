@@ -43,6 +43,12 @@ class JsonTest(StateTestCase):
         self.assertIn("Noïa Labs", path.read_text(encoding="utf-8"))
         self.assertEqual(os.listdir(str(path.parent)), ["b.json"])  # no temp file left
 
+    def test_atomic_text_write(self):
+        path = self.tmp / "r" / "report.html"
+        state.write_text_atomic(path, "<p>Noïa</p>\n")
+        self.assertEqual(path.read_text(encoding="utf-8"), "<p>Noïa</p>\n")
+        self.assertEqual(os.listdir(str(path.parent)), ["report.html"])
+
     def test_read_json_missing_returns_default(self):
         self.assertEqual(state.read_json(self.tmp / "nope.json", default={}), {})
         self.assertIsNone(state.read_json(self.tmp / "nope.json"))

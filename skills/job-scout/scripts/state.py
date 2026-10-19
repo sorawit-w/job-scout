@@ -51,14 +51,15 @@ def home():
     return path
 
 
-def write_json_atomic(path, data):
-    """Write UTF-8 JSON via temp file + fsync + os.replace, so readers never see half a file."""
+def _write_atomic(path, write):
+    """Run write(file) on a temp file next to path, fsync, then os.replace, so readers never see
+    half a file."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix="." + path.name + ".", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=1, ensure_ascii=False)
+            write(f)
             f.flush()
             os.fsync(f.fileno())
         os.replace(tmp, str(path))
@@ -66,6 +67,16 @@ def write_json_atomic(path, data):
         if os.path.exists(tmp):
             os.unlink(tmp)
         raise
+
+
+def write_json_atomic(path, data):
+    """Write UTF-8 JSON atomically (see _write_atomic)."""
+    _write_atomic(path, lambda f: json.dump(data, f, indent=1, ensure_ascii=False))
+
+
+def write_text_atomic(path, text):
+    """Write UTF-8 text atomically (see _write_atomic)."""
+    _write_atomic(path, lambda f: f.write(text))
 
 
 def read_json(path, default=None):

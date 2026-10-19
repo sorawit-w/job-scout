@@ -206,15 +206,19 @@ def main(argv=None):
             # The posting may have moved or changed since the board was probed: show live fields and
             # re-apply the brief, so a role now outside it is not shown as a fit.
             fresh, removed_by = refilter(row, live, profile)
+            dropped = None
             if removed_by:
-                unverified.append({"key": row["key"], "error": "changed since the search: now removed by %s" % removed_by})
-                continue
-            if set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
-                unverified.append({"key": row["key"], "error": "location or work mode still unknown after the live check"})
+                dropped = "changed since the search: now removed by %s" % removed_by
+            elif set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
+                dropped = "location or work mode still unknown after the live check"
+            if dropped:
+                entry["dropped"] = dropped  # status stays "open": the posting is open, it just no longer fits
+                unverified.append({"key": row["key"], "error": dropped})
                 continue
             job = {k: fresh.get(k) for k in ("key", "company", "title", "url", "locations", "workplace",
                                              "remote_scope", "first_published")}
             job.update(comp=entry["comp"], status="open", jd=entry["trimmed"], flags=fresh.get("flags") or [])
+            entry["job"] = {k: v for k, v in job.items() if k != "jd"}  # live display fields, for report.py
             jobs.append(job)
         elif entry["status"] == "closed":
             closed.append({"key": row["key"], "company": row.get("company"), "title": row.get("title")})

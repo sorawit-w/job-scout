@@ -154,6 +154,9 @@ class LiveCheckTest(unittest.TestCase):
         self.assertEqual(out["requests"], 2)
         self.assertEqual(set(job), {"key", "company", "title", "url", "locations", "workplace", "remote_scope",
                                     "first_published", "comp", "status", "jd", "flags"})
+        saved = read_jds(home)[FIGMA["key"]]["job"]  # the live display fields, saved for report.py
+        self.assertEqual(saved, {k: v for k, v in job.items() if k != "jd"})
+        self.assertNotIn("job", read_jds(home)[VERCEL["key"]])
 
     def test_live_fields_replace_the_stale_candidate_row(self):
         home = make_home([FIGMA])
@@ -325,6 +328,8 @@ class SearchSourceLiveCheckTest(unittest.TestCase):
         self.assertEqual((code, out["jobs"]), (0, []))
         self.assertEqual(read_jds(home)[sharp["key"]]["status"], "open")
         self.assertTrue(out["unverified"][0]["error"].startswith("changed since the search"), out["unverified"])
+        self.assertEqual(read_jds(home)[sharp["key"]]["dropped"], out["unverified"][0]["error"])
+        self.assertNotIn("job", read_jds(home)[sharp["key"]])
 
     def test_workday_place_still_unknown_after_the_live_check_is_not_shown(self):
         # "3 Locations" in the list, and a detail record with an empty location: the fit is never confirmed.
