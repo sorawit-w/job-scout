@@ -13,6 +13,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ## Follow-ups
 
+- [ ] SKILL.md Phase 5: say that a zero-candidate run still writes the report (Phase 7) — today Phase 5 says "stop" and only output-format §7 says the report still runs
 - [ ] Lever EU host (`api.eu.lever.co`) — not needed in v0: every sampled seed slug answered on `api.lever.co`
 - [ ] Location table gaps: cities missing from `normalize.py`'s table resolve to no country; "Lima, PE" reads PE as a Canadian province; "Porto Alegre" matches Porto (PT); "Stuttgart, DE" reads DE as Delaware
 - [ ] Region-to-country matching in filter.py: only "Americas" maps to countries today, so a DE or GB user's "Remote - Europe" role is removed by remote scope instead of kept with a flag
