@@ -294,7 +294,9 @@ shows everything). Lead with what moved:
   Only boards checked successfully this run can close a role; never call a role closed
   because a board failed.
 
-With nothing new, say so in one line and show the saved-or-applied list.
+With nothing new, say so in one line and show the saved-or-applied list. End every rerun with
+`python3 scripts/state.py seen record` — also when nothing was new — so closures are remembered
+and not reported again next time.
 
 **claude.ai:** files do not persist there. At the end, offer the profile and the saved/applied
 roles (title, company, link) as one block the user can paste next time.
