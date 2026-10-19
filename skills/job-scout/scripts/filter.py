@@ -55,6 +55,7 @@ SCOPE_NOT_STATED = "remote scope not stated"
 AMER_FLAG = "Americas — check US eligibility"
 MODE_NOT_STATED = "work mode not stated"
 RELOCATE_FLAG = "relocation: %s in %s"
+DESC_FLAG = "title is generic — matched on the description"
 LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED)
 
 _ALIASES = {"sr": "senior", "jr": "junior", "swe": "software engineer", "eng": "engineer"}
@@ -174,12 +175,27 @@ def title_match(ws, p):
     """'strong', 'borderline' or None for normalized title words ws."""
     for role in p["target_roles"] + p["title_synonyms"]:
         need = [w for w in words(role) if w not in _LEVEL_WORDS]
-        if need and all(w in ws for w in need):
+        # Adjacent words, either order for two-word roles ("Software Engineer, Frontend"), so
+        # "AV Engineer, Builds and Design" is not a design engineer.
+        if need and (has_phrase(ws, " ".join(need)) or (len(need) == 2 and has_phrase(ws, " ".join(need[::-1])))):
             return "strong"
     if any(has_phrase(ws, k) for k in p["title_keywords"]):
         return "borderline"
     distinct = {w for role in p["target_roles"] for w in words(role)} - _GENERIC - _WEAK
     return "borderline" if distinct & set(ws) else None
+
+
+def _description_match(ws, row, p):
+    """An engineering title that matched nothing ("Staff Software Engineer, Product") whose description
+    names at least three of the brief's title keywords. Keywords under 4 letters ("ui", "web") are too
+    common in descriptions to count; two keywords let in too many backend roles that mention React."""
+    if not ({"engineer", "developer"} & set(ws)):
+        return False
+    text = " ".join(words(row.get("description_text") or ""))
+    found = {" ".join(words(k)) for k in p["title_keywords"] if len(k) >= 4}
+    found = {t for t in found if " %s " % t in " %s " % text}
+    # "design system" and "design systems" are one signal, not two.
+    return len({t for t in found if not any(t != o and t in o for o in found)}) >= 3
 
 
 def _pay_check(comp, p, ats=None):
@@ -258,6 +274,8 @@ def _judge(job, p, ctx):
         # A borderline match ranks after scope misses: it is a weaker signal than a strong title.
         rank = 0 if match == "strong" else 3
         return "title_exclusion", row, ((rank, "title excluded: %s" % excluded) if match else None)
+    if not match and _description_match(ws, row, p):
+        match, flags = "borderline", flags + [DESC_FLAG]
     if not match:
         return "title", row, None
     removed, pay_flags, close = _pay_check(row.get("comp"), p, row.get("ats"))

@@ -295,6 +295,32 @@ class SeniorityTrackTest(unittest.TestCase):
 
 
 class TitleTest(unittest.TestCase):
+    def test_strong_needs_the_role_words_as_a_phrase(self):
+        p = jfilter.state.with_profile_defaults(profile())
+        self.assertEqual(jfilter.title_match(jfilter.words("Senior Design Engineer, Growth"), p), "strong")
+        self.assertEqual(jfilter.title_match(jfilter.words("Senior Frontend Engineer, Platform"), p), "strong")
+        # Both words present but not as the role: a weaker signal, not "strong".
+        self.assertNotEqual(jfilter.title_match(jfilter.words("AV Engineer, Builds and Design"), p), "strong")
+
+    def test_generic_engineering_title_matched_on_its_description(self):
+        # Live 49 boards, 2026-10-19: "Staff Software Engineer, Dashboard Product" was frontend work.
+        fe = job("Staff Software Engineer, Dashboard Product")
+        fe["description_text"] = ("You will build our dashboard in React and TypeScript, own the frontend architecture "
+                                  "and grow our design system.")
+        kw = {"title_keywords": ["react", "frontend", "design system", "ui", "web"]}
+        res, cand = outcome(fe, **kw)
+        self.assertEqual(res, "borderline")
+        self.assertIn("title is generic — matched on the description", cand["flags"])
+        weak = job("Staff Software Engineer, Payments")
+        weak["description_text"] = "Our web UI uses React; you build the Go services behind it."  # one real keyword
+        self.assertEqual(outcome(weak, **kw)[0], "title")
+        sales = job("Account Executive")
+        sales["description_text"] = "Sell our React and frontend tooling to design system teams."
+        self.assertEqual(outcome(sales, **kw)[0], "title")
+        one = job("Staff Software Engineer, Platform")
+        one["description_text"] = "Help our design system and design systems tooling grow."
+        self.assertEqual(outcome(one, title_keywords=["design system", "design systems"])[0], "title")
+
     def test_a_weak_word_alone_is_not_a_match(self):
         # Live 49 boards, 2026-10-19: "systems" from "Design Systems Engineer" pulled in IT roles.
         p = jfilter.state.with_profile_defaults(profile())
@@ -323,7 +349,7 @@ class TitleTest(unittest.TestCase):
     def test_borderline_matches(self):
         self.assertEqual(outcome(job("React Native Developer"))[0], "borderline")  # title keyword
         self.assertEqual(outcome(job("Senior Platform Engineer"))[0], "title")  # "platform" alone is too weak
-        self.assertEqual(outcome(job("Senior Frontend Platform Engineer"))[0], "strong")  # still a fit
+        self.assertEqual(outcome(job("Senior Frontend Platform Engineer"))[0], "borderline")  # still a candidate
 
     def test_unrelated_title_removed(self):
         self.assertEqual(outcome(job("Senior Accountant"))[0], "title")
