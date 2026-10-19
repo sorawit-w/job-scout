@@ -159,6 +159,8 @@ class ReportTest(unittest.TestCase):
         run([], self.home)
         html = page(self.home)
         self.assertIn("Nothing new since last time.", html)
+        self.assertIn("Checked 1 of 1 company job boards — 0 new or changed since last time.", html)
+        self.assertNotIn("open today", html)
         self.assertIn("Saved or applied, still open", html)
         self.assertIn("Closed since last time", html)
         self.assertIn("Gone Role", html)

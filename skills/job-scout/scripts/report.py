@@ -169,6 +169,7 @@ def build_view(files, profile, seen, run_id, probed_ok=()):
         "date": _run_date(run_id), "brief": _brief(profile), "roles": roles,
         "excluded": excluded[:MAX_EXCLUDED], "skipped": skipped, "rerun": bool(seen),
         "coverage": {"probed": boards.get("probed"), "available": boards.get("available"),
+                     "moved": sum(1 for c in cands.values() if c.get("state") in ("new", "changed")),
                      "open": sum(1 for e in jds.values()
                                  if isinstance(e, dict) and e.get("status") == "open" and not e.get("dropped"))},
         "top_removed": {"reason": REASON_TEXT.get(top, top), "n": removed[top], "of": counts.get("input")} if top else None,
@@ -323,9 +324,14 @@ def render(view):
     csp = ("default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-%s'; base-uri 'none'; "
            "form-action 'none'" % script_hash)
     cov = view["coverage"]
-    coverage = ("Checked %s of %s company job boards (%d job%s open today). Best for tech and startup roles."
-                % (_e(cov["probed"]), _e(cov["available"]), cov["open"], "" if cov["open"] == 1 else "s")
-                ) if cov.get("probed") is not None else ""
+    if cov.get("probed") is None:
+        coverage = ""
+    elif view["rerun"]:  # output-format §1: on a rerun, count what moved, not what is open
+        coverage = "Checked %s of %s company job boards — %d new or changed since last time." % (
+            _e(cov["probed"]), _e(cov["available"]), cov["moved"])
+    else:
+        coverage = "Checked %s of %s company job boards (%d job%s open today). Best for tech and startup roles." % (
+            _e(cov["probed"]), _e(cov["available"]), cov["open"], "" if cov["open"] == 1 else "s")
     parts = ['<header><h1>job-scout · %d role%s%s</h1>' % (
         len(roles), "" if len(roles) == 1 else "s", " · %s" % _e(view["date"]) if view["date"] else "")]
     if view["brief"]:
