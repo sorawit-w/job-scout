@@ -192,5 +192,11 @@ class QaFixesLocationTest(unittest.TestCase):
     def test_remote_evidence_beats_remote_false(self):
         self.assertIs(normalize.classify("Remote - US", remote_flag=False)["remote"], True)
 
+class CodexReviewLocationTest(unittest.TestCase):
+    def test_new_region_codes_never_appear_as_countries(self):
+        for loc in ("Remote - LATAM", "Remote (ANZ)", "DACH", "Nordics"):
+            self.assertEqual(normalize.classify(loc)["countries"], [], loc)
+        self.assertEqual(normalize.classify("Remote - LATAM")["remote_scope"], ["LATAM"])
+
 if __name__ == "__main__":
     unittest.main()

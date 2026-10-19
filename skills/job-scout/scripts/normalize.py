@@ -26,8 +26,6 @@ import re
 import unicodedata
 from html.parser import HTMLParser
 
-REGION_CODES = ("AMER", "EU", "EMEA", "APAC", "ANY")
-
 # ---- place table. Names written in ALL CAPS match case-sensitively; others ignore case.
 _REGIONS = {
     "AMER": "Americas|AMER|North America",
@@ -40,6 +38,7 @@ _REGIONS = {
     "DACH": "DACH",
     "NORDICS": "Nordics",
 }
+REGION_CODES = tuple(_REGIONS)  # derived, so a new region can never leak into countries
 _COUNTRIES = {
     "US": "United States|United States of America|USA|US|U.S.|U.S.A.",
     "CA": "Canada", "GB": "United Kingdom|UK|U.K.|Great Britain|Britain|England|Scotland|Wales|Northern Ireland",
