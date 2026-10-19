@@ -119,8 +119,9 @@ def check(row, budget):
     if str(job.get("job_id")) != str(row["job_id"]):  # a 200 with {} or an error object
         entry["error"] = "bad job record: not the requested job"
         return entry, None
-    for k in getattr(module, "JOB_LACKS", ()):  # fields the live record cannot express
-        job[k] = row.get(k)
+    if row.get("remote"):  # the live record cannot say "remote" (JOB_LACKS): keep the search's answer
+        for k in getattr(module, "JOB_LACKS", ()):
+            job[k] = row.get(k)
     # Some live checks carry no description (USAJOBS Historic JOA): keep the board list's text.
     full = job.get("description_text") or row.get("description_text")
     if not full:

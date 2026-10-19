@@ -30,7 +30,8 @@ SEARCH = "https://data.usajobs.gov/api/Search"
 JOA = "https://data.usajobs.gov/api/historicjoa?USAJOBSControlNumbers=%s"
 JOB_PAGE = "https://www.usajobs.gov/job/%s"
 PARTIAL = True  # the board list is a keyword search: probe.py never lets it close roles
-# The Historic JOA record (fetch_job) has telework but no remote field: keep the search row's values.
+# The Historic JOA record (fetch_job) has telework but no remote field: for a row the search found
+# remote, fetch_jd.py keeps these search values; any other row takes the JOA's current telework.
 JOB_LACKS = ("remote", "remote_scope", "workplace")
 MAX_TERMS = 3  # one search per term; extra terms mostly re-find the same postings
 # shortcut: newest MAX_PAGES * PAGE postings per term (2 requests); raise MAX_PAGES if a term needs more.

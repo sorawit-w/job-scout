@@ -363,6 +363,19 @@ class SearchSourceLiveCheckTest(unittest.TestCase):
         self.assertEqual((code, out["unverified"]), (0, []))
         self.assertEqual((out["jobs"][0]["workplace"], out["jobs"][0]["remote_scope"]), ("remote", ["US"]))
 
+    def test_usajobs_non_remote_row_takes_the_live_telework_answer(self):
+        # Only the remote indicator is missing from the JOA; its telework answer is current, so it wins.
+        r = row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS", title="Equipment Specialist (Electronic)",
+                remote=False, workplace="hybrid", remote_scope=None, locations=["Washington, District of Columbia"],
+                description_text="Duties\nMaintain equipment.")
+        home = make_home([r])
+        save_profile(home, target_roles=["Equipment Specialist"], work_modes=["onsite", "hybrid"],
+                     home_base="Washington, DC", commute_cities=["Washington"], remote_scope=[])
+        with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
+            code, out = run(["--top", "1"], home, replay_dir=USAJOBS)
+        self.assertEqual(code, 0)
+        self.assertIsNone(out["jobs"][0]["workplace"])  # the JOA says no telework: not "hybrid" any more
+
     def test_usajobs_with_no_description_anywhere_is_unverified(self):
         home = make_home([row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS")])
         with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
