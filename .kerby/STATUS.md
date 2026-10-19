@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Foundation — data layer complete; implementation next |
-| **Milestone** | impl-confirmation-gate (M2) |
-| **Milestone Goal** | Profile schema, DOCX text, SKILL.md phases 0–3 (route check, ingest, brief + confirmation gate, health check), trigger fixtures, gate evals |
+| **Phase** | Implementation — confirmation gate complete; matching next |
+| **Milestone** | impl-matching (M3) |
+| **Milestone Goal** | Hard filters, title prefilter, JD fetch with live check, cite check, rubric, output format, SKILL.md phases 4–8 |
 
 ---
 
@@ -23,9 +23,9 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M2 G1 — profile validate/save/show in `state.py` (unknown keys rejected) | data layer merged |
-| 2 | M2 G3 — SKILL.md frontmatter + phases 0–3; re-add manifest skill declarations | G1 |
-| 3 | M2 G5/G6 — trigger fixtures and gate evals E1/E4/E7/E9 | G3 |
+| 1 | M3 X1–X3 — `filter.py` hard filters, title prefilter, display variant + pay gate | confirmation gate merged |
+| 2 | M3 X4–X5 — `fetch_jd.py` (live check, trim) and `cite_check.py` | X1 |
+| 3 | M3 X6–X8 — rubric, output format, SKILL.md phases 4–8 | X4, X5 |
 
 ---
 
