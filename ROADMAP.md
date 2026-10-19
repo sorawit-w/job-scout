@@ -4,7 +4,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 1: v0 (M1–M6)
 
-- [!] M6 — Launch 0.1.0: repo public and v0.1.0 released (2026-10-19); open until the maintainer runs the four install smoke tests (DEVELOPER_TODO) and the agent-skills entry merges
+- [!] M6 — Launch 0.1.0: repo public and v0.1.0 released (2026-10-19); listed on the agent-skills shelf; open until the maintainer runs the four install smoke tests (DEVELOPER_TODO)
 
 ## Follow-ups
 

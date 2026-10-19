@@ -19,15 +19,3 @@ appears and nothing is searched until you confirm.
   scripts run on Python 3.9 against a replay world (health, probe, filter, profile).
 
 - **Optional while you are there:** turn on branch protection for `main` (Settings → Branches), so the weekly seed-check workflow can only open PRs.
-
-### 2. Add job-scout to the agent-skills shelf
-- **What:** an external entry in `sorawit-w/agent-skills` README, like kerby's. Suggested place:
-  "Calibration & personal voice", next to ghostwriter (they chain: find the role, then write the
-  message). Suggested text:
-  ```
-  [`job-scout`](https://github.com/sorawit-w/job-scout) *(external)* — open roles that fit your resume, read straight from employer job boards, with every fit reason quoted from the posting.
-
-  *Try:*
-    - "Here's my CV — what should I apply to?"
-    - "Anything new since last week?"
-  ```
