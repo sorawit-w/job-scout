@@ -86,14 +86,23 @@ class Budget:
             self.used += 1
 
 
-def fixture_key(url):
-    return hashlib.sha1(url.encode()).hexdigest()[:16]
+def _canon(post):
+    return json.dumps(post, sort_keys=True, separators=(",", ":"))
 
 
-def write_fixture(directory, url, status, body):
+def fixture_key(url, post=None):
+    """GET fixtures are named by URL alone; a POST adds its JSON body, so two searches never collide."""
+    return hashlib.sha1((url if post is None else url + "\n" + _canon(post)).encode()).hexdigest()[:16]
+
+
+def write_fixture(directory, url, status, body, post=None):
+    """Request headers are never written: a fixture must not carry credentials."""
     os.makedirs(directory, exist_ok=True)
-    with open(os.path.join(directory, fixture_key(url) + ".json"), "w", encoding="utf-8") as f:
-        json.dump({"url": url, "status": status, "body": body}, f, indent=1)
+    record = {"url": url, "status": status, "body": body}
+    if post is not None:
+        record["post"] = post
+    with open(os.path.join(directory, fixture_key(url, post) + ".json"), "w", encoding="utf-8") as f:
+        json.dump(record, f, indent=1)
         f.write("\n")
 
 
@@ -118,20 +127,26 @@ def _is_proxy_block(status, headers, body):
     return "proxy" in text or "allowlist" in text
 
 
-def _attempt(url, budget):
-    """One request (live or replayed). Returns (status, headers, body_text); raises Blocked on transport failure."""
+def _attempt(url, budget, post=None, headers=None):
+    """One request (live or replayed). Returns (status, headers, body_text); raises Blocked on transport failure.
+    ``post`` (a JSON-able object) makes it a JSON POST; ``headers`` are extra request headers."""
     if budget is not None:
         budget.take()
     replay_dir = os.environ.get("JOB_SCOUT_REPLAY_DIR")
     if replay_dir:
         try:
-            with open(os.path.join(replay_dir, fixture_key(url) + ".json"), encoding="utf-8") as f:
+            with open(os.path.join(replay_dir, fixture_key(url, post) + ".json"), encoding="utf-8") as f:
                 fixture = json.load(f)
         except FileNotFoundError:
             raise Blocked("no replay fixture for %s" % url, "replay_miss")
         return fixture["status"], {}, fixture["body"]
 
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+    send = dict({"User-Agent": USER_AGENT, "Accept": "application/json"}, **(headers or {}))
+    data = None
+    if post is not None:
+        data = _canon(post).encode()
+        send["Content-Type"] = "application/json"
+    req = urllib.request.Request(url, data=data, headers=send, method="POST" if data is not None else "GET")
     try:
         try:
             with _urlopen(req, timeout=TIMEOUT) as resp:
@@ -145,7 +160,7 @@ def _attempt(url, budget):
     body = raw.decode("utf-8", "replace")
     record_dir = os.environ.get("JOB_SCOUT_RECORD_DIR")
     if record_dir:
-        write_fixture(record_dir, url, status, body)
+        write_fixture(record_dir, url, status, body, post)
     return status, headers, body
 
 
@@ -156,28 +171,29 @@ def _retry_wait(headers):
         return DEFAULT_RETRY_WAIT
 
 
-def get_json(url, budget=None):
-    """GET url and return parsed JSON; None for 404/410. Raises NetError subclasses otherwise."""
+def get_json(url, budget=None, body=None, headers=None):
+    """GET url (or POST ``body`` as JSON) and return parsed JSON; None for 404/410.
+    Raises NetError subclasses otherwise. ``headers`` are extra request headers, never recorded."""
     replaying = bool(os.environ.get("JOB_SCOUT_REPLAY_DIR"))
     for attempt in (1, 2):
         try:
-            status, headers, body = _attempt(url, budget)
+            status, resp_headers, text = _attempt(url, budget, body, headers)
         except Blocked as e:
             if e.hint == "timeout" and attempt == 1:
                 continue
             raise
         if (status == 429 or status >= 500) and attempt == 1 and not replaying:
-            _sleep(_retry_wait(headers))
+            _sleep(_retry_wait(resp_headers))
             continue
         break
     if 200 <= status < 300:
         try:
-            return json.loads(body)
+            return json.loads(text)
         except (TypeError, ValueError):
             raise NetError("invalid JSON from %s" % url)
     if status in (404, 410):
         return None
-    if _is_proxy_block(status, headers, body):
+    if _is_proxy_block(status, resp_headers, text):
         raise Blocked("proxy refused %s (HTTP 403)" % url, "proxy_403")
     raise HTTPStatusError(status, url)
 

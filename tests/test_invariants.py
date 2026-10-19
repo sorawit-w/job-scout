@@ -81,9 +81,9 @@ class PipelineInvariantTest(unittest.TestCase):
         cls.urls = []
         real_attempt = net._attempt
 
-        def logged_attempt(url, budget):  # the lowest point in net.py that sees every URL
+        def logged_attempt(url, budget, *rest):  # the lowest point in net.py that sees every URL
             cls.urls.append(url)
-            return real_attempt(url, budget)
+            return real_attempt(url, budget, *rest)
 
         home = tempfile.mkdtemp()
         companies = os.path.join(home, "seed.csv")
