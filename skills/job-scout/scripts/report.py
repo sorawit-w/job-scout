@@ -218,7 +218,8 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     live_closed = {j.get("key") for j in jobs if closed_keys.intersection(state.job_keys(j))}
     saved = [k for k in lists.get("saved_open", []) if k not in live_closed]
     applied = [k for k in lists.get("applied_open", []) if k not in live_closed and k not in saved]  # saved wins, as in job_state
-    gone = list(dict.fromkeys(k for k in lists.get("saved_open", []) + lists.get("applied_open", []) if k in live_closed))
+    gone_saved = [k for k in lists.get("saved_open", []) if k in live_closed]  # diff() already chose the status,
+    gone_applied = [k for k in lists.get("applied_open", []) if k in live_closed and k not in gone_saved]  # even via aliases
 
     by_key = {j.get("key"): j for j in jobs}
 
@@ -242,7 +243,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
                                  if isinstance(e, dict) and e.get("status") == "open" and not e.get("dropped"))},
         "top_removed": {"reason": REASON_TEXT.get(top, top), "n": removed[top], "of": counts.get("input")} if top else None,
         "still_open": listed(saved, "saved") + listed(applied, "applied"),
-        "closed": listed(lists.get("closed", []) + gone),  # the live check found these closed
+        "closed": listed(lists.get("closed", [])) + listed(gone_saved, "saved") + listed(gone_applied, "applied"),
     }
 
 

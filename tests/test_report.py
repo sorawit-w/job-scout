@@ -222,6 +222,17 @@ class ReportTest(unittest.TestCase):
         self.assertNotIn("Saved or applied, still open", html)
         self.assertIn("<h2>Closed since last time</h2>", html)
 
+    def test_live_closed_alias_keeps_its_saved_status(self):
+        grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
+        make_run(self.home, [grouped], rows=None, jds={"gh:a:2": {"status": "closed"}})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {"gh:old:9": {  # matches the job only through an alias
+                "status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": "", "aliases": ["gh:a:2"]}})
+        run([], self.home)
+        html = page(self.home)
+        closed = html[html.index("<h2>Closed since last time</h2>"):]
+        self.assertIn('<td dir="auto">saved</td>', closed)
+
     def test_regrouped_saved_and_applied_roles_list_once(self):
         grouped = job("gh:a:1", state_="saved", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
         make_run(self.home, [grouped], rows=None)
