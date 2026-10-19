@@ -146,6 +146,27 @@ class StyleCheckTest(unittest.TestCase):
             self.assertEqual(code, 1, item)
             self.assertIn(reason, out["failed"][0]["why"], item)
 
+    def test_shown_rows_cover_every_saved_topic_exactly_once(self):
+        home = make_home()
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "async", "travel": "none"}}, f)
+        meet = {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}
+        travel = {"topic": "travel", "verdict": "not_stated", "text": "not stated", "quote": None}
+        stage = {"topic": "stage", "verdict": "not_stated", "text": "not stated", "quote": None}
+        for style, problem in (([meet, travel], None), ([meet], "style missing for: travel"), ([], "missing for: meetings, travel"),
+                               ([meet, travel, stage], "did not set: stage"), ([meet, meet, travel], "more than once for: meetings")):
+            payload = results(why=self.WHY)
+            payload["rows"][0].update(show=True, style=style)
+            code, out = run(payload, home)
+            if problem is None:
+                self.assertEqual((code, out["failed"]), (0, []))
+            else:
+                self.assertEqual(code, 1, style)
+                self.assertIn(problem, out["failed"][0]["why"])
+        payload = results(why=self.WHY)  # excluded rows need no style
+        payload["rows"][0]["show"] = False
+        self.assertEqual(run(payload, home)[0], 0)
+
     def test_style_never_counts_as_the_reason_a_role_is_shown(self):
         payload = results()
         payload["rows"][0].update(show=True, style=[

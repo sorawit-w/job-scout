@@ -14,7 +14,8 @@ Usage (paths relative to the skill folder):
                              "why": [{"text", "quote"}], "risk": [{"text", "quote"}],
                              "style": [{"topic", "verdict", "text", "quote"}]}]}
     A style item's topic is a work_style topic and its verdict match / conflict / not_stated;
-    match and conflict need a quote, not_stated has quote null (rubric §4).
+    match and conflict need a quote, not_stated has quote null (rubric §4). Each shown row needs
+    exactly one style item per topic in the saved profile's work_style, and none for other topics.
     Each row's key must have an open job description in jds.json, and a row with show: true
     needs at least one why item; each failing row is reported once, with quote null.
     Stdout: {"ok": bool, "checked": n, "failed": [{"key", "quote", "why"}]}
@@ -88,6 +89,16 @@ def style_problem(item, jd):
     return problem(item, jd)
 
 
+def style_coverage(style, wanted):
+    """Why a shown row's style items don't cover the saved work_style topics exactly once, or None."""
+    got = [i.get("topic") for i in style if isinstance(i, dict)]
+    gaps = [("missing for", sorted(wanted - set(got))),
+            ("given for topics the user did not set", sorted(set(got) - wanted - {None})),
+            ("given more than once for", sorted({t for t in got if t and got.count(t) > 1}))]
+    gaps = ["style %s: %s" % (what, ", ".join(map(str, topics))) for what, topics in gaps if topics]
+    return "; ".join(gaps) or None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Check results.json quotes against the live job descriptions.")
     ap.add_argument("--run", default="latest")
@@ -112,6 +123,9 @@ def main(argv=None):
     jds = state.read_json(run / "jds.json", {})
     if not isinstance(jds, dict):
         jds = {}
+    profile = state.read_json(state.profile_path(), {})
+    saved = profile.get("work_style") if isinstance(profile, dict) else None
+    wanted = {t for t in saved if t in state.WORK_STYLE} if isinstance(saved, dict) else set()
 
     checked, failed = 0, []
     for row in rows:
@@ -125,6 +139,9 @@ def main(argv=None):
             continue
         if row.get("show") is True and not row.get("why"):
             failed.append({"key": key, "quote": None, "why": "shown row has no quoted reason"})
+        gap = style_coverage(style, wanted) if row.get("show") is True else None
+        if gap:
+            failed.append({"key": key, "quote": None, "why": gap})
         for item, check in [(i, problem) for i in items] + [(i, style_problem) for i in style]:
             why = check(item, jd)
             if why:

@@ -70,8 +70,8 @@ claim that failed, and never edit a quote to match — re-read the description i
 Only when the profile has a non-empty `work_style`. Signals **never** change gates, scores, `total`,
 `show` or rank: they tell the user what the posting says, nothing more.
 
-For each **shown** row, add one item per topic the user set (skip topics they didn't set, and give
-excluded rows none):
+For each **shown** row, add exactly one item per topic the user set (skip topics they didn't set,
+and give excluded rows none; cite_check fails a shown row that misses or repeats a topic):
 
 ```json
 "style": [{"topic": "travel", "verdict": "conflict", "text": "Up to a quarter of the time on the road",
