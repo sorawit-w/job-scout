@@ -17,6 +17,37 @@
       ]
     },
     {
+      "id": "E2",
+      "name": "remote only, US — non-US remote removed, Americas flagged, employer links",
+      "prompt": "Here's my resume (attached). Remote only, and the remote job has to be open to people in the US. No pay floor. I don't need visa sponsorship. Exclude Lumenly. Everything else, use your best read of the resume and go straight to the search.\n\n[Eval setup — not part of the user's message: from the skill folder, run every job-scout script with JOB_SCOUT_REPLAY_DIR=evals/files/worlds/day1 and JOB_SCOUT_HOME set to a new empty temp directory. In Phase 4 run `python3 scripts/probe.py --boards greenhouse:koboldmetals,greenhouse:arizeai,ashby:turquoise-health,ashby:reactivemarkets` instead of the default board pick.]",
+      "expected_output": "The brief saves work_modes [remote] and remote_scope [US], then the search runs on the four replayed boards. The Reactive Markets Senior Frontend Engineer (Remote, UK) is not in the results table; it may appear under close but excluded with a reason saying remote is limited to the UK. The Kobold Metals Frontend Software Engineer (Remote, North America), if shown, carries an Americas flag. Every link opens the job on the employer's own job page.",
+      "files": ["evals/files/persona-frontend.md"],
+      "assertions": [
+        "Runs scripts/probe.py with JOB_SCOUT_REPLAY_DIR pointing at evals/files/worlds/day1 and the four-board --boards list",
+        "Saves a profile with work_modes [\"remote\"] and remote_scope including \"US\"",
+        "The Reactive Markets 'Senior Frontend Engineer' (Remote, UK) is not a row in the results table",
+        "If the Reactive Markets job is mentioned at all, it is under close but excluded with a reason saying remote is limited to the UK (GB)",
+        "If the Kobold Metals 'Frontend Software Engineer' (Remote, North America) is shown, its row or notes carry a flag such as 'Americas — check US eligibility'",
+        "Every link in the table is an https employer job page (job-boards.greenhouse.io, jobs.ashbyhq.com or the employer's own site), never an aggregator (Indeed, LinkedIn, ZipRecruiter, Glassdoor and similar) and never an API address",
+        "Shows only jobs that scripts/fetch_jd.py reported as open"
+      ]
+    },
+    {
+      "id": "E3",
+      "name": "needs sponsorship — refusal quoted or excluded, silence stated",
+      "prompt": "Here's my resume (attached). Remote only, open to people in the US. No pay floor. I will need H-1B visa sponsorship, so that's a yes. Exclude Lumenly. Everything else, use your best read of the resume and go straight to the search.\n\n[Eval setup — not part of the user's message: from the skill folder, run every job-scout script with JOB_SCOUT_REPLAY_DIR=evals/files/worlds/day1 and JOB_SCOUT_HOME set to a new empty temp directory. In Phase 4 run `python3 scripts/probe.py --boards greenhouse:koboldmetals,greenhouse:arizeai,ashby:turquoise-health,ashby:reactivemarkets` instead of the default board pick.]",
+      "expected_output": "The profile saves needs_sponsorship yes. The Turquoise Health Senior Design Engineer description says Turquoise does not sponsor employment visas, so that job is excluded on the sponsorship gate or shown with the refusal quoted word for word. Jobs whose description says nothing about sponsorship (for example the Arize AI Senior Open Source Design Engineer) carry 'sponsorship not stated'. No sponsorship claim appears without a quote.",
+      "files": ["evals/files/persona-frontend.md"],
+      "assertions": [
+        "Runs scripts/probe.py with JOB_SCOUT_REPLAY_DIR pointing at evals/files/worlds/day1 and the four-board --boards list",
+        "Saves the profile with needs_sponsorship \"yes\"",
+        "The Turquoise Health 'Senior Design Engineer' is either left out of the table (and, if mentioned, excluded for sponsorship) or shown with the refusal quoted from its description, e.g. \"Turquoise does not sponsor employment visas (H-1B, PERM, etc.)\"",
+        "Each shown job whose description does not mention sponsorship says 'sponsorship not stated' — it is never described as sponsoring",
+        "Every statement that a job does or does not sponsor visas comes with a quote from that job's description",
+        "Runs scripts/cite_check.py on results.json and it reports \"ok\": true before the results are shown"
+      ]
+    },
+    {
       "id": "E4",
       "name": "just go — proceeds with labelled defaults",
       "prompt": "Here's my resume (attached). Skip the questions and just go — use your best guess.",
@@ -40,6 +71,21 @@
         "Runs no job-scout script (no probe.py, no state.py)",
         "Says cover letters are out of scope for job-scout",
         "Does not draft a cover letter as job-scout output"
+      ]
+    },
+    {
+      "id": "E8",
+      "name": "nurse — thin coverage said honestly, no padding",
+      "prompt": "Here's my resume (attached). I want nursing roles, onsite or hybrid near Sacramento. No pay floor. I don't need visa sponsorship. Everything else, use your best read of the resume and go straight to the search.\n\n[Eval setup — not part of the user's message: from the skill folder, run every job-scout script with JOB_SCOUT_REPLAY_DIR=evals/files/worlds/day1 and JOB_SCOUT_HOME set to a new empty temp directory. In Phase 4 run `python3 scripts/probe.py --boards greenhouse:koboldmetals,greenhouse:arizeai,ashby:turquoise-health,ashby:reactivemarkets` instead of the default board pick.]",
+      "expected_output": "The brief says most nursing employers don't use the job boards job-scout reads, so results will be thin. The search runs on the four replayed boards, none of which has a nursing role. The coverage line says coverage was thin for this field. No unrelated roles fill the table. With zero matches, the reply says so and names the filter from filter.py's counts.removed that removed the most jobs.",
+      "files": ["evals/files/persona-nurse.md"],
+      "assertions": [
+        "Runs scripts/probe.py with JOB_SCOUT_REPLAY_DIR pointing at evals/files/worlds/day1 and the four-board --boards list",
+        "Says before searching that coverage for nursing on these job boards is thin",
+        "The results' coverage line says coverage was thin for this field",
+        "Shows no unrelated roles (software, sales, design or other non-nursing jobs) as matches",
+        "If filter.py reports zero candidates, the reply says nothing matched and names the filter with the largest count in filter.py's counts.removed, as shown in the transcript",
+        "Does not fall back to web search or aggregator sites"
       ]
     },
     {
