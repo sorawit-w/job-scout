@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Released — v0 launched; follow-ups next |
-| **Milestone** | none open (all of M1–M6 shipped) |
-| **Milestone Goal** | Next: the maintainer's install smoke tests, then the ROADMAP follow-ups |
+| **Phase** | Deployment — released; install smoke tests pending |
+| **Milestone** | deploy-launch (M6) — open until the smoke tests pass |
+| **Milestone Goal** | Every install surface smoke-tested; the agent-skills entry merged |
 
 ---
 
