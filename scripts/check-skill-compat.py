@@ -153,6 +153,59 @@ def _version_sources(root):
     return out
 
 
+def _skill_declarations(root):
+    """Return [(manifest label, declared path)] for every skill path a manifest declares.
+
+    A list entry is one skill folder; a string ending in "/" (Codex's form) is a
+    directory that must hold at least one */SKILL.md.
+    """
+    def load(relpath):
+        try:
+            with open(os.path.join(root, relpath), encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+    out = []
+
+    def add(label, value):
+        if isinstance(value, str):
+            out.append((label, value))
+        elif isinstance(value, list):
+            out.extend((label, v) for v in value if isinstance(v, str))
+
+    add(".claude-plugin/plugin.json", load(".claude-plugin/plugin.json").get("skills"))
+    for i, entry in enumerate(load(".claude-plugin/marketplace.json").get("plugins") or []):
+        if isinstance(entry, dict):
+            add(f".claude-plugin/marketplace.json plugins[{i}]", entry.get("skills"))
+    add(".codex-plugin/plugin.json", load(".codex-plugin/plugin.json").get("skills"))
+    return out
+
+
+def check_declared_skills(root):
+    """Errors when a manifest declares a skill that has no SKILL.md, or a SKILL.md
+    exists that no manifest declares. Without this, an empty or renamed skill
+    folder passes the gate as "All 0 skills pass"."""
+    errors = []
+    covered = set()
+    for label, declared in _skill_declarations(root):
+        rel = os.path.normpath(declared[2:] if declared.startswith("./") else declared)
+        if declared.endswith("/"):
+            found = glob.glob(os.path.join(root, rel, "*", "SKILL.md"))
+            if not found:
+                errors.append(f"{label} declares skill directory {declared} but it holds no */SKILL.md")
+            covered.update(os.path.normpath(os.path.relpath(os.path.dirname(p), root)) for p in found)
+        elif not os.path.isfile(os.path.join(root, rel, "SKILL.md")):
+            errors.append(f"{label} declares skill {declared} but {rel}/SKILL.md does not exist")
+        else:
+            covered.add(rel)
+    for path in glob.glob(os.path.join(root, "skills", "*", "SKILL.md")):
+        rel = os.path.normpath(os.path.relpath(os.path.dirname(path), root))
+        if rel not in covered:
+            errors.append(f"{rel}/SKILL.md exists but is not declared in any manifest")
+    return errors
+
+
 def check_versions(root):
     """Return list of error strings if the release version disagrees across manifests."""
     sources = _version_sources(root)
@@ -187,6 +240,16 @@ def main():
             print(f"        ✗ {e}")
         for w in warnings:
             print(f"        ! {w}")
+
+    print()
+    declared_errors = check_declared_skills(root)
+    if declared_errors:
+        failures += 1
+        print("FAIL  declared skills")
+        for e in declared_errors:
+            print(f"        ✗ {e}")
+    else:
+        print("ok    declared skills — every manifest-declared skill has a SKILL.md")
 
     print()
     version_errors, agreed = check_versions(root)

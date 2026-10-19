@@ -10,7 +10,7 @@ All notable changes to `job-scout` are documented here. Format follows
 ### Added
 - `agent-context.yaml`, `CONTEXT.md` (domain glossary), `ROADMAP.md`, and `implementation-plan.yaml` covering M1a–M6.
 - The ATS adapter port (`skills/job-scout/scripts/adapters/__init__.py`) with its contract test.
-- Plugin manifests for Claude Code and Codex, `skills/job-scout/VERSION`, and `scripts/check-skill-compat.py` (copied from kerby; checks SKILL.md frontmatter and version parity).
+- Plugin manifests for Claude Code and Codex, `skills/job-scout/VERSION`, and `scripts/check-skill-compat.py` (copied from kerby; checks SKILL.md frontmatter and version parity). It also fails when a manifest declares a skill with no `SKILL.md`, or a `SKILL.md` exists that no manifest declares — so the manifests declare no skill until M2 adds it.
 - CI on Python 3.9 and 3.13: compile, compat check, unit tests.
 
 ### Notes

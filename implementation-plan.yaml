@@ -95,7 +95,7 @@ phases:
         tasks:
           - {id: G1, name: "profile validate/save/show (unknown keys rejected)", area: scripts, depends_on: [D9], complexity: 4}
           - {id: G2, name: "docx_text.py", area: scripts, depends_on: [], complexity: 2}
-          - {id: G3, name: "SKILL.md frontmatter + phases 0–3", area: skill, depends_on: [G1], complexity: 6}
+          - {id: G3, name: "SKILL.md frontmatter + phases 0–3", area: skill, depends_on: [G1], complexity: 6, acceptance_criteria: ["re-add skill declarations: .claude-plugin/plugin.json skills [./skills/job-scout] and .codex-plugin/plugin.json skills ./skills/ (removed in M1a until SKILL.md exists)", "compat check 'declared skills' passes"]}
           - {id: G4, name: "skill README stub", area: skill, depends_on: [], complexity: 1}
           - {id: G5, name: ".eval/triggers/job-scout.json", area: evals, depends_on: [G3], complexity: 2}
           - {id: G6, name: "evals E1/E4/E7/E9 + personas", area: evals, depends_on: [G3], complexity: 3}
