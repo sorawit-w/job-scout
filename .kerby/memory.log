@@ -89,5 +89,5 @@ Action: SmartRecruiters adapter + seed (6,214 live); Workday adapter (keyword se
 Files: skills/job-scout/scripts/{adapters/,net.py,probe.py,filter.py,normalize.py,fetch_jd.py,companies.py}, skills/job-scout/{SKILL.md,references/output-format.md,data/companies.csv,evals/results/2026-10-19-nurse.md}, scripts/{seed_import,seed_check}.py, tests/, NOTICE, ROADMAP.md
 Commit: 977d7ab..HEAD (branch feature/more-hiring-tools)
 Status: DONE
-Notes: skill-evaluator: clean (24/24) at 56c148f — 2026-10-19 (N1–N5 16/16 on the coverage text; N6–N7 8/8 on the zero-result and commute-state text)
+Notes: skill-evaluator: clean (28/28) at cdff553 — 2026-10-19 (N1–N5 16/16 on the coverage text; N6–N7 8/8 on the zero-result and commute-state text; N2 re-run 4/4 after the Codex fix to the `skipped` field)
 Observations: Sacramento's large hospital systems use Phenom, iCIMS and Taleo — none readable yet (ROADMAP).
