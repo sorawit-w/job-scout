@@ -127,6 +127,49 @@ class WorkModeLocationTest(unittest.TestCase):
         self.assertEqual(outcome(local(city="New York, NY"))[0], "location")
 
 
+def elsewhere(city, countries, workplace="hybrid", **kw):
+    """A non-remote job outside the commute cities, with parsed countries on the job and its variant."""
+    j = local(city=city, workplace=workplace, **kw)
+    j["countries"] = list(countries)
+    for v in j["variants"]:
+        v["countries"] = list(countries)
+    return j
+
+
+class RelocationTest(unittest.TestCase):
+    def test_off_by_default(self):
+        self.assertEqual(outcome(elsewhere("San Francisco, CA", ["US"]))[0], "location")
+
+    def test_open_to_relocation_keeps_hybrid_elsewhere_with_a_flag(self):
+        res, cand = outcome(elsewhere("San Francisco, CA", ["US"]), open_to_relocation=True)
+        self.assertEqual(res, "strong")
+        self.assertIn("relocation: hybrid in San Francisco, CA", cand["flags"])
+
+    def test_relocation_ranks_after_a_clean_local_match(self):
+        sf = elsewhere("San Francisco, CA", ["US"], key="sf", date="2026-10-10")
+        la = local(key="la", date="2026-09-01")
+        out, _ = run([sf, la], open_to_relocation=True)
+        self.assertEqual([c["key"] for c in out["candidates"]], ["la", "sf"])
+
+    def test_only_home_and_remote_scope_countries(self):
+        self.assertEqual(outcome(elsewhere("London", ["GB"]), open_to_relocation=True)[0], "location")
+        res, _ = outcome(elsewhere("Toronto", ["CA"]), open_to_relocation=True, remote_scope=["US", "CA"])
+        self.assertEqual(res, "strong")
+
+    def test_mode_must_still_be_wanted(self):
+        res, _ = outcome(elsewhere("San Francisco, CA", ["US"], workplace="onsite"), open_to_relocation=True)
+        self.assertIsNotNone(res)
+        self.assertNotIn(res, ("strong", "borderline"))
+
+    def test_near_miss_names_the_unwanted_mode(self):
+        out, _ = run([elsewhere("San Francisco, CA", ["US"], workplace="onsite", title="Design Engineer")],
+                     open_to_relocation=True)
+        self.assertEqual(out["near_misses"][0]["reason"], "onsite in San Francisco, CA — onsite is not a mode you picked")
+
+    def test_unparsed_location_is_not_relocatable(self):
+        self.assertEqual(outcome(elsewhere("Somewhere", []), open_to_relocation=True)[0], "location")
+
+
 class DisplayVariantTest(unittest.TestCase):
     def test_us_remote_variant_applied_with_its_pay(self):
         eur = {"min": 80000, "max": 100000, "currency": "EUR", "interval": "year", "source": "ats_field"}

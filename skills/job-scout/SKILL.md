@@ -92,7 +92,8 @@ people trust results more when they have seen the assumptions behind them.
 
 **"Just go" never means guessing the three ask-only fields.** For work mode, pay floor and
 sponsorship, use the defaults that filter nothing out — all work modes (remote limited to the
-home-base country), `base_pay_floor: null`, `needs_sponsorship: "undisclosed"` — label each
+home-base country, `open_to_relocation: true` so hybrid or onsite roles elsewhere in that country
+stay in, flagged), `base_pay_floor: null`, `needs_sponsorship: "undisclosed"` — label each
 `default`, and list those three as optional follow-ups after the brief ("these three answers
 would sharpen the results"). A wrong guess here silently hides roles; a non-filtering default
 only costs some extra results.
@@ -128,6 +129,7 @@ conversation), or **`needs you`**. Anything the user stated earlier in the conve
 | Title exclusions (e.g. mechanical, RF, "Product Designer" for an engineer) | Infer; show only if non-obvious. |
 | **Work mode** (remote / hybrid / onsite) | **Never guess. Ask.** |
 | **Remote scope** | Ask if they chose remote — many remote roles are limited to one country. |
+| **Relocation** | Ask if they chose hybrid or onsite: would they move for the right role? Never infer it from past moves. If yes, roles elsewhere in their home or remote-scope countries stay in, flagged "relocation". |
 | **Visa sponsorship** | **Never guess or infer.** Ask plainly: yes / no / prefer not to say. Used only as a filter. |
 | **Base pay floor** | **Never guess. Ask** (a number, or "no floor"). Roles with no listed pay are kept and labelled "pay not listed" unless the user says hide them. |
 | Industries | Infer softly; label `inferred`. |
@@ -138,7 +140,7 @@ conversation), or **`needs you`**. Anything the user stated earlier in the conve
 
 - Ask only what is missing or critical: **at most about 5 questions, in one message.** Number
   them and offer the choices inline (e.g. "1. Work mode: remote (US) / LA-area hybrid / onsite —
-  pick any").
+  pick any; for hybrid or onsite, would you relocate?").
 - Use a structured choice tool if your environment has one (e.g. an ask-the-user tool);
   otherwise plain text.
 - Write for anyone, not just engineers: no "ATS", "slug", "JSON", or "API" in questions or
@@ -161,7 +163,8 @@ python3 scripts/state.py profile save --stdin <<'JSON'
 {"schema": 1, "target_roles": [...], "title_synonyms": [...], "title_exclusions": [...],
  "seniority": [...], "track": "ic", "home_base": "...", "work_modes": ["remote", "hybrid"],
  "commute_cities": ["Los Angeles", "Pasadena", ...], "remote_scope": ["US"],
- "needs_sponsorship": "no", "base_pay_floor": {"amount": 180000, "currency": "USD", "interval": "year"},
+ "open_to_relocation": false, "needs_sponsorship": "no",
+ "base_pay_floor": {"amount": 180000, "currency": "USD", "interval": "year"},
  "hide_no_pay": false, "industries_prefer": [...], "industries_exclude": [], "companies_include": [],
  "companies_exclude": ["Acme"], "must_haves": [], "dealbreakers": [], "recency_flag_days": 90,
  "result_count": 15, "sources": {"target_roles": "resume", "work_modes": "you", ...}}

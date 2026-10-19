@@ -13,7 +13,8 @@ prints one compact JSON object:
 Exit codes: 0 ok · 2 no profile, no run, no jobs.json, or bad arguments.
 
 Rules, in order (the first rule a job fails is its removal reason): company exclude ->
-display-variant pick -> work mode / location / remote scope -> seniority -> track -> title
+display-variant pick -> work mode / location / remote scope (open_to_relocation keeps a wanted-mode
+job elsewhere in the home or remote-scope countries, flagged) -> seniority -> track -> title
 exclusions -> title prefilter (strong / borderline) -> pay floor (structured pay only).
 Old postings are flagged ("open over N days"), never removed.
 
@@ -43,6 +44,7 @@ REASONS = ("work_mode", "location", "remote_scope", "seniority", "track", "compa
 SCOPE_NOT_STATED = "remote scope not stated"
 AMER_FLAG = "Americas — check US eligibility"
 MODE_NOT_STATED = "work mode not stated"
+RELOCATE_FLAG = "relocation: %s in %s"
 LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED)
 
 _ALIASES = {"sr": "senior", "jr": "junior", "swe": "software engineer", "eng": "engineer"}
@@ -74,9 +76,9 @@ def has_phrase(ws, phrase):
     return n > 0 and any(ws[i:i + n] == pw for i in range(len(ws) - n + 1))
 
 
-def _place_check(job, p, cities):
+def _place_check(job, p, ctx):
     """(reason, flags, via) for one job or variant. reason None = passes; via is remote/local."""
-    modes = p["work_modes"]
+    modes, cities = p["work_modes"], ctx["cities"]
     remote_fail = None
     if job.get("remote") is True:
         if "remote" in modes:
@@ -99,16 +101,30 @@ def _place_check(job, p, cities):
         if wp != "remote" and wp in modes:
             return None, [], "local"
         return remote_fail or "work_mode", [], None  # in a commute city, but not in a wanted mode
+    wp, allowed = job.get("workplace"), ctx["relocate"]
+    if allowed is not None and wp in ("hybrid", "onsite") and wp in modes and job.get("countries") \
+            and (not allowed or allowed & set(job["countries"])):
+        return None, [RELOCATE_FLAG % (wp, (job.get("locations") or ["?"])[0])], "local"
     return remote_fail or "location", [], None
 
 
-def _pick_variant(job, p, cities):
+def _relocation_countries(p):
+    """None when not relocating; else the countries they would move within (empty set = anywhere)."""
+    if not p["open_to_relocation"]:
+        return None
+    if "ANY" in p["remote_scope"]:
+        return frozenset()
+    home = normalize.place_codes(p.get("home_base") or "")
+    return frozenset(c for c in set(home) | set(p["remote_scope"]) if c not in normalize.REGION_CODES)
+
+
+def _pick_variant(job, p, ctx):
     """Apply the variant the user can take: clean remote, then clean local, then flagged, else primary."""
     best = None
     for v in job.get("variants") or [{}]:
         row = dict(job)
         row.update(v)
-        reason, flags, via = _place_check(row, p, cities)
+        reason, flags, via = _place_check(row, p, ctx)
         rank = 3 if reason else 2 if flags else 0 if via == "remote" else 1
         if best is None or rank < best[0]:
             best = (rank, row, reason, flags)
@@ -198,7 +214,7 @@ def _judge(job, p, ctx):
     """(removal reason or None, row with the display variant applied, near miss (priority, text) or None)."""
     if normalize.company_norm(job.get("company")) in ctx["excluded"]:
         return "company", job, None
-    row, reason, flags = _pick_variant(job, p, ctx["cities"])
+    row, reason, flags = _pick_variant(job, p, ctx)
     title = row.get("title") or ""
     ws = words(title)
     excluded = next((x for x in p["title_exclusions"] if has_phrase(ws, x)), None)
@@ -208,8 +224,9 @@ def _judge(job, p, ctx):
         if reason == "remote_scope" and strong:
             near = (2, "remote, but only in %s" % ", ".join(row.get("remote_scope") or []))
         elif reason == "location" and strong and row.get("locations"):
-            near = (2, "%s in %s — outside your commute cities" % (row.get("workplace") or "onsite",
-                                                                   row["locations"][0]))
+            wp = row.get("workplace") or "onsite"
+            why = "outside your commute cities" if wp in p["work_modes"] else "%s is not a mode you picked" % wp
+            near = (2, "%s in %s — %s" % (wp, row["locations"][0], why))
         return reason, row, near
     if ctx["senior_only"] and _too_junior(title, ws):
         return "seniority", row, None
@@ -237,7 +254,7 @@ def _judge(job, p, ctx):
 def _rank_key(row):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
-    return (row["match"] != "strong", any(f in LOCATION_FLAGS for f in row["flags"]), newest is None, newest or 0)
+    return (row["match"] != "strong", any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]), newest is None, newest or 0)
 
 
 def _where(row):
@@ -255,6 +272,7 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None):
     ctx = {"excluded": {normalize.company_norm(c) for c in p["companies_exclude"]},
            "cities": [c for c in p["commute_cities"] + [home_city] if c.strip()],
            "senior_only": _senior_only(p["seniority"]),
+           "relocate": _relocation_countries(p),
            "today": today or datetime.date.today()}
     removed = dict.fromkeys(REASONS, 0)
     kept, near = [], []

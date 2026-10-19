@@ -62,7 +62,12 @@ class ValidateTest(unittest.TestCase):
         self.assertEqual(p["result_count"], 15)
         self.assertEqual(p["recency_flag_days"], 90)
         self.assertIs(p["hide_no_pay"], False)
+        self.assertIs(p["open_to_relocation"], False)
         self.assertEqual(p["companies_exclude"], [])
+
+    def test_open_to_relocation_must_be_a_bool(self):
+        self.assertEqual(state.validate_profile(good(open_to_relocation=True)), [])
+        self.assertTrue(state.validate_profile(good(open_to_relocation="yes")))
 
 
 class ProfileCliTest(unittest.TestCase):

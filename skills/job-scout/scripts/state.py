@@ -193,8 +193,8 @@ _WORK_MODES = ("remote", "hybrid", "onsite")
 _SOURCES = ("resume", "inferred", "default", "you")
 _INTERVALS = ("year", "month", "week", "day", "hour")
 _REQUIRED = ("schema", "target_roles", "work_modes", "needs_sponsorship", "base_pay_floor")
-PROFILE_DEFAULTS = {"track": "either", "home_base": None, "hide_no_pay": False, "recency_flag_days": 90,
-                    "result_count": 15, "sources": {}}
+PROFILE_DEFAULTS = {"track": "either", "home_base": None, "hide_no_pay": False, "open_to_relocation": False,
+                    "recency_flag_days": 90, "result_count": 15, "sources": {}}
 PROFILE_KEYS = set(_STR_LISTS) | set(_ENUMS) | set(_REQUIRED) | set(PROFILE_DEFAULTS)
 
 
@@ -225,8 +225,9 @@ def validate_profile(p):
             errors.append("base_pay_floor must be null or {amount: number, currency: str, interval: %s}" % "/".join(_INTERVALS))
     if "home_base" in p and p["home_base"] is not None and not isinstance(p["home_base"], str):
         errors.append("home_base must be a string or null")
-    if "hide_no_pay" in p and not isinstance(p["hide_no_pay"], bool):
-        errors.append("hide_no_pay must be true or false")
+    for key in ("hide_no_pay", "open_to_relocation"):
+        if key in p and not isinstance(p[key], bool):
+            errors.append("%s must be true or false" % key)
     for key, lo, hi in (("result_count", 1, 50), ("recency_flag_days", 1, 3650)):
         if key in p and not (isinstance(p[key], int) and not isinstance(p[key], bool) and lo <= p[key] <= hi):
             errors.append("%s must be an integer from %d to %d" % (key, lo, hi))
