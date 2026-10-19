@@ -45,6 +45,9 @@ def job(ats, slug, company, job_id, title, url, locations, remote_flag=None, wor
     """
     cls = normalize.classify(locations, remote_flag=remote_flag, workplace_hint=workplace_hint)
     merged = sorted(set(cls["countries"]) | set(countries or []))
+    scope = cls["remote_scope"]
+    if cls["remote"] and scope is None and countries:
+        scope = sorted(set(countries))  # "Remote" text plus a structured country (e.g. Lever's `country`)
     return {
         "key": "%s:%s:%s" % (ats, slug, job_id),
         "company": company,
@@ -55,7 +58,7 @@ def job(ats, slug, company, job_id, title, url, locations, remote_flag=None, wor
         "locations": cls["locations"],
         "countries": merged,
         "remote": cls["remote"],
-        "remote_scope": cls["remote_scope"],
+        "remote_scope": scope,
         "workplace": cls["workplace"],
         "department": department,
         "first_published": first_published,
@@ -67,9 +70,16 @@ def job(ats, slug, company, job_id, title, url, locations, remote_flag=None, wor
 
 
 def country_codes(names):
-    """ISO codes for structured country names/codes ("United States", "USA", "ca")."""
+    """ISO codes for structured country names/codes ("United States", "USA", "ca").
+
+    A bare two-letter value is already an ISO code — taken as-is, never looked up as a
+    place (place_codes would read "LA" as Los Angeles and miss "DE").
+    """
     out = set()
     for name in names:
-        if name:
-            out.update(c for c in normalize.place_codes(str(name)) if len(c) == 2)
+        text = str(name).strip() if name else ""
+        if len(text) == 2 and text.isalpha():
+            out.add(text.upper())
+        elif text:
+            out.update(c for c in normalize.place_codes(text) if len(c) == 2)
     return sorted(out)

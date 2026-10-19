@@ -146,5 +146,26 @@ class LeverTest(SchemaMixin, unittest.TestCase):
             self.assertIsNone(lever.fetch_board("job-scout-no-such-board"))
 
 
+class QaFixesAdapterTest(unittest.TestCase):
+    def test_structured_iso2_country_is_kept(self):
+        from adapters import _common
+        self.assertEqual(_common.country_codes(["CA"]), ["CA"])
+        self.assertEqual(_common.country_codes(["LA"]), ["LA"])  # Laos, not Los Angeles
+        self.assertEqual(_common.country_codes(["United States", "de"]), ["DE", "US"])
+
+    def test_lever_remote_with_only_structured_country_gets_a_scope(self):
+        raw = {"id": "y", "text": "Engineer", "hostedUrl": "https://jobs.lever.co/a/y", "createdAt": 1736955783359,
+               "categories": {"location": "Remote"}, "country": "DE", "workplaceType": "remote"}
+        job = lever.normalize(raw, "a", "A")
+        self.assertEqual(job["countries"], ["DE"])
+        self.assertEqual(job["remote_scope"], ["DE"])
+
+    def test_ashby_fetch_job_reads_a_fresh_cache_without_network(self):
+        import tempfile
+        import state
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": tempfile.mkdtemp(), "JOB_SCOUT_REPLAY_DIR": tempfile.mkdtemp()}):
+            state.cache_put("ashby", "acme", [{"id": "j1", "title": "A"}])
+            self.assertEqual(ashby.fetch_job("acme", "j1")["id"], "j1")
+
 if __name__ == "__main__":
     unittest.main()

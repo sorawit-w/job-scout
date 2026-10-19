@@ -6,7 +6,8 @@ What it does NOT do: no caching (probe.py) and no pay parsing from description t
 pay comes only from `compensation` salary components.
 """
 import net
-import normalize as norm  # the module; `normalize` below is this adapter's contract function
+import normalize as norm
+import state  # the module; `normalize` below is this adapter's contract function
 
 from adapters import _common
 
@@ -23,8 +24,13 @@ def fetch_board(slug, budget=None):
 
 
 def fetch_job(slug, job_id, budget=None):
-    """The job from a fresh board list, or None if it is no longer listed (closed)."""
-    jobs = fetch_board(slug, budget)
+    """The job from a board list younger than the cache TTL (a live check per HANDOFF §9),
+    fetching the list only when no fresh copy is cached; None if it is no longer listed."""
+    jobs = state.cache_get("ashby", slug)
+    if jobs is None:
+        jobs = fetch_board(slug, budget)
+        if jobs is not None:
+            state.cache_put("ashby", slug, jobs)
     for raw in jobs or []:
         if str(raw.get("id")) == str(job_id):
             return raw
