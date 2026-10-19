@@ -64,12 +64,12 @@ class SearchTest(unittest.TestCase):
     def test_credentials_go_in_headers_never_the_url(self):
         empty = {"SearchResult": {"SearchResultItems": [], "UserArea": {"NumberOfPages": "0"}}}
         with env(), mock.patch.object(net, "get_json", return_value=empty) as get:
-            usajobs.fetch_board("all", terms=["nurse"], location="Denver, Colorado")
+            usajobs.fetch_board("all", terms=["nurse"])
         url, headers = get.call_args.args[0], get.call_args.kwargs["headers"]
         self.assertEqual(headers, {"Host": "data.usajobs.gov", "User-Agent": EMAIL, "Authorization-Key": KEY})
         self.assertNotIn(KEY, url)
         self.assertNotIn(EMAIL.split("@")[0], url)
-        self.assertIn("LocationName=Denver%2C+Colorado", url)
+        self.assertNotIn("LocationName", url)  # only the search words leave the machine
         self.assertIn("ResultsPerPage=%d" % usajobs.PAGE, url)
 
     def test_search_respects_the_budget(self):

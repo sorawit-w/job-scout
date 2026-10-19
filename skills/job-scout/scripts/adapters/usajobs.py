@@ -53,15 +53,13 @@ def _today():  # test seam
     return datetime.date.today()
 
 
-def _search_url(term, page, location=None):
+def _search_url(term, page):
     params = [("Keyword", term), ("ResultsPerPage", PAGE), ("Page", page),
               ("SortField", "opendate"), ("SortDirection", "Desc")]
-    if location:
-        params.append(("LocationName", location))
     return SEARCH + "?" + urllib.parse.urlencode(params)
 
 
-def fetch_board(slug="all", budget=None, terms=None, location=None):
+def fetch_board(slug="all", budget=None, terms=None):
     """Raw search items for up to MAX_TERMS keywords, de-duplicated by control number.
     None when no key is set (no request made); [] when there are no terms."""
     if not enabled():
@@ -71,7 +69,7 @@ def fetch_board(slug="all", budget=None, terms=None, location=None):
     out, seen = [], set()
     for term in [t.strip() for t in terms or [] if t and t.strip()][:MAX_TERMS]:
         for page in range(1, MAX_PAGES + 1):
-            data = net.get_json(_search_url(term, page, location), budget, headers=headers)
+            data = net.get_json(_search_url(term, page), budget, headers=headers)
             result = (data or {}).get("SearchResult") or {}
             items = result.get("SearchResultItems") or []
             for item in items:
