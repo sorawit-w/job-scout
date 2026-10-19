@@ -1,2 +1,15 @@
 # kerby project-state pin (machine-local) — written by `kerby install`
 .kerby/rulebooks.lock
+
+# Python
+__pycache__/
+*.pyc
+
+# Release builds
+dist/
+
+# Live eval snapshots (large, re-recorded on eval day; ground truth + scorecards are committed)
+skills/job-scout/evals/snapshots/
+
+# Anything personal: real resumes, real profiles, local notes — never committed
+private/

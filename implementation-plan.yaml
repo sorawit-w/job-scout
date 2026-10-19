@@ -1,0 +1,220 @@
+# job-scout v0 implementation plan (approved 2026-10-18).
+# Shape: phases → milestones → tasks (kerby swe references/implementation-planning.md).
+# Each milestone = one branch + one PR; the human merges. Expected outcomes are per
+# milestone (case table); every task commits on its own with a conventional type.
+# Spec: docs/HANDOFF.md (rev. 3). Decisions + rationale: see `decisions` below.
+
+version: 1
+project: job-scout
+gate:
+  build: "python3 -m compileall -q skills scripts tests"
+  lint: "python3 scripts/check-skill-compat.py"
+  test: "python3 -m unittest discover -s tests -t ."
+
+decisions:
+  runtime: "Python 3.9+ stdlib only; CI on 3.9 and 3.13"
+  layout: "skills/job-scout/ (not skill/); evals inside the skill; tests/ at root"
+  seed: "all ~5,687 corpHuntingMCP GH/Ashby/Lever tenants (0BSD, pinned SHA), live-only, sector tagged where known"
+  jobscope: "reference only; its known bugs become test inputs"
+  board_cap: "400 per run default, 600 ceiling; user companies → seed49 → sector → us/remote share → job count"
+  cover_letters: "out of scope in v0; outreach/recruiter messages → ghostwriter (if installed)"
+  seed_check: "weekly Action opens a PR; never pushes to main"
+  output: "6 columns + one notes line per row"
+  dedupe: "collapsed rows keep variants[]; recall counts any variant"
+  pay: "structured ATS fields only, never parsed from free text"
+  state_dir: "~/.job-scout/ (JOB_SCOUT_HOME overrides)"
+
+phases:
+  - id: setup
+    exit: "Standard gate green locally and in CI (3.9 + 3.13)"
+    milestones:
+      - id: setup-repo
+        name: "M1a — Setup"
+        branch: feature/initial-setup
+        complexity: 4
+        goal: "Scaffold a stdlib-Python skill repo with a green gate"
+        tasks:
+          - {id: S1, name: "agent-context.yaml", area: repo, depends_on: [], complexity: 2, acceptance_criteria: ["project/runtime/stack present", "gate commands in agentNotes"]}
+          - {id: S2, name: "CONTEXT.md glossary", area: docs, depends_on: [], complexity: 1, acceptance_criteria: [">=3 glossary terms"]}
+          - {id: S3, name: "ROADMAP.md", area: docs, depends_on: [], complexity: 1, acceptance_criteria: ["only Follow-ups and Shipped sections"]}
+          - {id: S4, name: "implementation-plan.yaml", area: docs, depends_on: [], complexity: 3, acceptance_criteria: ["all milestones M1a–M6 present"]}
+          - {id: S5, name: "adapter port contract + first test", area: scripts, depends_on: [], complexity: 2, acceptance_criteria: ["test_contract passes"]}
+          - {id: S6, name: "compat check + manifests + VERSION + CHANGELOG + README stub", area: repo, depends_on: [], complexity: 3, acceptance_criteria: ["version parity at 0.0.1", "README has Current release line + disclaimer"]}
+          - {id: S7, name: ".gitignore + .env.example", area: repo, depends_on: [], complexity: 1, acceptance_criteria: ["no secrets; optional env vars documented"]}
+          - {id: S8, name: "ci.yml", area: ci, depends_on: [S5, S6], complexity: 2, acceptance_criteria: ["matrix 3.9 + 3.13 runs build, lint, test"]}
+          - {id: S9, name: "STATUS + DEVELOPER_TODO", area: docs, depends_on: [], complexity: 1, acceptance_criteria: ["human TODOs listed"]}
+        expected_outcomes:
+          end_state: "gate prints 'version parity — all manifests at 0.0.1' and 'Ran N tests … OK'"
+          cases:
+            - {case: happy path, input: "run the gate locally and in CI", expected: "green on 3.9 and 3.13"}
+            - {case: edge, input: "bump only one manifest version", expected: "FAIL version parity, exit 1"}
+            - {case: failure, input: "code that needs Python 3.10+", expected: "3.9 CI job fails"}
+
+  - id: foundation
+    exit: "probe works offline via replay; seed imported and checked"
+    milestones:
+      - id: foundation-data-layer
+        name: "M1b — Data layer"
+        branch: feature/data-layer
+        complexity: 7   # plan approval + QA sub-agent
+        goal: "Fetch, normalize, collapse and cache 3 ATSs; import and check the seed"
+        tasks:
+          - {id: D1, name: "net.py (UA, timeout, retry, Budget, health, record/replay)", area: scripts, depends_on: [], complexity: 5}
+          - {id: D2, name: "record HTTP fixtures + ats-notes.md (verify pay fields, Lever EU, SmartRecruiters)", area: tests, depends_on: [D1], complexity: 3}
+          - {id: D3, name: "parse_locations + remote_scope (test-first, jobscope bug cases)", area: scripts, depends_on: [], complexity: 6}
+          - {id: D4, name: "html_to_text + title_stem + collapse_variants", area: scripts, depends_on: [], complexity: 5}
+          - {id: D5, name: "greenhouse adapter", area: scripts, depends_on: [D1, D2, D3, D4], complexity: 4}
+          - {id: D6, name: "ashby adapter", area: scripts, depends_on: [D1, D2, D3, D4], complexity: 4}
+          - {id: D7, name: "lever + lever_eu adapter", area: scripts, depends_on: [D1, D2, D3, D4], complexity: 4}
+          - {id: D8, name: "SmartRecruiters verdict", area: docs, depends_on: [D2], complexity: 2}
+          - {id: D9, name: "state.py (home, atomic write, cache TTL, run dirs)", area: scripts, depends_on: [], complexity: 4}
+          - {id: D10, name: "probe.py (selection, cache, collapse, denylist, exit codes)", area: scripts, depends_on: [D5, D6, D7, D9], complexity: 6}
+          - {id: D11, name: "seed_import.py + denylist.txt (pinned corpHuntingMCP SHA)", area: scripts, depends_on: [], complexity: 4}
+          - {id: D12, name: "seed_check.py (live/unverified/dead, >10% errors aborts)", area: scripts, depends_on: [D1, D11], complexity: 5}
+          - {id: D13, name: "companies.csv + NOTICE", area: data, depends_on: [D11, D12], complexity: 3}
+          - {id: D14, name: "seed-check.yml (weekly PR, never main)", area: ci, depends_on: [D12], complexity: 3}
+        expected_outcomes:
+          end_state: "companies.csv ~5,700 rows; 'seed-check: N boards · live · unverified · dead · errors'; replay probe summary JSON"
+          cases:
+            - {case: happy path, input: "replay probe of 3 boards", expected: "3 live; normalized jobs with employer URLs"}
+            - {case: edge, input: "4 Ashby regional variants", expected: "1 row, 4 variants, union of locations"}
+            - {case: edge, input: "greenhouse:webflow (200, 0 jobs)", expected: "empty / unverified, not coverage"}
+            - {case: edge, input: "lever:jobgether", expected: "removed by denylist"}
+            - {case: edge, input: "rerun within 6 h", expected: "0 requests, all cached"}
+            - {case: failure, input: "--health with empty replay dir", expected: "exit 3, blocked, hint"}
+            - {case: failure, input: "budget smaller than boards", expected: "exit 4, partial results written"}
+            - {case: failure, input: "seed check >10% errors", expected: "abort; companies.csv unchanged"}
+
+  - id: implementation
+    exit: "gate, matching and reruns work end to end with evals E1–E9 drafted"
+    milestones:
+      - id: impl-confirmation-gate
+        name: "M2 — Confirmation gate"
+        branch: feature/confirmation-gate
+        complexity: 6
+        tasks:
+          - {id: G1, name: "profile validate/save/show (unknown keys rejected)", area: scripts, depends_on: [D9], complexity: 4}
+          - {id: G2, name: "docx_text.py", area: scripts, depends_on: [], complexity: 2}
+          - {id: G3, name: "SKILL.md frontmatter + phases 0–3", area: skill, depends_on: [G1], complexity: 6, acceptance_criteria: ["re-add skill declarations: .claude-plugin/plugin.json skills [./skills/job-scout] and .codex-plugin/plugin.json skills ./skills/ (removed in M1a until SKILL.md exists)", "compat check 'declared skills' passes"]}
+          - {id: G4, name: "skill README stub", area: skill, depends_on: [], complexity: 1}
+          - {id: G5, name: ".eval/triggers/job-scout.json", area: evals, depends_on: [G3], complexity: 2}
+          - {id: G6, name: "evals E1/E4/E7/E9 + personas", area: evals, depends_on: [G3], complexity: 3}
+          - {id: G7, name: "run gate evals + fix (classify layer first)", area: evals, depends_on: [G6], complexity: 3}
+          - {id: G8, name: "claude.ai frontmatter upload check (maintainer)", area: release, depends_on: [G3], complexity: 2}
+          - {id: G9, name: "skill-evaluator pass + record", area: skill, depends_on: [G7], complexity: 3}
+        expected_outcomes:
+          end_state: "E1 transcript: brief table with Source column, ≤5 questions, no probe.py before reply"
+          cases:
+            - {case: happy path, input: "E1 resume + 'find me roles that fit'", expected: "brief, asks mode/pay/sponsorship, no network"}
+            - {case: edge, input: "E4 'just go'", expected: "labelled defaults, proceeds"}
+            - {case: edge, input: "'remote only, US' given up front", expected: "Source=you; still asks pay + sponsorship"}
+            - {case: edge, input: "E9 chat-only marketer", expected: "gate works; no jargon"}
+            - {case: failure, input: "health check blocked", expected: "per-surface stop message only"}
+            - {case: failure, input: "profile with 'age'", expected: "validate exit 1"}
+            - {case: edge, input: "E7 cover letter", expected: "no search; out-of-scope reply"}
+      - id: impl-matching
+        name: "M3 — Matching"
+        branch: feature/matching
+        complexity: 7   # plan approval + QA sub-agent
+        tasks:
+          - {id: X1, name: "hard filters + removal counts", area: scripts, depends_on: [D10, G1], complexity: 6}
+          - {id: X2, name: "title prefilter (strong / borderline / near miss)", area: scripts, depends_on: [X1], complexity: 5}
+          - {id: X3, name: "display variant + pay-floor gate (structured only)", area: scripts, depends_on: [X1], complexity: 3}
+          - {id: X4, name: "fetch_jd.py (live check, trim_jd, budget 40)", area: scripts, depends_on: [D5, D6, D7], complexity: 5}
+          - {id: X5, name: "cite_check.py", area: scripts, depends_on: [X4], complexity: 3}
+          - {id: X6, name: "references/rubric.md", area: skill, depends_on: [], complexity: 3}
+          - {id: X7, name: "references/output-format.md", area: skill, depends_on: [], complexity: 2}
+          - {id: X8, name: "SKILL.md phases 4–8", area: skill, depends_on: [X1, X4, X5, X6, X7], complexity: 6}
+          - {id: X9, name: "test_invariants.py (no profile data in URLs; employer links only)", area: tests, depends_on: [X4], complexity: 2}
+          - {id: X10, name: "replay world day1 + E2/E3/E8", area: evals, depends_on: [X8], complexity: 4}
+          - {id: X11, name: "scripts/score_run.py (recall over variants)", area: scripts, depends_on: [], complexity: 3}
+          - {id: X12, name: "skill-evaluator pass + record", area: skill, depends_on: [X10], complexity: 3}
+        expected_outcomes:
+          end_state: "≤15 rows in chat; cite_check {\"ok\": true}"
+          cases:
+            - {case: happy path, input: "frontend persona, live 49 boards", expected: "≥12/18 GT in candidates; all employer links"}
+            - {case: edge, input: "E2 remote US", expected: "'Remote - Poland' removed; 'Americas' flagged"}
+            - {case: edge, input: "E3 needs sponsorship", expected: "refusals excluded/flagged with quote; silence labelled"}
+            - {case: edge, input: "E8 nurse", expected: "thin-coverage line; no padding"}
+            - {case: failure, input: "quote not in JD", expected: "cite_check exit 1; claim fixed or dropped"}
+            - {case: failure, input: "0 candidates", expected: "names the filter that removed the most"}
+      - id: impl-state-reruns
+        name: "M4 — State and reruns"
+        branch: feature/state-reruns
+        complexity: 5
+        tasks:
+          - {id: R1, name: "diff() new/changed/saved-open/closed; errored boards never close jobs", area: scripts, depends_on: [D9], complexity: 5}
+          - {id: R2, name: "diff/record/mark CLI", area: scripts, depends_on: [R1], complexity: 3}
+          - {id: R3, name: "filter state tags + only-new on reruns", area: scripts, depends_on: [R1, X1], complexity: 3}
+          - {id: R4, name: "companies.py slug guessing + growth-loop row", area: scripts, depends_on: [D1, D13], complexity: 5}
+          - {id: R5, name: "probe always includes user companies", area: scripts, depends_on: [R4, D10], complexity: 1}
+          - {id: R6, name: "SKILL.md feedback + rerun + export + add-company", area: skill, depends_on: [R2, R4], complexity: 4}
+          - {id: R7, name: "replay world day2 + E5/E6", area: evals, depends_on: [R6], complexity: 3}
+          - {id: R8, name: "skill-evaluator pass + record", area: skill, depends_on: [R7], complexity: 3}
+        expected_outcomes:
+          end_state: "day-2 diff prints new [E], changed [B], closed [A]"
+          cases:
+            - {case: happy path, input: "E5 rerun", expected: "only new/changed + closed list; applied role not new"}
+            - {case: edge, input: "board errored on day 2", expected: "its jobs not closed"}
+            - {case: edge, input: "E6 'also check Linear and Figma'", expected: "found in seed, 0 requests; saved"}
+            - {case: failure, input: "unknown company 'Zzqx'", expected: "says so; offers manual slug; saves nothing"}
+
+  - id: integration
+    exit: "§11 acceptance criteria met or explicitly accepted"
+    milestones:
+      - id: int-evals
+        name: "M5 — Evals"
+        branch: feature/evals
+        complexity: 6
+        tasks:
+          - {id: V1, name: "personas + evals README", area: evals, depends_on: [], complexity: 2}
+          - {id: V2, name: "E1–E9 with assertions", area: evals, depends_on: [V1], complexity: 3}
+          - {id: V3, name: "relabel_ground_truth.py (snapshot + labelling sheet)", area: scripts, depends_on: [D1], complexity: 3}
+          - {id: V4, name: "human labelling → ground_truth/<date>.json", area: evals, depends_on: [V3], complexity: 2}
+          - {id: V5, name: "score_run.py loads jobscope _run.json", area: scripts, depends_on: [X11], complexity: 3}
+          - {id: V6, name: "scorecard job-scout vs jobscope", area: evals, depends_on: [V4, V5], complexity: 4}
+          - {id: V7, name: "skill-creator benchmark (skill vs plain agent)", area: evals, depends_on: [V2], complexity: 4}
+          - {id: V8, name: "fix loop (classify layer; escalate on recurrence)", area: skill, depends_on: [V6, V7], complexity: 5}
+          - {id: V9, name: "trigger eval", area: evals, depends_on: [], complexity: 2}
+          - {id: V10, name: "final skill-evaluator pass", area: skill, depends_on: [V8, V9], complexity: 3}
+        expected_outcomes:
+          end_state: "scorecard: JD shortlist ≥15/18 · top15 well above jobscope's 3/18 · links 100% employer · dups 0 · open 100%"
+          cases:
+            - {case: happy path, input: "V6 scorecard", expected: "meets §11 thresholds"}
+            - {case: edge, input: "GT role closed by eval day", expected: "dropped from denominator with a note"}
+            - {case: failure, input: "recall below 15", expected: "V8 loop; no PR until pass or accepted gap"}
+
+  - id: deployment
+    exit: "release zip built, every surface smoke-tested; going public is the maintainer's call"
+    milestones:
+      - id: deploy-launch
+        name: "M6 — Launch 0.1.0"
+        branch: feature/launch-0.1.0
+        complexity: 5
+        tasks:
+          - {id: L1, name: "root README (agent-skills section order)", area: docs, depends_on: [], complexity: 3}
+          - {id: L2, name: "skill README (ghostwriter shape)", area: docs, depends_on: [], complexity: 2}
+          - {id: L3, name: "PRIVACY.md", area: docs, depends_on: [], complexity: 2}
+          - {id: L4, name: "CONTRIBUTING.md + CI seed-rows job", area: ci, depends_on: [D12], complexity: 3}
+          - {id: L5, name: "NOTICE credits", area: docs, depends_on: [D13], complexity: 1}
+          - {id: L6, name: "build_release.py (zip; frontmatter rewrite if G8 requires)", area: scripts, depends_on: [G8], complexity: 3}
+          - {id: L7, name: "version 0.1.0 everywhere + CHANGELOG", area: repo, depends_on: [], complexity: 2}
+          - {id: L8, name: "install smoke tests on 4 surfaces", area: release, depends_on: [L6, L7], complexity: 3}
+          - {id: L9, name: "agent-skills external-entry branch (open after public)", area: release, depends_on: [L1], complexity: 2}
+          - {id: L10, name: "DEVELOPER_TODO — ask maintainer to go public + release", area: release, depends_on: [L8], complexity: 1}
+          - {id: L11, name: "skill-evaluator re-run if description changed", area: skill, depends_on: [L7], complexity: 2}
+        expected_outcomes:
+          end_state: "'dist/job-scout-0.1.0.zip (N files, X KB)'; compat 'version parity — all manifests at 0.1.0'"
+          cases:
+            - {case: happy path, input: "build zip, unzip, list", expected: "job-scout/SKILL.md at root; no evals"}
+            - {case: edge, input: "stray __pycache__", expected: "excluded from the zip"}
+            - {case: failure, input: "VERSION differs from CHANGELOG", expected: "compat check fails"}
+
+out_of_scope:
+  - LinkedIn, login-walled scraping, auto-apply, bulk messaging
+  - cover letters and drafting
+  - any server, hosted index or MCP
+  - Workday, Workable, iCIMS, Taleo, USAJOBS (v0)
+  - telemetry, recruiter features, alerts/scheduling
+  - job-connector data (discovery use is v0.1)
+  - making anything public without the maintainer's go-ahead

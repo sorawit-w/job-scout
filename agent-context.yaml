@@ -1,0 +1,65 @@
+# ----------------------------------------------------------------------
+# Project Context (schema-enforced)
+# ----------------------------------------------------------------------
+# Rules:
+# - Sections `project`, `runtime`, and `stack` must exist.
+# - These sections are primarily maintained by humans.
+# - AI agents may freely extend ONLY the `agentNotes` section, and may
+#   edit core sections only when explicitly instructed.
+# ----------------------------------------------------------------------
+
+version: 1.0.0
+lastUpdated: "2026-10-18"
+
+project:
+  name: "job-scout"
+  description: "Agent skill: resume → confirmed search brief → roles open today on employer job boards (Greenhouse, Ashby, Lever), linked straight to the employer, with fit reasons quoted from each job description."
+  type: "agent-skill"
+  visibility: private     # public at M6, by the maintainer only
+
+runtime:
+  primary: "python"
+  language: "python3"     # standard library only; floor 3.9 (macOS /usr/bin/python3)
+  target: "claude.ai code sandbox, Claude Code, Codex"
+
+stack:
+  frameworks: {}
+  tools:
+    python: "skills/job-scout/scripts/* (shipped), scripts/* (maintainer + CI only)"
+    tests: "unittest (stdlib), offline via recorded HTTP fixtures"
+  aiProviders: []
+
+entryPoints: ["skills/job-scout/SKILL.md"]
+directories:
+  source: skills/job-scout/
+  public: ""
+  distribution: dist/
+
+ai:
+  enabled: false
+  usage: []
+  notes: []
+  memoryPolicy:
+    logTo: .kerby/memory.log
+    maxEntries: 200
+  planThreshold: 4
+
+knowledge:
+  enabled: true
+
+preferences: {}
+status:
+  editableBy: [human, ai]
+  changePolicy: append-log
+  lastEditedBy: ai
+
+agentNotes:
+  commands:
+    build: "python3 -m compileall -q skills scripts tests"
+    lint: "python3 scripts/check-skill-compat.py"
+    test: "python3 -m unittest discover -s tests -t ."
+  constraints:
+    - "No third-party packages anywhere in skills/job-scout/ — it must run unmodified with no pip."
+    - "No tomllib, no match statements, no runtime X | Y unions (Python 3.9 floor)."
+    - "Never name a module after a stdlib package (e.g. net.py, not http.py)."
+  plan: "implementation-plan.yaml (phases → milestones → tasks)"
