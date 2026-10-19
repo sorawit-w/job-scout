@@ -209,8 +209,9 @@ def validate_profile(p):
     for key in _STR_LISTS + ("work_modes",):
         if key in p and not (isinstance(p[key], list) and all(isinstance(x, str) and x.strip() for x in p[key])):
             errors.append("%s must be a list of non-empty strings" % key)
-    if isinstance(p.get("target_roles"), list) and not p["target_roles"]:
-        errors.append("target_roles must not be empty")
+    for key in ("target_roles", "work_modes"):  # both are answers the confirmation gate must have
+        if isinstance(p.get(key), list) and not p[key]:
+            errors.append("%s must not be empty" % key)
     if isinstance(p.get("work_modes"), list):
         errors += ["work_modes: %r is not one of %s" % (m, "/".join(_WORK_MODES)) for m in p["work_modes"] if m not in _WORK_MODES]
     for key, allowed in _ENUMS.items():
@@ -218,7 +219,7 @@ def validate_profile(p):
             errors.append("%s must be one of %s" % (key, "/".join(allowed)))
     floor = p.get("base_pay_floor")
     if floor is not None:
-        if not (isinstance(floor, dict) and isinstance(floor.get("amount"), (int, float)) and floor["amount"] >= 0
+        if not (isinstance(floor, dict) and isinstance(floor.get("amount"), (int, float)) and not isinstance(floor["amount"], bool) and floor["amount"] >= 0
                 and isinstance(floor.get("currency", "USD"), str) and floor.get("interval", "year") in _INTERVALS
                 and set(floor) <= {"amount", "currency", "interval"}):
             errors.append("base_pay_floor must be null or {amount: number, currency: str, interval: %s}" % "/".join(_INTERVALS))

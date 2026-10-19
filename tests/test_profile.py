@@ -50,6 +50,13 @@ class ValidateTest(unittest.TestCase):
         self.assertTrue(state.validate_profile(good(result_count=500)))
         self.assertTrue(state.validate_profile("not a dict"))
 
+    def test_empty_work_modes_is_rejected(self):
+        self.assertTrue(any("work_modes" in e for e in state.validate_profile(good(work_modes=[]))))
+
+    def test_boolean_pay_amount_is_rejected(self):
+        for amount in (True, False):
+            self.assertTrue(state.validate_profile(good(base_pay_floor={"amount": amount, "currency": "USD", "interval": "year"})))
+
     def test_defaults_are_applied(self):
         p = state.with_profile_defaults(good())
         self.assertEqual(p["result_count"], 15)
