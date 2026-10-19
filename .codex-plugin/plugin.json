@@ -19,6 +19,7 @@
     "career",
     "skill"
   ],
+  "skills": "./skills/",
   "interface": {
     "displayName": "job-scout",
     "shortDescription": "Open roles that fit your resume, straight from employer job boards.",
