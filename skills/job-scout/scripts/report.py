@@ -22,6 +22,7 @@ the only record), no job-description text beyond the quotes the rubric already c
 """
 import argparse
 import base64
+import collections
 import hashlib
 import html
 import json
@@ -173,6 +174,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             base, rank=len(roles) + 1, url=_safe_url(job.get("url")), where=_where(job),
             pay=jfilter.pay_text(comp), pay_short=_pay_short(comp),
             pay_sort=pay_sort if isinstance(pay_sort, (int, float)) else None,
+            pay_cur=str(comp.get("currency") or "").upper(),
             since=str(job.get("first_published") or "")[:10], total=_fit(row),
             since_short=_short_date(str(job.get("first_published") or "")[:10], (run_id or "")[:4]),
             scores={s: scores.get(s) for s in SCORES}, gates={g: gates.get(g) or "unknown" for g in GATES},
@@ -180,6 +182,11 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             state=cand.get("state") if rerun and cand.get("state") in ("new", "changed") else None,  # all new on a first run
             flags=[f for f in (job["flags"] if isinstance(job.get("flags"), list) else cand.get("flags") or [])
                    if isinstance(f, str)]))  # an empty live list means the live check cleared them
+    curs = collections.Counter(r["pay_cur"] for r in roles if r["pay_sort"] is not None and r["pay_cur"])
+    main_cur = curs.most_common(1)[0][0] if curs else ""
+    for r in roles:  # no exchange rates offline: other currencies sort after the main one, like unknown pay
+        if r["pay_cur"] and r["pay_cur"] != main_cur:
+            r["pay_sort"] = None
     summary = files.get("filter") if isinstance(files.get("filter"), dict) else {}
     for nm in summary.get("near_misses") or []:
         if isinstance(nm, dict) and nm.get("key") not in used:
@@ -601,7 +608,7 @@ def render(view):
                 "".join(_row(r) for r in roles)))
     else:
         top = view["top_removed"]
-        if view["rerun"] and not top:
+        if view["rerun"] and not view["coverage"]["moved"]:  # no new or changed candidates, whatever else was removed
             msg = "Nothing new since last time."
         elif top:
             msg = "No roles matched your brief. Most jobs were removed by %s (%s of %s)." % (

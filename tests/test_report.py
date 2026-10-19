@@ -233,6 +233,25 @@ class ReportTest(unittest.TestCase):
         html = page(self.home)
         self.assertEqual((html.count('<td dir="auto">saved</td>'), html.count('<td dir="auto">applied</td>')), (1, 0))
 
+    def test_rerun_with_other_removals_is_still_nothing_new(self):
+        make_run(self.home, [job("gh:a:1", state_="seen")], rows=None, filter_summary={
+            "counts": {"input": 9, "removed": {"location": 6, "title": 2, "already_seen": 1}, "candidates": 0},
+            "near_misses": []})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {"gh:a:1": {"status": "seen", "title": "Old", "sig": ""}})
+        run([], self.home)
+        self.assertIn("Nothing new since last time.", page(self.home))
+
+    def test_other_currencies_sort_after_the_main_one(self):
+        usd = [job("gh:a:%d" % i, comp={"min": 150000 + i, "max": None, "currency": "USD", "interval": "year"})
+               for i in (1, 2)]
+        jpy = job("gh:b:9", comp={"min": 12000000, "max": None, "currency": "JPY", "interval": "year"})
+        make_run(self.home, usd + [jpy], [row("gh:a:1"), row("gh:a:2"), row("gh:b:9")])
+        run([], self.home)
+        html = page(self.home)
+        self.assertIn('data-pay="150001"', html)
+        self.assertIn('data-rank="3" data-fit="7" data-top="1" data-flags="0" data-pay=""', html)
+
     def test_empty_history_still_counts_as_a_rerun(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
