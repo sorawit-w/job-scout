@@ -4,14 +4,16 @@
 Usage (from the repo root):
   python3 scripts/build_release.py [--out dist]
 
-The zip is the skill folder (skills/job-scout) plus the repo's LICENSE and NOTICE, without
-evals/, __pycache__, *.pyc or .DS_Store. Its SKILL.md keeps only the standard frontmatter keys
-(CLAUDE_AI_KEYS), so claude.ai accepts the upload; the repo's SKILL.md is not changed. Files are
-written in sorted order with a fixed timestamp, so the same tree gives the same zip.
+The zip is the files git tracks in the skill folder (skills/job-scout) plus the repo's LICENSE
+and NOTICE, without evals/, __pycache__, *.pyc or .DS_Store; it needs git. Its SKILL.md keeps
+only the standard frontmatter keys (CLAUDE_AI_KEYS), so claude.ai accepts the upload; the repo's
+SKILL.md is not changed. Files are written in sorted order with a fixed timestamp, so the same
+tree gives the same zip. Build from a clean checkout: tracked files are read as they are on disk.
 Prints one line: dist/job-scout-<VERSION>.zip (N files, X KB).
 """
 import argparse
 import os
+import subprocess
 import sys
 import zipfile
 
@@ -40,14 +42,16 @@ def claude_ai_frontmatter(text):
 
 
 def files():
-    """(path on disk, name in the zip), sorted."""
+    """(path on disk, name in the zip), sorted: only files git tracks, so a local .env, backup or
+    other untracked file never ships."""
+    listed = subprocess.run(["git", "-C", ROOT, "ls-files", "-z", "--", "skills/job-scout"],
+                            check=True, stdout=subprocess.PIPE).stdout.decode("utf-8")
     out = []
-    for d, dirs, names in os.walk(SKILL):
-        dirs[:] = sorted(x for x in dirs if x not in SKIP_DIRS)
-        for n in sorted(names):
-            if not n.endswith(SKIP_FILES):
-                path = os.path.join(d, n)
-                out.append((path, "job-scout/" + os.path.relpath(path, SKILL).replace(os.sep, "/")))
+    for rel in filter(None, listed.split("\0")):
+        inside = rel[len("skills/job-scout/"):]
+        if set(inside.split("/")[:-1]) & SKIP_DIRS or inside.endswith(SKIP_FILES):
+            continue
+        out.append((os.path.join(ROOT, rel), "job-scout/" + inside))
     out += [(os.path.join(ROOT, n), "job-scout/" + n) for n in EXTRA]
     return sorted(out, key=lambda p: p[1])
 

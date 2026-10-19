@@ -88,8 +88,9 @@ The scripts use only the Python 3.9+ standard library: nothing to install.
   every quote, so made-up reasons fail the run.
 - **Board order by field.** Tech briefs check Greenhouse, Ashby and Lever first. Other fields
   check Workday and SmartRecruiters first, where hospitals and large employers post.
-- **Search words are the only thing sent.** Workday and USAJOBS are searched with your target
-  job titles. Nothing else from your resume or brief leaves your machine.
+- **Search words are the only part of your brief that is sent.** Workday and USAJOBS are searched
+  with your target job titles. Nothing else from your resume or brief leaves your machine.
+  (USAJOBS also needs your key and email, sent as request headers only to USAJOBS.)
 
 ## Install
 
@@ -149,7 +150,8 @@ Workday careers URL. If a field is thin, the skill says so instead of filling th
 
 Your resume, brief and history stay on your machine in `~/.job-scout/`. The only requests that
 leave are job-board list and job requests. For Workday and USAJOBS, those requests carry your
-target job titles. There is no telemetry. Details: [PRIVACY.md](PRIVACY.md).
+target job titles; USAJOBS requests also carry your key and email as headers, because its API
+requires them. There is no telemetry. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Cross-skill
 

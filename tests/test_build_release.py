@@ -29,6 +29,10 @@ class BuildTest(unittest.TestCase):
     def setUp(self):
         stray = os.path.join(SKILL, "scripts", "__pycache__")
         os.makedirs(stray, exist_ok=True)  # a stray cache must never ship
+        local = os.path.join(SKILL, "job-scout-test-untracked.env")  # nor an untracked local file
+        with open(local, "w", encoding="utf-8") as f:
+            f.write("SECRET=1\n")
+        self.addCleanup(os.remove, local)
         self.out = tempfile.mkdtemp()
         self.path = build_release.build(self.out)
         with zipfile.ZipFile(self.path) as z:
@@ -44,8 +48,8 @@ class BuildTest(unittest.TestCase):
                      "job-scout/references/rubric.md", "job-scout/LICENSE", "job-scout/NOTICE"):
             self.assertIn(need, self.names)
 
-    def test_no_evals_caches_or_os_files(self):
-        bad = [n for n in self.names if "/evals/" in n or "__pycache__" in n or n.endswith((".pyc", ".DS_Store"))]
+    def test_only_committed_files_no_evals_or_caches(self):
+        bad = [n for n in self.names if "/evals/" in n or "__pycache__" in n or n.endswith((".pyc", ".DS_Store", ".env"))]
         self.assertEqual(bad, [])
 
     def test_skill_md_has_claude_ai_frontmatter(self):
