@@ -10,8 +10,10 @@ Purpose:
 Usage (paths relative to the skill folder):
     python3 scripts/cite_check.py [--run latest] < results.json
 
-    results.json: {"rows": [{"key", "gates", "scores", "total",
+    results.json: {"rows": [{"key", "show", "gates", "scores", "total",
                              "why": [{"text", "quote"}], "risk": [{"text", "quote"}]}]}
+    Each row's key must have an open job description in jds.json, and a row with show: true
+    needs at least one why item; each failing row is reported once, with quote null.
     Stdout: {"ok": bool, "checked": n, "failed": [{"key", "quote", "why"}]}
     Exit codes: 0 all quotes verified · 1 any failure · 2 bad input JSON or no run.
 
@@ -32,6 +34,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import state  # noqa: E402
 
 UNKNOWN_LABELS = ("pay not listed", "sponsorship not stated", "location unclear")
+NO_JD = "no live job description for this key"
 MIN_QUOTE = 12
 _TRANS = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', " ": " ",
                         "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "―": "-"})
@@ -42,10 +45,15 @@ def norm(s):
     return re.sub(r"\s+", " ", s.translate(_TRANS)).strip().lower()
 
 
+def live(jd):
+    """True when jds.json has an open entry with a full description."""
+    return isinstance(jd, dict) and jd.get("status") == "open" and bool(jd.get("full"))
+
+
 def problem(item, jd):
     """Why this why/risk item fails, or None when it is verified."""
-    if not isinstance(jd, dict) or jd.get("status") != "open" or not jd.get("full"):
-        return "no live job description for this key"
+    if not live(jd):
+        return NO_JD
     if not isinstance(item, dict):
         return "item must be an object with text and quote"
     quote, text = item.get("quote"), item.get("text")
@@ -92,8 +100,14 @@ def main(argv=None):
     for row in rows:
         key = row.get("key")
         jd = jds.get(key) if isinstance(key, str) else None
-        for item in list(row.get("why") or []) + list(row.get("risk") or []):
-            checked += 1
+        items = list(row.get("why") or []) + list(row.get("risk") or [])
+        checked += len(items)
+        if not live(jd):  # one failure per row, even with no items to check
+            failed.append({"key": key, "quote": None, "why": NO_JD})
+            continue
+        if row.get("show") is True and not row.get("why"):
+            failed.append({"key": key, "quote": None, "why": "shown row has no quoted reason"})
+        for item in items:
             why = problem(item, jd)
             if why:
                 failed.append({"key": key, "quote": item.get("quote") if isinstance(item, dict) else None, "why": why})

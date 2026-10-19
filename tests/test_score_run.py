@@ -97,6 +97,12 @@ class StageTest(unittest.TestCase):
         self.assertIn("variants", rows[0])  # resolved to the full jobs.json row
         self.assertEqual(score_run.score(GT, run, "results")["recall"]["found"], 2)
 
+    def test_results_keeps_only_shown_rows(self):
+        run = make_run(jobs=[RAMP, FILLER, ASHBY_COLLAPSED], candidates=[RAMP],
+                       results={"rows": [{"key": RAMP["key"], "show": True}, {"key": FILLER["key"], "show": False},
+                                         {"key": ASHBY_COLLAPSED["key"]}]})
+        self.assertEqual(keys(score_run.stage_rows(run, "results")), [RAMP["key"], ASHBY_COLLAPSED["key"]])
+
     def test_missing_stage_file_raises(self):
         with self.assertRaises(SystemExit):
             score_run.stage_rows(make_run(jobs=[RAMP]), "shortlist")

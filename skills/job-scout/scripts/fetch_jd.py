@@ -3,14 +3,14 @@
 
 Purpose:
     For each chosen row of <run>/candidates.json, ask the employer's ATS whether the job is
-    still open (HANDOFF §9: never show a job as open without a live check this run, or a
-    board cache younger than the TTL — Ashby's fetch_job uses that cache). Open jobs get their
+    still open (HANDOFF §9: never show a job as open without a live check this run — Ashby's
+    fetch_job counts a board list fetched in the last 15 minutes as one). Open jobs get their
     full description and pay re-read from the ATS (Greenhouse pay exists only on the single-job
     endpoint) and a verbatim trimmed copy for the LLM to quote from.
 
 Usage (paths relative to the skill folder):
     python3 scripts/fetch_jd.py [--run latest] --top [N]        # first N rows (default 40, max 60)
-    python3 scripts/fetch_jd.py [--run latest] --keys k1,k2,...  # rows by key
+    python3 scripts/fetch_jd.py [--run latest] --keys k1,k2,...  # rows by key (keys past 60 are unverified)
 
     Writes <run>/jds.json (merged with any existing file):
       {key: {status: open|closed|unverified, full, trimmed, comp, checked_at, error}}
@@ -22,7 +22,8 @@ Usage (paths relative to the skill folder):
 What it does NOT do:
     * No judging or scoring — that is the LLM step in SKILL.md; cite_check.py verifies its quotes.
     * Never rewords description text: trim_jd only selects whole lines, so quotes stay checkable.
-    * Never treats a network error as open or closed — that row is "unverified".
+    * Never treats a network error as open or closed — that row is "unverified", as is a 200
+      response without a description or for a different job.
     * Never parses pay out of description text; comp comes only from ATS pay fields.
 """
 import argparse
@@ -107,10 +108,13 @@ def check(row, budget):
         return entry
     try:
         job = module.normalize(raw, row["slug"], row.get("company") or row["slug"])
-    except (KeyError, TypeError, ValueError) as e:
+    except (AttributeError, KeyError, TypeError, ValueError) as e:  # AttributeError: a list or string body
         entry["error"] = "bad job record: %s" % e
         return entry
     full = job.get("description_text")
+    if not full or str(job.get("job_id")) != str(row["job_id"]):  # a 200 with {} or an error object
+        entry["error"] = "bad job record: no description, or not the requested job"
+        return entry
     entry.update(status="open", full=full, trimmed=trim_jd(full), comp=job.get("comp"))
     return entry
 
@@ -146,6 +150,8 @@ def main(argv=None):
         wanted = list(dict.fromkeys(k.strip() for k in args.keys.split(",") if k.strip()))
         unverified += [{"key": k, "error": "unknown key: not in candidates.json"} for k in wanted if k not in by_key]
         selected = [by_key[k] for k in wanted if k in by_key]
+        unverified += [{"key": r["key"], "error": "not checked: over the %d-job limit" % MAX_JOBS}
+                       for r in selected[MAX_JOBS:]]
     else:
         selected = rows[:max(args.top, 0)]
     selected = selected[:MAX_JOBS]

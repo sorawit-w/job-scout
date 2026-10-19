@@ -52,7 +52,7 @@ PROFILE = {
     "home_base": SENTINEL + " Town, CA",
     "work_modes": ["remote", "hybrid"],
     "commute_cities": [SENTINEL + " City"],
-    "remote_scope": ["US", SENTINEL],
+    "remote_scope": ["US"],  # codes only (validate_profile), so it cannot carry free text
     "needs_sponsorship": "yes",
     "base_pay_floor": {"amount": 0, "currency": SENTINEL, "interval": "year"},
     "industries_prefer": [SENTINEL + " Health"],

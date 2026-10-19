@@ -172,6 +172,28 @@ class LiveCheckTest(unittest.TestCase):
         self.assertIn("down", out["unverified"][0]["error"])
         self.assertEqual(read_jds(home)[FIGMA["key"]]["status"], "unverified")
 
+    def test_empty_or_wrong_200_body_is_unverified(self):
+        other = {"id": 999, "title": "Other", "content": "&lt;p&gt;Some other job&lt;/p&gt;"}
+        for body in ({}, {"error": "not found"}, [], "oops", other):
+            home = make_home([FIGMA])
+            with mock.patch.object(adapters.greenhouse, "fetch_job", return_value=body):
+                code, out = run(["--top", "1"], home)
+            self.assertEqual(code, 0, body)
+            self.assertEqual((out["jobs"], out["closed"]), ([], []), body)
+            self.assertEqual(out["unverified"][0]["key"], FIGMA["key"], body)
+            self.assertTrue(out["unverified"][0]["error"], body)
+            self.assertEqual(read_jds(home)[FIGMA["key"]]["status"], "unverified", body)
+
+    def test_keys_over_the_limit_are_reported_not_dropped(self):
+        rows = [row("greenhouse", "x", str(i)) for i in range(62)]
+        home = make_home(rows)
+        with mock.patch.object(adapters.greenhouse, "fetch_job", return_value=None) as fetch:
+            code, out = run(["--keys", ",".join(r["key"] for r in rows)], home)
+        self.assertEqual(code, 0)
+        self.assertEqual(fetch.call_count, 60)
+        self.assertEqual(out["unverified"], [{"key": r["key"], "error": "not checked: over the 60-job limit"}
+                                             for r in rows[60:]])
+
     def test_top_is_clamped_to_the_ceiling(self):
         home = make_home([row("greenhouse", "x", str(i)) for i in range(100)])
         with mock.patch.object(adapters.greenhouse, "fetch_job", return_value=None) as fetch:

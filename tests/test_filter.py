@@ -33,17 +33,17 @@ _N = [0]
 
 
 def job(title="Senior Frontend Engineer", company="Acme", locations=("Remote - US",), remote=True,
-        scope=("US",), workplace="remote", comp=USD, date="2026-10-01", variants=None, key=None):
+        scope=("US",), workplace="remote", comp=USD, date="2026-10-01", variants=None, key=None, ats="ashby"):
     _N[0] += 1
-    j = {"key": key or "ashby:acme:%d" % _N[0], "job_id": str(_N[0]), "company": company, "ats": "ashby",
+    j = {"key": key or "%s:acme:%d" % (ats, _N[0]), "job_id": str(_N[0]), "company": company, "ats": ats,
          "slug": "acme", "title": title, "locations": list(locations), "countries": [],
          "remote": remote, "remote_scope": list(scope) if scope is not None else None,
          "workplace": workplace, "department": None, "first_published": date,
          "url": "https://jobs.ashbyhq.com/acme/%d" % _N[0], "comp": comp, "description_text": None,
          "fetched_at": "2026-10-18T00:00:00Z"}
     j["variants"] = variants if variants is not None else [
-        {k: j[k] for k in ("job_id", "key", "title", "url", "locations", "first_published", "countries",
-                           "remote", "remote_scope", "workplace", "comp")}]
+        {k: j[k] for k in ("job_id", "key", "ats", "slug", "title", "url", "locations", "first_published",
+                           "countries", "remote", "remote_scope", "workplace", "comp")}]
     return j
 
 
@@ -169,6 +169,29 @@ class RelocationTest(unittest.TestCase):
     def test_unparsed_location_is_not_relocatable(self):
         self.assertEqual(outcome(elsewhere("Somewhere", []), open_to_relocation=True)[0], "location")
 
+    def test_unknown_mode_elsewhere_kept_with_both_flags(self):
+        res, cand = outcome(elsewhere("San Francisco, CA", ["US"], workplace=None), open_to_relocation=True)
+        self.assertEqual(res, "strong")
+        self.assertEqual(cand["flags"][:2], ["work mode not stated", "relocation: onsite or hybrid in San Francisco, CA"])
+        self.assertEqual(outcome(elsewhere("San Francisco, CA", ["US"], workplace=None))[0], "location")
+        self.assertEqual(outcome(elsewhere("London", ["GB"], workplace=None), open_to_relocation=True)[0], "location")
+        self.assertEqual(outcome(elsewhere("San Francisco, CA", ["US"], workplace=None), open_to_relocation=True,
+                                 work_modes=["remote"])[0], "location")
+
+    def test_flag_names_a_real_place_not_the_word_hybrid(self):
+        j = elsewhere("Hybrid", ["US"])
+        j["locations"] = j["variants"][0]["locations"] = ["Hybrid", "Austin, TX"]
+        res, cand = outcome(j, open_to_relocation=True)
+        self.assertIn("relocation: hybrid in Austin, TX", cand["flags"])
+
+    def test_no_resolvable_country_means_no_relocation(self):
+        p = state.with_profile_defaults(profile(open_to_relocation=True, home_base=None, remote_scope=["EU"]))
+        self.assertIsNone(jfilter._relocation_countries(p))
+        self.assertEqual(outcome(elsewhere("London", ["GB"]), open_to_relocation=True, home_base=None,
+                                 remote_scope=[])[0], "location")
+        anywhere = state.with_profile_defaults(profile(open_to_relocation=True, remote_scope=["ANY"]))
+        self.assertEqual(jfilter._relocation_countries(anywhere), frozenset())
+
 
 class DisplayVariantTest(unittest.TestCase):
     def test_us_remote_variant_applied_with_its_pay(self):
@@ -247,6 +270,11 @@ class SeniorityTrackTest(unittest.TestCase):
                       "VP, UI Platform"):
             self.assertEqual(outcome(job(title))[0], "track", title)
 
+    def test_manager_word_in_a_target_role_is_not_a_track_miss(self):
+        pm = {"target_roles": ["Product Manager"], "title_synonyms": [], "title_keywords": [], "title_exclusions": []}
+        self.assertEqual(outcome(job("Senior Product Manager"), **pm)[0], "strong")
+        self.assertEqual(outcome(job("Engineering Manager, Frontend"))[0], "track")
+
     def test_manager_titles_kept_for_either_track(self):
         self.assertIn(outcome(job("Engineering Manager, Frontend"), track="either")[0], ("strong", "borderline"))
 
@@ -313,6 +341,13 @@ class PayTest(unittest.TestCase):
 
     def test_hide_no_pay_removes_missing_pay(self):
         self.assertEqual(outcome(job(comp=None), hide_no_pay=True)[0], "pay_floor")
+
+    def test_greenhouse_pay_is_checked_after_fetch_jd_not_at_list_time(self):
+        m, c = outcome(job(comp=None, ats="greenhouse"))
+        self.assertEqual(m, "strong")
+        self.assertNotIn("pay not listed", c["flags"])
+        self.assertEqual(outcome(job(comp=None, ats="greenhouse"), hide_no_pay=True)[0], "strong")
+        self.assertEqual(outcome(job(comp=self.comp(100000, 120000), ats="greenhouse"))[0], "pay_floor")
 
     def test_no_floor_keeps_low_pay(self):
         self.assertEqual(outcome(job(comp=self.comp(50000, 60000)), base_pay_floor=None)[0], "strong")

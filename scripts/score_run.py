@@ -9,7 +9,7 @@ Usage:
   jobs        every probed row (jobs.json)
   candidates  filter output, ranked (candidates.json)
   shortlist   candidates whose jds.json status is "open"
-  results     results.json rows in order, resolved to full rows via candidates.json / jobs.json
+  results     results.json rows shown to the user (show: true), in order, resolved to full rows via candidates.json / jobs.json
 
 Recall: a ground-truth role is found when any scored row, or any entry of a row's variants[],
 has the same ats + slug, the exact title and the same first-published date. A role whose
@@ -71,7 +71,8 @@ def stage_rows(run_dir, stage):
         return [r for r in cands if (jds.get(r.get("key")) or {}).get("status") == "open"]
     by_key = {r.get("key"): r for r in _rows(_load(run_dir, "jobs"))}
     by_key.update({r.get("key"): r for r in cands})
-    return [by_key.get(r.get("key"), r) for r in _rows(_require(run_dir, "results"))]
+    # results.json also holds excluded rows (show: false); rows without "show" predate it and count.
+    return [by_key.get(r.get("key"), r) for r in _rows(_require(run_dir, "results")) if r.get("show", True) is True]
 
 
 def _match_keys(rows):

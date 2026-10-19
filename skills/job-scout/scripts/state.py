@@ -30,6 +30,8 @@ import tempfile
 import time
 from pathlib import Path
 
+import normalize  # pure text helpers, no I/O; must never import state
+
 CACHE_TTL = 6 * 3600
 _ATS_RE = re.compile(r"^[a-z_]+$")
 _RUN_ID_RE = re.compile(r"^\d{8}T\d{6}Z(-\d+)?$")  # what new_run() creates; nothing else resolves
@@ -192,6 +194,7 @@ _ENUMS = {"track": ("ic", "manager", "either"), "needs_sponsorship": ("yes", "no
 _WORK_MODES = ("remote", "hybrid", "onsite")
 _SOURCES = ("resume", "inferred", "default", "you")
 _INTERVALS = ("year", "month", "week", "day", "hour")
+_CODE_RE = re.compile(r"^[A-Z]{2}$")
 _REQUIRED = ("schema", "target_roles", "work_modes", "needs_sponsorship", "base_pay_floor")
 PROFILE_DEFAULTS = {"track": "either", "home_base": None, "hide_no_pay": False, "open_to_relocation": False,
                     "recency_flag_days": 90, "result_count": 15, "sources": {}}
@@ -212,6 +215,10 @@ def validate_profile(p):
     for key in ("target_roles", "work_modes"):  # both are answers the confirmation gate must have
         if isinstance(p.get(key), list) and not p[key]:
             errors.append("%s must not be empty" % key)
+    if isinstance(p.get("remote_scope"), list):  # filter.py compares these to ISO codes, not names
+        errors += ['remote_scope: %r is not a code — use two-letter country codes like "US" or "GB", or a region '
+                   'like %s' % (c, "/".join(normalize.REGION_CODES))
+                   for c in p["remote_scope"] if isinstance(c, str) and not (_CODE_RE.match(c) or c in normalize.REGION_CODES)]
     if isinstance(p.get("work_modes"), list):
         errors += ["work_modes: %r is not one of %s" % (m, "/".join(_WORK_MODES)) for m in p["work_modes"] if m not in _WORK_MODES]
     for key, allowed in _ENUMS.items():

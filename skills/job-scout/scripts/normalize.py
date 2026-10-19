@@ -283,7 +283,7 @@ def company_norm(name):
     return " ".join(words)
 
 
-VARIANT_KEYS = ("job_id", "key", "title", "url", "locations", "first_published",
+VARIANT_KEYS = ("job_id", "key", "ats", "slug", "title", "url", "locations", "first_published",
                 "countries", "remote", "remote_scope", "workplace", "comp")
 
 

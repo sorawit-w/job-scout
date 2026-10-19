@@ -86,6 +86,22 @@ class CiteCheckTest(unittest.TestCase):
                          "no live job description")
         self.assertFails(results(risk=[("pay not listed", None)], key="gh:a:9"), "no live job description")
 
+    def test_row_without_a_live_jd_fails_once_even_with_no_items(self):
+        code, out = run(results(key="gh:a:2"))
+        self.assertEqual(code, 1)
+        self.assertEqual(out["failed"], [{"key": "gh:a:2", "quote": None, "why": "no live job description for this key"}])
+        code, out = run(results(why=[("x", "years building React applications"), ("y", "another made up quote")],
+                                key="gh:a:9"))
+        self.assertEqual(out["failed"], [{"key": "gh:a:9", "quote": None, "why": "no live job description for this key"}])
+        self.assertEqual(out["checked"], 2)
+
+    def test_shown_row_needs_a_quoted_reason(self):
+        payload = results(risk=[("pay not listed", None)])
+        payload["rows"][0]["show"] = True
+        self.assertFails(payload, "shown row has no quoted reason")
+        payload["rows"][0]["show"] = False
+        self.assertEqual(run(payload)[0], 0)
+
     def test_failure_lists_key_and_quote_and_counts_all(self):
         out = self.assertFails(results(why=[("ok", "years building React applications"), ("bad", "made up text here")]),
                                "not found")

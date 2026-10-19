@@ -14,8 +14,9 @@ Exit codes: 0 ok · 2 no profile, no run, no jobs.json, or bad arguments.
 
 Rules, in order (the first rule a job fails is its removal reason): company exclude ->
 display-variant pick -> work mode / location / remote scope (open_to_relocation keeps a wanted-mode
-job elsewhere in the home or remote-scope countries, flagged) -> seniority -> track -> title
-exclusions -> title prefilter (strong / borderline) -> pay floor (structured pay only).
+or unknown-mode job elsewhere in the home or remote-scope countries, flagged) -> seniority -> track
+-> title exclusions -> title prefilter (strong / borderline) -> pay floor (structured pay only;
+Greenhouse lists no pay, so its pay is checked after fetch_jd).
 Old postings are flagged ("open over N days"), never removed.
 
 What it does NOT do:
@@ -102,20 +103,25 @@ def _place_check(job, p, ctx):
             return None, [], "local"
         return remote_fail or "work_mode", [], None  # in a commute city, but not in a wanted mode
     wp, allowed = job.get("workplace"), ctx["relocate"]
-    if allowed is not None and wp in ("hybrid", "onsite") and wp in modes and job.get("countries") \
-            and (not allowed or allowed & set(job["countries"])):
-        return None, [RELOCATE_FLAG % (wp, (job.get("locations") or ["?"])[0])], "local"
+    if allowed is not None and job.get("countries") and (not allowed or allowed & set(job["countries"])):
+        locs = job.get("locations") or ["?"]
+        where = next((loc for loc in locs if normalize.place_codes(loc)), locs[0])  # not "Hybrid"
+        if wp is None and ("hybrid" in modes or "onsite" in modes):
+            return None, [MODE_NOT_STATED, RELOCATE_FLAG % ("onsite or hybrid", where)], "local"
+        if wp in ("hybrid", "onsite") and wp in modes:
+            return None, [RELOCATE_FLAG % (wp, where)], "local"
     return remote_fail or "location", [], None
 
 
 def _relocation_countries(p):
-    """None when not relocating; else the countries they would move within (empty set = anywhere)."""
+    """None when not relocating or no country resolves; else the countries they would move within
+    (empty set = anywhere, only for "ANY" in remote_scope)."""
     if not p["open_to_relocation"]:
         return None
     if "ANY" in p["remote_scope"]:
         return frozenset()
     home = normalize.place_codes(p.get("home_base") or "")
-    return frozenset(c for c in set(home) | set(p["remote_scope"]) if c not in normalize.REGION_CODES)
+    return frozenset(c for c in set(home) | set(p["remote_scope"]) if c not in normalize.REGION_CODES) or None
 
 
 def _pick_variant(job, p, ctx):
@@ -164,10 +170,12 @@ def title_match(ws, p):
     return "borderline" if distinct & set(ws) else None
 
 
-def _pay_check(comp, p):
+def _pay_check(comp, p, ats=None):
     """(removed?, flags, near_miss?) against base_pay_floor; only structured pay is compared."""
     floor = p.get("base_pay_floor")
     if not (isinstance(comp, dict) and (comp.get("min") is not None or comp.get("max") is not None)):
+        if ats == "greenhouse":  # Greenhouse pay is only on the single-job endpoint; checked after fetch_jd
+            return False, [], False
         if p.get("hide_no_pay"):
             return True, [], False
         return False, (["pay not listed"] if floor else []), False
@@ -230,7 +238,7 @@ def _judge(job, p, ctx):
         return reason, row, near
     if ctx["senior_only"] and _too_junior(title, ws):
         return "seniority", row, None
-    if p["track"] == "ic" and any(has_phrase(ws, x) for x in _MANAGER):
+    if p["track"] == "ic" and any(has_phrase(ws, x) for x in ctx["manager"]):
         return "track", row, None
     match = title_match(ws, p)
     if excluded:
@@ -240,7 +248,7 @@ def _judge(job, p, ctx):
         return "title_exclusion", row, ((rank, "title excluded: %s" % excluded) if match else None)
     if not match:
         return "title", row, None
-    removed, pay_flags, close = _pay_check(row.get("comp"), p)
+    removed, pay_flags, close = _pay_check(row.get("comp"), p, row.get("ats"))
     if removed:
         return "pay_floor", row, ((1, "pay just under your floor") if close else None)
     flags = flags + pay_flags
@@ -273,6 +281,9 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None):
            "cities": [c for c in p["commute_cities"] + [home_city] if c.strip()],
            "senior_only": _senior_only(p["seniority"]),
            "relocate": _relocation_countries(p),
+           # A "Product Manager" target keeps "manager" titles: only phrases not in their own roles count.
+           "manager": [x for x in _MANAGER
+                       if not any(has_phrase(words(r), x) for r in p["target_roles"] + p["title_synonyms"])],
            "today": today or datetime.date.today()}
     removed = dict.fromkeys(REASONS, 0)
     kept, near = [], []
