@@ -20,6 +20,9 @@ board list is a keyword search, never the whole board (workday, usajobs). Such a
   * never closes a saved role: a job missing from a search is unseen, not gone, so probe.py
     records the board under "partial_boards", never "live_boards", and does not cache it
     (the result depends on the terms).
+A module whose fetch_job record cannot express some fields its board list has may name them in
+`JOB_LACKS`; fetch_jd.py then keeps the candidate row's values for them (usajobs: remote).
+A non-search module that pages through its board list sets MAX_PAGES too (smartrecruiters).
 An opt-in source may also define `enabled()`; while it returns False probe.py makes no request
 to it and records "<name>: no key" once under "skipped".
 

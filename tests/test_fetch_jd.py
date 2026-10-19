@@ -339,6 +339,17 @@ class SearchSourceLiveCheckTest(unittest.TestCase):
         self.assertEqual(read_jds(home)[with_text["key"]]["full"], text)
         self.assertEqual(out["jobs"][0]["url"], "https://www.usajobs.gov/job/%s" % USAJOBS_OPEN_ID)
 
+    def test_usajobs_remote_search_result_stays_remote_after_the_live_check(self):
+        # The Historic JOA record has no remote field (only telework), so the search row's remote fields win.
+        remote = row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS", title="Equipment Specialist (Electronic)",
+                     remote=True, description_text="Duties\nMaintain equipment.")
+        home = make_home([remote])
+        save_profile(home, target_roles=["Equipment Specialist"], work_modes=["remote"], commute_cities=[])
+        with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
+            code, out = run(["--top", "1"], home, replay_dir=USAJOBS)
+        self.assertEqual((code, out["unverified"]), (0, []))
+        self.assertEqual((out["jobs"][0]["workplace"], out["jobs"][0]["remote_scope"]), ("remote", ["US"]))
+
     def test_usajobs_with_no_description_anywhere_is_unverified(self):
         home = make_home([row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS")])
         with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
