@@ -165,14 +165,15 @@ def _partial(module):
 
 
 def request_cap(boards, terms):
-    """One request per board, every page of every term for a search board, plus RETRY_ALLOWANCE."""
+    """Every page a board may read (MAX_PAGES, else one), every page of every term for a search
+    board, plus RETRY_ALLOWANCE."""
     total = RETRY_ALLOWANCE
     for ats, _, _ in boards:
         module = adapters.REGISTRY.get(ats)
         if module is not None and _partial(module):
             total += min(len(terms), module.MAX_TERMS) * module.MAX_PAGES or 1  # no terms: one blank search page
         else:
-            total += 1
+            total += getattr(module, "MAX_PAGES", 1)  # SmartRecruiters pages through up to MAX_PAGES
     return total
 
 

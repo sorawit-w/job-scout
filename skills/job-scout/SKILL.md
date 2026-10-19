@@ -219,7 +219,7 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
   Workday and SmartRecruiters first, so neither crowds the other out of the cap.
 - **Search words leave the machine.** Workday and USAJOBS are searched with the brief's target
   job titles; nothing else from the brief is sent anywhere.
-- **USAJOBS (US federal jobs) is opt-in.** If `boards.skipped` says `usajobs: no key` and the
+- **USAJOBS (US federal jobs) is opt-in.** If probe.py's `skipped` says `usajobs: no key` and the
   user's field includes government work, say once: "Federal jobs need your own free USAJOBS
   key: request one at https://developer.usajobs.gov/apirequest/, then set
   JOB_SCOUT_USAJOBS_KEY and JOB_SCOUT_USAJOBS_EMAIL in your environment." Never ask the user to

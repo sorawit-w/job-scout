@@ -289,6 +289,12 @@ class PartialBoardTest(unittest.TestCase):
         self.assertEqual(probe.request_cap(boards, ["a"]), 1 + wd.MAX_PAGES + probe.RETRY_ALLOWANCE)
         self.assertEqual(probe.request_cap(boards, []), 2 + probe.RETRY_ALLOWANCE)
 
+    def test_request_cap_counts_every_smartrecruiters_page(self):
+        import adapters
+        sr = adapters.REGISTRY["smartrecruiters"]
+        boards = [("smartrecruiters", "a", "A"), ("smartrecruiters", "b", "B")]
+        self.assertEqual(probe.request_cap(boards, []), 2 * sr.MAX_PAGES + probe.RETRY_ALLOWANCE)
+
     def test_usajobs_without_a_key_is_skipped_once_with_no_request(self):
         home = save_profile(tempfile.mkdtemp())
         code, out = run(["--boards", "usajobs:all,greenhouse:airtable"], home=home)
