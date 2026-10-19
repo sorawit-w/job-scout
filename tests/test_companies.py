@@ -349,3 +349,10 @@ class ListRemoveTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BudgetSizeTest(unittest.TestCase):
+    def test_every_smartrecruiters_guess_may_read_all_its_pages(self):
+        sr = companies.ADAPTERS["smartrecruiters"]
+        per_name = companies.MAX_TRIES + 2 * (sr.MAX_PAGES - 1)  # two guesses, each up to MAX_PAGES requests
+        self.assertEqual(companies.budget_for(5).cap, 5 * per_name + companies.RETRY_ALLOWANCE)

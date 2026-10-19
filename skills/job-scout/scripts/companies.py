@@ -288,7 +288,10 @@ def find_one(name, seed, seed_keys, budget, refresh, stats, board=None):
 
 
 def budget_for(n_names):
-    return net.Budget(n_names * MAX_TRIES + RETRY_ALLOWANCE)
+    """MAX_TRIES per name, plus the extra pages each SmartRecruiters guess may read, plus retries."""
+    sr_pages = getattr(ADAPTERS["smartrecruiters"], "MAX_PAGES", 1)
+    per_name = MAX_TRIES + len(sr_guesses("A B")) * (sr_pages - 1)
+    return net.Budget(n_names * per_name + RETRY_ALLOWANCE)
 
 
 def add(names, refresh=False, board=None):
