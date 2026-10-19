@@ -121,8 +121,8 @@
     {
       "id": "E9",
       "name": "chat-only, non-developer user",
-      "prompt": "I'm a marketing manager in Austin, what's out there?",
-      "expected_output": "With no resume, the brief is built from the chat (target roles inferred from 'marketing manager', home base Austin from the user). The gate still asks work mode, pay floor and sponsorship. No jargon such as ATS, slug, JSON or API in the questions or brief.",
+      "prompt": "I'm a marketing manager in Austin, what's out there? About 7 years in B2B demand gen at software companies. I run email programs, webinars and paid campaigns, mostly in HubSpot and Salesforce, and I report pipeline numbers to sales every week.\n\n[Eval setup — not part of the user's message: the text above is everything the user gives; no resume or file is attached. It is the message in evals/files/persona-marketer-chat.md.]",
+      "expected_output": "With no resume, the brief is built from the chat (target roles inferred from 'marketing manager' and B2B demand gen, home base Austin from the user). The gate still asks work mode, pay floor and sponsorship. No jargon such as ATS, slug, JSON or API in the questions or brief.",
       "files": [],
       "assertions": [
         "Builds a brief from the chat message alone; home base Austin has Source you",
@@ -130,6 +130,36 @@
         "Does not run scripts/probe.py before the user replies",
         "Uses no jargon (ATS, slug, JSON, API) in the questions or the brief",
         "Mentions honestly that coverage is best for tech and startup employers, if relevant to marketing roles outside tech"
+      ]
+    },
+    {
+      "id": "E10",
+      "name": "data analyst, remote US — gate asks pay and sponsorship, analytics not data engineering",
+      "prompt": "Here's my resume (attached). I'm looking for remote roles that are open to people in the US. What fits?",
+      "expected_output": "A search brief table built from the resume: target roles and synonyms are analytics roles (for example Senior Data Analyst, Product Analyst, Analytics Lead), not data engineering. Home base Seattle comes from the resume; work mode remote and remote scope US come from the user and are not asked again. The questions ask for the base pay floor and visa sponsorship. No job-board request is made before the user answers.",
+      "files": ["evals/files/persona-data-analyst.md"],
+      "assertions": [
+        "Shows a search brief table with a Source column; work mode is remote with remote scope US, Source you, and home base is Seattle, Source resume",
+        "Asks for the base pay floor and visa sponsorship, at most about 5 questions in one message, and does not ask work mode again",
+        "Target roles and title synonyms are analytics titles (Data Analyst, Product Analyst, Analytics or similar); none is Data Engineer or another pipeline or infrastructure engineering title",
+        "Does not run scripts/probe.py (search or --health) before the user replies",
+        "Marks the current employer (Tidewell) as an inferred exclusion to confirm",
+        "Does not ask about or infer age, gender, race, nationality, religion, or family status"
+      ]
+    },
+    {
+      "id": "E11",
+      "name": "product manager on the IC track — Product Manager titles kept, not treated as manager track",
+      "prompt": "Here's my resume (attached). I want to stay an individual contributor, not move into people management. Find me roles that fit.",
+      "expected_output": "A search brief table built from the resume: target roles keep 'Product Manager' titles (for example Senior Product Manager), and the track is individual contributor from the user. The brief never treats 'Product Manager' as the manager track and never puts 'Product Manager' or 'Manager' in the title exclusions; if it excludes people-manager titles, it names ones like Director or Head of Product. The questions ask for work mode, base pay floor and visa sponsorship. No job-board request is made before the user answers.",
+      "files": ["evals/files/persona-pm.md"],
+      "assertions": [
+        "Target roles in the brief include 'Product Manager' titles (e.g. Senior Product Manager), Source resume",
+        "The seniority / track row says individual contributor, and nothing in the brief calls Product Manager roles the manager track or people management",
+        "Title exclusions do not contain 'Product Manager' or a bare 'Manager'; any people-manager exclusion names titles like Director of Product, Head of Product or VP Product",
+        "Asks for work mode, base pay floor, and visa sponsorship, at most about 5 questions in one message",
+        "Does not run scripts/probe.py (search or --health) before the user replies",
+        "Home base is Austin, Source resume, and the current employer (Ledgerline) is an inferred exclusion to confirm"
       ]
     }
   ]
