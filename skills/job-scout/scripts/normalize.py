@@ -194,11 +194,15 @@ def classify(locations, remote_flag=None, workplace_hint=None):
     hint = _mode(workplace_hint)
     remote_locs = [loc for loc in locs if _REMOTE_RE.search(loc)]
 
+    # A location saying "Remote" or an explicit mode wins over the bare flag: Ashby sets
+    # isRemote=True on every Hybrid job, so the flag alone only means "not onsite".
     remote = None
-    if remote_flag is True or remote_locs or hint == "remote":
+    if remote_locs or hint == "remote":
         remote = True
-    elif remote_flag is False or hint == "onsite":
+    elif hint in ("hybrid", "onsite"):
         remote = False
+    elif remote_flag is not None:
+        remote = bool(remote_flag)
 
     scope = None
     if remote:
