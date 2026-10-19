@@ -1,0 +1,47 @@
+name: seed-check
+
+# Weekly: re-check every board in companies.csv and open a PR with the changes.
+# Never pushes to main. If more than 10% of boards error, seed_check.py exits 1
+# and no PR is opened (a bad network day must not wipe the seed).
+on:
+  schedule:
+    - cron: "17 6 * * 1"   # Mondays 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: seed-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: check every board
+        run: python scripts/seed_check.py
+      - name: open a PR if anything changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- skills/job-scout/data/companies.csv; then
+            echo "companies.csv unchanged"; exit 0
+          fi
+          stamp="$(date -u +%Y-%m-%d-%H%M)"
+          branch="chore/seed-check-$stamp"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add skills/job-scout/data/companies.csv
+          git commit -m "chore: weekly seed check $stamp"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "chore: weekly seed check $stamp" \
+            --body "Automated run of \`scripts/seed_check.py\`. Before merging, review boards that turned dead or unverified, and any \"possible aggregator\" lines in the workflow log (candidates for \`skills/job-scout/data/denylist.txt\`)."
