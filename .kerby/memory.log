@@ -53,3 +53,9 @@ Notes: live smoke (49 boards, frontend persona, open_to_relocation true): 18/18 
   skill-evaluator: 44/46 first pass (T1.results unclear → rubric layer, assertion ignored the allowed null-quote labels; T3.coverage unclear → skill-text layer, "coverage first" ambiguous → output-format §1 fixed) → T3 re-run on the final text, T9 added for the remote_scope codes rule.
   skill-evaluator: clean (46/46) at 317408e — 2026-10-19
 Observations: two executor runs were stopped by the API safety filter (reasoning_extraction false positive); shorter briefs with a "Summary" section passed. Executors flagged that the description already promises rerun memory (M4).
+
+Task: M3 — Codex review fixes on the matching PR
+Action: remote_scope ANY/AMER honoured on the brief's side; fetch_jd shows live job fields and re-runs the brief's hard filters (a job the live data rules out becomes unverified "changed since the search"); rubric exclusions gate for industries_exclude and dealbreakers. New evaluator test T10 (excluded industry quoted from the description; unstated dealbreaker never assumed).
+Commit: 30ebf1c..df0dff4 (branch feature/matching)
+Status: DONE
+Notes: skill-evaluator: clean (50/50) at df0dff4 — 2026-10-19 (T1–T9 as recorded above; T10 4/4 on the final rubric text)
