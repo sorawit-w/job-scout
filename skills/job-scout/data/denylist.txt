@@ -1,0 +1,5 @@
+# Boards that must never be treated as employers.
+# These are aggregators that host other employers' reposts on an ATS
+# (e.g. lever:jobgether held ~3,600 reposts of unnamed employers).
+# One `ats:slug` per line; `#` starts a comment. Read by scripts/seed_import.py.
+lever:jobgether
