@@ -1,4 +1,5 @@
 import unittest
+import normalize
 
 from normalize import classify, place_codes, split_locations
 
@@ -183,6 +184,13 @@ class ClassifyTest(unittest.TestCase):
         self.assertEqual(r["countries"], [])
         self.assertIsNone(r["remote"])
 
+
+class QaFixesLocationTest(unittest.TestCase):
+    def test_explicit_remote_false_is_kept(self):
+        self.assertIs(normalize.classify("New York, NY", remote_flag=False)["remote"], False)
+
+    def test_remote_evidence_beats_remote_false(self):
+        self.assertIs(normalize.classify("Remote - US", remote_flag=False)["remote"], True)
 
 if __name__ == "__main__":
     unittest.main()

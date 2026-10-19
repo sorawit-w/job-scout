@@ -1,4 +1,5 @@
 import unittest
+import normalize
 
 from normalize import classify, collapse_variants, company_norm, html_to_text, title_stem
 
@@ -164,6 +165,32 @@ class CollapseVariantsTest(unittest.TestCase):
         self.assertNotIn("variants", jobs[0])
         self.assertEqual(jobs[0]["countries"], ["US"])
 
+
+class QaFixesCollapseTest(unittest.TestCase):
+    def _job(self, title, dept, date="2026-01-01", loc="New York, NY", remote=False, workplace="onsite", n=[0]):
+        n[0] += 1
+        return {"key": "g:x:%d" % n[0], "job_id": str(n[0]), "company": "Acme", "title": title, "department": dept,
+                "url": "u", "locations": [loc], "countries": ["US"], "remote": remote,
+                "remote_scope": ["US"] if remote else None, "workplace": workplace, "first_published": date, "comp": None}
+
+    def test_same_title_in_different_departments_stays_separate(self):
+        rows = normalize.collapse_variants([self._job("Software Engineer", "Payments"), self._job("Software Engineer", "Infra")])
+        self.assertEqual(len(rows), 2)
+
+    def test_same_department_regional_variants_still_merge(self):
+        rows = normalize.collapse_variants([self._job("Engineer - Americas", "Eng"), self._job("Engineer - EU", "Eng")])
+        self.assertEqual(len(rows), 1)
+
+    def test_merged_remote_row_reports_remote_workplace(self):
+        rows = normalize.collapse_variants([self._job("PM - US", "Product", date="2026-01-01"),
+                                            self._job("PM - Remote", "Product", date="2026-02-01", loc="Remote", remote=True, workplace="remote")])
+        self.assertEqual(len(rows), 1)
+        self.assertTrue(rows[0]["remote"])
+        self.assertEqual(rows[0]["workplace"], "remote")
+
+    def test_more_region_words_are_stripped_from_titles(self):
+        for suffix in ("LATAM", "ANZ", "DACH", "Nordics"):
+            self.assertEqual(normalize.title_stem("Design Engineer - " + suffix), "design engineer")
 
 if __name__ == "__main__":
     unittest.main()

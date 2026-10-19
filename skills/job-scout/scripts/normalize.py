@@ -35,6 +35,10 @@ _REGIONS = {
     "EMEA": "EMEA",
     "APAC": "APAC|Asia Pacific|Asia-Pacific",
     "ANY": "Anywhere|Worldwide|Global",
+    "LATAM": "LATAM|Latin America",
+    "ANZ": "ANZ",
+    "DACH": "DACH",
+    "NORDICS": "Nordics",
 }
 _COUNTRIES = {
     "US": "United States|United States of America|USA|US|U.S.|U.S.A.",
@@ -194,7 +198,7 @@ def classify(locations, remote_flag=None, workplace_hint=None):
     remote = None
     if remote_flag is True or remote_locs or hint == "remote":
         remote = True
-    elif hint == "onsite":
+    elif remote_flag is False or hint == "onsite":
         remote = False
 
     scope = None
@@ -277,10 +281,12 @@ def company_norm(name):
 
 
 def collapse_variants(jobs):
-    """Merge postings with the same company and title stem into one role row with variants[]."""
+    """Merge postings with the same company, title stem and department into one role row with
+    variants[]. Department is part of the key: big boards post "Software Engineer" in many teams."""
     groups = {}
     for j in jobs:
-        groups.setdefault((company_norm(j.get("company")), title_stem(j.get("title"))), []).append(j)
+        dept = re.sub(r"\s+", " ", str(j.get("department") or "").strip().lower())
+        groups.setdefault((company_norm(j.get("company")), title_stem(j.get("title")), dept), []).append(j)
     rows = []
     for members in groups.values():
         # Earliest first; None dates last; sorted() is stable, so ties keep input order.
@@ -292,6 +298,8 @@ def collapse_variants(jobs):
         row["countries"] = sorted({c for m in members for c in (m.get("countries") or [])})
         row["remote"] = True if True in remotes else (False if all(r is False for r in remotes) else None)
         row["remote_scope"] = sorted({c for s in scopes for c in s}) if scopes else None
+        if row["remote"]:
+            row["workplace"] = "remote"  # some posting of this role can be done remotely
         row["variants"] = [{k: m.get(k) for k in ("job_id", "key", "title", "url", "locations", "first_published")}
                            for m in members]
         rows.append(row)
