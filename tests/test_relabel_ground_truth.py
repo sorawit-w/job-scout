@@ -137,6 +137,25 @@ class SheetTest(unittest.TestCase):
         self.assertEqual(pool["profile"], R.FRONTEND_PROFILE)
         self.assertEqual(pool["counts"]["pool"], 4)
 
+    def test_only_writes_a_blind_review_subset_and_leaves_the_sheet(self):
+        d, snap = make_snapshot()
+        run(["sheet", "--snapshot", snap, "--prev-gt", os.path.join(d, "gt.json")])
+        with open(os.path.join(snap, "sheet.csv"), encoding="utf-8") as f:
+            before, keys = f.read(), [r["key"] for r in csv.DictReader(open(os.path.join(snap, "sheet.csv")))][:2]
+        only = os.path.join(d, "only.json")
+        with open(only, "w", encoding="utf-8") as f:
+            json.dump(keys, f)
+        code, out, _ = run(["sheet", "--snapshot", snap, "--only", only])
+        self.assertEqual(code, 0)
+        with open(os.path.join(snap, "review.csv"), encoding="utf-8") as f:
+            self.assertEqual(sorted(r["key"] for r in csv.DictReader(f)), sorted(keys))
+        self.assertTrue(os.path.exists(os.path.join(snap, "review.html")))
+        with open(os.path.join(snap, "sheet.csv"), encoding="utf-8") as f:
+            self.assertEqual(f.read(), before)
+        with open(only, "w", encoding="utf-8") as f:
+            json.dump(["greenhouse:nope:1"], f)
+        self.assertEqual(run(["sheet", "--snapshot", snap, "--only", only])[0], 1)
+
     def test_shuffle_is_deterministic(self):
         jobs = [{"key": "ashby:s:%d" % i, "title": "T%d" % i, "url": "javascript:alert(1)"} for i in range(12)]
         keys = [j["key"] for j in jobs]

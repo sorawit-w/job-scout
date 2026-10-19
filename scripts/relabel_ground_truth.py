@@ -415,6 +415,17 @@ def cmd_sheet(args):
     snap_dir = os.path.abspath(args.snapshot or latest_snapshot())
     snap = os.path.basename(snap_dir.rstrip(os.sep))
     jobs = _read_json(os.path.join(snap_dir, "jobs.json"))
+    if args.only:  # a blind review subset (e.g. a first-pass labeller's picks); sheet.* and pool.json stay
+        keys, known = _read_json(args.only), {r["key"] for r in jobs}
+        bad = [k for k in keys if k not in known]
+        if bad:
+            print("unknown keys (not in snapshot %s): %s" % (snap, ", ".join(bad[:5])))
+            return 1
+        rows = sheet_rows(jobs, set(keys), args.seed)
+        write_csv(os.path.join(snap_dir, "review.csv"), rows)
+        write_html(os.path.join(snap_dir, "review.html"), rows, snap)
+        print("review %d rows -> %s/review.html" % (len(rows), snap_dir))
+        return 0
     prev = _read_json(args.prev_gt) if args.prev_gt and os.path.exists(args.prev_gt) else None
     js = _read_json(args.jobscope) if args.jobscope else None
     pool, by_source, notes = build_pool(jobs, prev, js)
@@ -502,6 +513,7 @@ def main(argv=None):
     s.add_argument("--snapshot")
     s.add_argument("--jobscope")
     s.add_argument("--seed", type=int, default=1)
+    s.add_argument("--only", help="JSON list of keys: write review.csv/html for just these rows")
     s.add_argument("--prev-gt", default=PREV_GT, help=argparse.SUPPRESS)
     s = sub.add_parser("import")
     s.add_argument("labels")
