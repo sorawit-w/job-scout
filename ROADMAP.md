@@ -4,8 +4,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 1: v0 (M1–M6)
 
-- [~] M4 — State and reruns: seen/diff, closed detection, add-a-company slug guessing
-- [ ] M5 — Evals: E1–E9, re-labelled ground truth, recall ≥15/18, beat jobscope's top-15
+- [~] M5 — Evals: E1–E9, re-labelled ground truth, recall ≥15/18, beat jobscope's top-15
 - [ ] M5b — More hiring tools: SmartRecruiters, Workday (with a verified company list), opt-in USAJOBS
 - [ ] M6 — Launch 0.1.0: README, PRIVACY, CONTRIBUTING, NOTICE, release zip, install smoke tests (going public is the maintainer's call)
 
@@ -23,6 +22,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ## Shipped
 
+- [x] M4 — State and reruns: seen/diff, closed detection, rerun view, add-a-company (2026-10-19)
 - [x] M3 — Matching: hard filters, title prefilter, live check, cite check, rubric, output format, relocation (2026-10-19)
 - [x] M2 — Confirmation gate: profile schema, DOCX text, SKILL.md phases 0–3, trigger fixtures, gate evals (2026-10-19)
 - [x] M1b — Data layer: net, normalize, Greenhouse/Ashby/Lever adapters, cache, probe, seed import + weekly seed check (2026-10-19)
