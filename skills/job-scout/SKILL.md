@@ -87,6 +87,13 @@ reply.
 Why: wrong parameters waste the request budget and anchor the ranking on the wrong things, and
 people trust results more when they have seen the assumptions behind them.
 
+**"Just go" never means guessing the three ask-only fields.** For work mode, pay floor and
+sponsorship, use the defaults that filter nothing out — all work modes (remote limited to the
+home-base country), `base_pay_floor: null`, `needs_sponsorship: "undisclosed"` — label each
+`default`, and list those three as optional follow-ups after the brief ("these three answers
+would sharpen the results"). A wrong guess here silently hides roles; a non-filtering default
+only costs some extra results.
+
 ### Show one compact table
 
 ```
