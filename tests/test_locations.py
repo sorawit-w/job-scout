@@ -220,5 +220,6 @@ class UsStatesTest(unittest.TestCase):
     def test_codes_after_a_comma_and_full_names(self):
         for loc, expected in (("Lincoln, NE, United States", {"NE"}), ("Sacramento, California", {"CA"}),
                               ("Davis Pavilion North - Pavilion D", set()), ("NE corner, Remote", set()),
-                              ("Toronto, ON", set()), ("", set())):
+                              ("Toronto, ON", set()), ("", set()),
+                              ("Washington, PA", {"PA"}), ("Washington, DC", {"DC"}), ("Washington", {"WA"})):
             self.assertEqual(us_states(loc), expected, loc)

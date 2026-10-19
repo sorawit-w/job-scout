@@ -117,6 +117,10 @@ class WorkModeLocationTest(unittest.TestCase):
         self.assertEqual(outcome(local(city="Burbank, California"))[0], "strong")
         self.assertEqual(outcome(local(city="Burbank Medical Pavilion"))[0], "strong")
 
+    def test_city_named_like_a_state_uses_the_explicit_code(self):
+        pa = local(city="Washington, PA")
+        self.assertEqual(outcome(pa, home_base="Washington, DC", commute_cities=["Washington"])[0], "location")
+
     def test_commute_city_written_with_its_state_allows_that_state(self):
         md = local(city="Bethesda, MD")
         self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda"])[0], "location")
