@@ -19,7 +19,7 @@ Usage:
 
 What it does NOT do:
     * No network access; adapters fetch, this module only stores.
-    * No profile.json or seen.json logic yet (arrives in M2 / M4, in this module).
+    * Profile: validate_profile() + the `profile` CLI (M2). seen.json logic arrives in M4.
     * Never caches errors: callers store only successful fetches.
 """
 import json
@@ -179,3 +179,106 @@ def prune_runs(keep=3):
 def now_iso(now=None):
     """UTC timestamp like 2026-10-18T09:30:00Z."""
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now))
+
+
+# --- profile (the confirmed search brief) -----------------------------------
+# Only these keys are allowed. Rejecting everything else is how protected attributes
+# (age, gender, nationality, ...) are kept out of the profile: there is no field for them.
+
+_STR_LISTS = ("target_roles", "title_synonyms", "title_keywords", "title_exclusions", "seniority",
+              "commute_cities", "remote_scope", "industries_prefer", "industries_exclude",
+              "companies_include", "companies_exclude", "must_haves", "dealbreakers")
+_ENUMS = {"track": ("ic", "manager", "either"), "needs_sponsorship": ("yes", "no", "undisclosed")}
+_WORK_MODES = ("remote", "hybrid", "onsite")
+_SOURCES = ("resume", "inferred", "default", "you")
+_INTERVALS = ("year", "month", "week", "day", "hour")
+_REQUIRED = ("schema", "target_roles", "work_modes", "needs_sponsorship", "base_pay_floor")
+PROFILE_DEFAULTS = {"track": "either", "home_base": None, "hide_no_pay": False, "recency_flag_days": 90,
+                    "result_count": 15, "sources": {}}
+PROFILE_KEYS = set(_STR_LISTS) | set(_ENUMS) | set(_REQUIRED) | set(PROFILE_DEFAULTS)
+
+
+def validate_profile(p):
+    """Return a list of error strings; empty means the profile is valid."""
+    if not isinstance(p, dict):
+        return ["profile must be a JSON object"]
+    errors = ["unknown field %r — the profile has no place for it" % k for k in sorted(set(p) - PROFILE_KEYS)]
+    errors += ["missing required field %r" % k for k in _REQUIRED if k not in p]
+    if p.get("schema", 1) != 1:
+        errors.append("schema must be 1")
+    for key in _STR_LISTS + ("work_modes",):
+        if key in p and not (isinstance(p[key], list) and all(isinstance(x, str) and x.strip() for x in p[key])):
+            errors.append("%s must be a list of non-empty strings" % key)
+    if isinstance(p.get("target_roles"), list) and not p["target_roles"]:
+        errors.append("target_roles must not be empty")
+    if isinstance(p.get("work_modes"), list):
+        errors += ["work_modes: %r is not one of %s" % (m, "/".join(_WORK_MODES)) for m in p["work_modes"] if m not in _WORK_MODES]
+    for key, allowed in _ENUMS.items():
+        if key in p and p[key] not in allowed:
+            errors.append("%s must be one of %s" % (key, "/".join(allowed)))
+    floor = p.get("base_pay_floor")
+    if floor is not None:
+        if not (isinstance(floor, dict) and isinstance(floor.get("amount"), (int, float)) and floor["amount"] >= 0
+                and isinstance(floor.get("currency", "USD"), str) and floor.get("interval", "year") in _INTERVALS
+                and set(floor) <= {"amount", "currency", "interval"}):
+            errors.append("base_pay_floor must be null or {amount: number, currency: str, interval: %s}" % "/".join(_INTERVALS))
+    if "home_base" in p and p["home_base"] is not None and not isinstance(p["home_base"], str):
+        errors.append("home_base must be a string or null")
+    if "hide_no_pay" in p and not isinstance(p["hide_no_pay"], bool):
+        errors.append("hide_no_pay must be true or false")
+    for key, lo, hi in (("result_count", 1, 50), ("recency_flag_days", 1, 3650)):
+        if key in p and not (isinstance(p[key], int) and not isinstance(p[key], bool) and lo <= p[key] <= hi):
+            errors.append("%s must be an integer from %d to %d" % (key, lo, hi))
+    sources = p.get("sources", {})
+    if not isinstance(sources, dict) or any(k not in PROFILE_KEYS or v not in _SOURCES for k, v in sources.items()):
+        errors.append("sources must map profile fields to one of %s" % "/".join(_SOURCES))
+    return errors
+
+
+def with_profile_defaults(p):
+    out = dict(PROFILE_DEFAULTS, sources={})
+    out.update({k: [] for k in _STR_LISTS})
+    out.update(p)
+    return out
+
+
+def profile_path():
+    return home() / "profile.json"
+
+
+def main(argv=None):
+    """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout)."""
+    import argparse
+    import sys
+    ap = argparse.ArgumentParser(prog="state.py")
+    sub = ap.add_subparsers(dest="area", required=True)
+    prof = sub.add_parser("profile")
+    prof.add_argument("action", choices=("validate", "save", "show"))
+    prof.add_argument("--stdin", action="store_true", help="read the profile JSON from stdin (save)")
+    args = ap.parse_args(argv)
+
+    if args.action == "show":
+        p = read_json(profile_path())
+        if p is None:
+            print(json.dumps({"error": "no profile saved yet"}))
+            return 1
+        print(json.dumps(with_profile_defaults(p), ensure_ascii=False, indent=1))
+        return 0
+    try:
+        p = json.loads(sys.stdin.read())
+    except ValueError as e:
+        print(json.dumps({"errors": ["invalid JSON: %s" % e]}))
+        return 1
+    errors = validate_profile(p)
+    if errors:
+        print(json.dumps({"errors": errors}, ensure_ascii=False))
+        return 1
+    if args.action == "save":
+        write_json_atomic(profile_path(), p)
+    print(json.dumps({"ok": True, "saved": args.action == "save"}))
+    return 0
+
+
+if __name__ == "__main__":
+    import sys
+    sys.exit(main())
