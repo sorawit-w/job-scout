@@ -7,7 +7,7 @@ today, links straight to the employer, and explains its fit with quotes from the
 - **Works in:** Claude Code, Codex, claude.ai (Pro/Max), and any agent that reads `SKILL.md`.
 - **Reads:** Greenhouse, Ashby, Lever, SmartRecruiters and Workday boards, plus USAJOBS with
   your own free key.
-- **Status:** Current release: `0.0.1` (pre-release). See [Status](#status).
+- **Status:** Current release: `0.1.0`. See [Status](#status).
 
 job-scout is not affiliated with any job board or employer.
 
@@ -153,8 +153,7 @@ target job titles. There is no telemetry. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Status
 
-Pre-release. The skill works end to end on all milestones in [`ROADMAP.md`](ROADMAP.md);
-the first public release is being prepared. Planned next: more hiring tools (iCIMS, Taleo,
+First release, `0.1.0`: every milestone in [`ROADMAP.md`](ROADMAP.md) is done. Planned next: more hiring tools (iCIMS, Taleo,
 Phenom), job connectors as a way to discover employers, and board order by distance from home.
 Spec: [`docs/HANDOFF.md`](docs/HANDOFF.md).
 
