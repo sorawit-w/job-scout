@@ -141,7 +141,7 @@
       "assertions": [
         "Shows a search brief table with a Source column; work mode is remote with remote scope US, Source you, and home base is Seattle, Source resume",
         "Asks for the base pay floor and visa sponsorship, at most about 5 questions in one message, and does not ask work mode again",
-        "Target roles and title synonyms are analytics titles (Data Analyst, Product Analyst, Analytics or similar); none is Data Engineer or another pipeline or infrastructure engineering title",
+        "Target roles and title synonyms are analytics titles (Data Analyst, Product Analyst, Analytics Engineer, Data Scientist (Analytics) or similar); none is Data Engineer or another pipeline or infrastructure engineering title (Analytics Engineer is allowed)",
         "Does not run scripts/probe.py (search or --health) before the user replies",
         "Marks the current employer (Tidewell) as an inferred exclusion to confirm",
         "Does not ask about or infer age, gender, race, nationality, religion, or family status"
