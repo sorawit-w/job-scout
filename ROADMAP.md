@@ -4,8 +4,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 1: v0 (M1–M6)
 
-- [~] M5 — Evals: E1–E9, re-labelled ground truth, recall ≥15/18, beat jobscope's top-15
-- [ ] M5b — More hiring tools: SmartRecruiters, Workday (with a verified company list), opt-in USAJOBS
+- [~] M5b — More hiring tools: SmartRecruiters, Workday (with a verified company list), opt-in USAJOBS
 - [ ] M6 — Launch 0.1.0: README, PRIVACY, CONTRIBUTING, NOTICE, release zip, install smoke tests (going public is the maintainer's call)
 
 ## Follow-ups
@@ -14,6 +13,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 - [ ] Location table gaps: cities missing from `normalize.py`'s table resolve to no country; "Lima, PE" reads PE as a Canadian province; "Porto Alegre" matches Porto (PT); "Stuttgart, DE" reads DE as Delaware
 - [ ] Region-to-country matching in filter.py: only "Americas" maps to countries today, so a DE or GB user's "Remote - Europe" role is removed by remote scope instead of kept with a flag
 - [ ] Workable adapter
+- [ ] Read up to 60 job descriptions when more than ~30 candidates are strong (M5 scorecard: generic titles miss the 40-pick cut)
+- [ ] Human re-label of the 2026-10-19 key (it is two-model consensus today)
 - [ ] CSV export with the full 11-column table
 - [ ] Sector tagging beyond the 49 eval boards
 - [ ] Job connectors (Indeed / Dice / ZipRecruiter) as an employer-discovery source only, resolved to employer links — worth doing once Workday ships (M5b), so most employers a connector finds have a board job-scout can read
@@ -22,6 +23,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ## Shipped
 
+- [x] M5 — Evals: E1–E11, consensus ground truth (Codex + Gemini), scorecard vs jobscope (top 15: 13/33 vs 2/33), filter fixes from the fix loop (2026-10-19)
 - [x] M4 — State and reruns: seen/diff, closed detection, rerun view, add-a-company (2026-10-19)
 - [x] M3 — Matching: hard filters, title prefilter, live check, cite check, rubric, output format, relocation (2026-10-19)
 - [x] M2 — Confirmation gate: profile schema, DOCX text, SKILL.md phases 0–3, trigger fixtures, gate evals (2026-10-19)

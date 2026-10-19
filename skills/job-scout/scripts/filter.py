@@ -55,12 +55,14 @@ SCOPE_NOT_STATED = "remote scope not stated"
 AMER_FLAG = "Americas — check US eligibility"
 MODE_NOT_STATED = "work mode not stated"
 RELOCATE_FLAG = "relocation: %s in %s"
+DESC_FLAG = "title is generic — matched on the description"
 LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED)
 
 _ALIASES = {"sr": "senior", "jr": "junior", "swe": "software engineer", "eng": "engineer"}
 _LEVEL_WORDS = {"senior", "staff", "lead", "principal"}  # ignored when matching a target role
 _GENERIC = {"engineer", "engineering", "software", "developer", "senior", "staff", "lead", "principal",
             "manager", "the", "and", "of", "for", "a", "an", "in", "at", "to", "with"}
+_WEAK = {"systems", "system", "platform", "product", "data", "infrastructure", "technical", "solutions"}  # too common to match alone
 _LEVELS = {"intern": 0, "internship": 0, "junior": 1, "entry": 1, "associate": 1, "mid": 2,
            "senior": 3, "staff": 4, "lead": 4, "principal": 5, "distinguished": 6}
 _JUNIOR = ("intern", "internship", "junior", "new grad", "new graduate", "entry level")
@@ -173,12 +175,28 @@ def title_match(ws, p):
     """'strong', 'borderline' or None for normalized title words ws."""
     for role in p["target_roles"] + p["title_synonyms"]:
         need = [w for w in words(role) if w not in _LEVEL_WORDS]
-        if need and all(w in ws for w in need):
+        # Adjacent words, either order for two-word roles ("Software Engineer, Frontend"), so
+        # "AV Engineer, Builds and Design" is not a design engineer.
+        if need and (has_phrase(ws, " ".join(need)) or (len(need) == 2 and has_phrase(ws, " ".join(need[::-1])))):
             return "strong"
     if any(has_phrase(ws, k) for k in p["title_keywords"]):
         return "borderline"
-    distinct = {w for role in p["target_roles"] for w in words(role)} - _GENERIC
+    distinct = {w for role in p["target_roles"] for w in words(role)} - _GENERIC - _WEAK
     return "borderline" if distinct & set(ws) else None
+
+
+def _description_match(ws, row, p):
+    """An engineering title that matched nothing ("Staff Software Engineer, Product") whose description
+    names at least three of the brief's title keywords. Keywords under 4 letters ("ui", "web") are too
+    common in descriptions to count; two keywords let in too many backend roles that mention React."""
+    return bool({"engineer", "developer"} & set(ws)) and _desc_hits(row, p) >= 3
+
+
+def _desc_hits(row, p):
+    """How many distinct title keywords (4+ letters) the description names — a relevance signal."""
+    text = " %s " % " ".join(words(row.get("description_text") or ""))
+    found = {t for t in (" ".join(words(k)) for k in p["title_keywords"] if len(k) >= 4) if " %s " % t in text}
+    return len({t for t in found if not any(t != o and t in o for o in found)})  # "design system(s)" counts once
 
 
 def _pay_check(comp, p, ats=None):
@@ -257,6 +275,8 @@ def _judge(job, p, ctx):
         # A borderline match ranks after scope misses: it is a weaker signal than a strong title.
         rank = 0 if match == "strong" else 3
         return "title_exclusion", row, ((rank, "title excluded: %s" % excluded) if match else None)
+    if not match and _description_match(ws, row, p):
+        match, flags = "borderline", flags + [DESC_FLAG]
     if not match:
         return "title", row, None
     removed, pay_flags, close = _pay_check(row.get("comp"), p, row.get("ats"))
@@ -270,10 +290,12 @@ def _judge(job, p, ctx):
     return None, row, None
 
 
-def _rank_key(row):
+def _rank_key(row, p):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
-    return (_STATE_TIER.get(row["state"], 2), row["match"] != "strong", any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]), newest is None, newest or 0)
+    return (_STATE_TIER.get(row["state"], 2), row["match"] != "strong",
+            any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]),
+            -_desc_hits(row, p), newest is None, newest or 0)
 
 
 def _where(row):
@@ -312,7 +334,7 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_a
                 near.append((miss[0], len(near), row, miss[1]))
         else:
             kept.append(row)
-    kept.sort(key=_rank_key)
+    kept.sort(key=lambda r: _rank_key(r, p))
     shown = kept[:limit]
     near.sort(key=lambda n: n[:2])
     summary = {

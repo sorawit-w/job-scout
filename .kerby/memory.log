@@ -75,3 +75,11 @@ Commit: 0c7b30e..fde6b92 (branch feature/state-reruns)
 Status: DONE
 Notes: skill-evaluator: clean (44/44) at fde6b92 — 2026-10-19 (as recorded above, with M4r replaced by its 5/5 re-run on the final text)
 Observations: open for M5 — the brief table has no Source label for a saved brief on a rerun (cosmetic).
+
+Task: M5 — evals (implementation-plan.yaml int-evals, V1–V10)
+Action: personas (data analyst, PM, chat-only marketer) and evals E10/E11 + evals README; relabel_ground_truth.py (live snapshot of the 49 boards, blind pooled sheet incl. jobscope's same-day run, --only review subset, import); ground truth 2026-10-19 by two-model consensus — Codex labelled all 433 pooled roles (two passes), Gemini 4 Argon (via agy) labelled the 178 review rows blind; 33 strong, 115 uncertain (maintainer chose model labels over human review). Scorecard: two live end-to-end runs of the skill — shortlist 26/33 both runs, top 15 13/15 in the strict key and 15/15 in the loose key; jobscope top 15 2/33. Fix loop (V8): weak words alone no longer match, strong titles need adjacent role words, generic engineering titles can match on ≥3 description keywords, candidates rank by description relevance (default list 27 → 30/33); sheet shows the US posting of region-split roles. Trigger eval: skill-creator run_eval could not detect triggers in this environment (0/33 even when the prompt names the skill) → recorded as not measured; stated-intent skill-selection proxy 11/11 in two orders. .gitleaks.toml allows job keys for the generic-api-key rule only.
+Files: scripts/relabel_ground_truth.py, skills/job-scout/scripts/filter.py, skills/job-scout/evals/{README.md,evals.json,files/persona-*.md,ground_truth/,results/}, tests/{test_relabel_ground_truth,test_filter}.py, .gitleaks.toml, ROADMAP.md
+Commit: 4be062a..HEAD (branch feature/evals)
+Status: DONE
+Notes: SKILL.md and references unchanged in M5 — skill-evaluator: clean (44/44) at fde6b92 still covers the exact text; E10 6/6, E11 6/6 (E10 needed one rubric-layer clarification).
+Observations: shortlist 79% vs the §11 ~83% bar on a larger key — follow-up: read up to 60 descriptions when many candidates are strong.
