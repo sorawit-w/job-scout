@@ -1,6 +1,6 @@
 """ATS adapter port: the one contract every job-board adapter implements.
 
-Each adapter module (greenhouse, ashby, lever) provides three functions:
+Each adapter module (greenhouse, ashby, lever, smartrecruiters) provides three functions:
 
     fetch_board(slug)                -> list of raw job dicts from the board's list endpoint
     normalize(raw, slug, company)    -> one normalized job dict (schema: references/ats-notes.md)
@@ -22,6 +22,6 @@ def missing(module):
     return [name for name in CONTRACT if not callable(getattr(module, name, None))]
 
 
-from adapters import ashby, greenhouse, lever  # noqa: E402  (after missing(): adapters import this package)
+from adapters import ashby, greenhouse, lever, smartrecruiters  # noqa: E402  (after missing(): adapters import this package)
 
-REGISTRY = {"greenhouse": greenhouse, "ashby": ashby, "lever": lever}
+REGISTRY = {"greenhouse": greenhouse, "ashby": ashby, "lever": lever, "smartrecruiters": smartrecruiters}

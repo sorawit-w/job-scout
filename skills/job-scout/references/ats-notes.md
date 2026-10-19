@@ -73,14 +73,24 @@ judgment step may *quote* pay from the description, with a citation.
 | Pay | `salaryRange: {min, max, currency, interval}` (e.g. `per-year-salary`) — rare: 3/159 postings across 3 boards (2026-10-19). Map `per-year-salary` → "year", `per-hour-wage` → "hour", else `null`. |
 | Aggregators | `lever:jobgether` hosts ~3,600 reposts of unnamed employers → `data/denylist.txt` |
 
-## SmartRecruiters — deferred to v0.1 (verdict 2026-10-19)
+## SmartRecruiters (verified 2026-10-19)
 
-`GET https://api.smartrecruiters.com/v1/companies/{id}/postings?limit=100&offset=N` works (200 for
-BoschGroup, ServiceNow; 0 results for "Visa"). Fields: `name`, `releasedDate`, structured
-`location{city, region, country(iso2 lowercase), remote, hybrid, fullLocation}`, `ref` (API URL).
-No description in the list (needs one request per posting) and results are paged, so an adapter
-costs more requests per board than the other three. corpHuntingMCP also lists SmartRecruiters
-tenants, so this is the natural first coverage expansion. Not in v0.
+| | |
+|---|---|
+| List | `GET https://api.smartrecruiters.com/v1/companies/{company}/postings?limit=100&offset=N` → `{offset, limit, totalFound, content:[…]}`, newest first. `limit` above 100 is silently clamped to 100. The adapter pages until `totalFound` or a short page, **capped at 5 pages (500 postings)**; probe.py lists a capped board under `errors` so it never closes saved roles. |
+| Single job | `GET …/companies/{company}/postings/{id}` → posting with `jobAd`, `compensation`, `postingUrl`, `active`; **404 when it does not exist** (checked with id `1`). A real closed posting was not observed; `active: false` is treated as closed too. An id from another company → **400**, which stays unverified. |
+| Unknown company | **200 with `totalFound: 0`** — never 404 (checked 2026-10-19), so seed_check marks it `unverified`, never `dead` |
+| Slug | case-insensitive (`endava` answers for `Endava`); the key keeps the slug as imported |
+| Title / URL | `name`; detail `postingUrl` (`https://jobs.smartrecruiters.com/{company}/{id}-{title-slug}`). The list has only `ref` (an API URL), so list-time `url` is built as `https://jobs.smartrecruiters.com/{company.identifier}/{id}` — that page answers 200 without the title part (checked 2026-10-19). `applyUrl` is the same page with `?oga=true`. |
+| Location | one structured `location{city, region, country (ISO-2 lowercase), fullLocation, remote, hybrid}` per posting; `fullLocation` has empty parts ("Staines, , United Kingdom") — dropped. **Use `country` first.** |
+| Remote / workplace | `location.remote` / `location.hybrid`. Both false on most postings, including some titled "remote" — so false means "not said" (`remote: null`), never onsite |
+| Date | `releasedDate` |
+| Department | `department.label` (often empty `{}`) |
+| Description | **detail only**: `jobAd.sections` → `companyDescription`, `jobDescription`, `qualifications`, `additionalInformation`, each `{title, text(html)}`; joined as "title + text" in that order. List items have none (`description_text: null`, like Greenhouse list pay) |
+| Pay | **detail only**: `compensation: {min, max, currency, period}` (`YEARLY` → "year", `HOURLY` → "hour", `MONTHLY`/`WEEKLY`/`DAILY` mapped the same way). Seen on 2 of 25 sampled companies (BryceTech, GalileoLearning), both US. |
+| Not available | no description or pay in the list; no workplace text beyond the two flags; no requisition close date |
+| Cost | one request per 100 postings per board, plus one per shortlisted job for `fetch_jd.py` |
+| Seed | 6,282 tenants from corpHuntingMCP `src/tenants/smartrecruiters_*.rs` at the pinned SHA |
 
 ## Politeness (all adapters)
 

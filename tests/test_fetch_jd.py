@@ -48,6 +48,8 @@ FIGMA = row("greenhouse", "figma", "5426468004", "Figma")
 VERCEL = row("greenhouse", "vercel", "1", "Vercel")
 AIRSLATE = row("lever", "airslate", "9a4add3b-1bbc-453d-94da-502113da3c53", "airSlate")
 AIRSLATE_GONE = row("lever", "airslate", "00000000-0000-0000-0000-000000000000", "airSlate")
+BRYCE = row("smartrecruiters", "BryceTech", "744000154771568", "BryceTech")
+BRYCE_GONE = row("smartrecruiters", "BryceTech", "1", "BryceTech")
 
 
 def make_home(rows, jds=None):
@@ -180,6 +182,19 @@ class LiveCheckTest(unittest.TestCase):
         self.assertEqual([j["key"] for j in out["jobs"]], [AIRSLATE["key"]])
         self.assertTrue(read_jds(home)[AIRSLATE["key"]]["full"])
         self.assertEqual([c["key"] for c in out["closed"]], [AIRSLATE_GONE["key"]])
+
+    def test_smartrecruiters_open_with_description_and_pay_and_closed(self):
+        home = make_home([BRYCE, BRYCE_GONE])
+        code, out = run(["--keys", "%s,%s" % (BRYCE["key"], BRYCE_GONE["key"])], home)
+        self.assertEqual(code, 0)
+        self.assertEqual([j["key"] for j in out["jobs"]], [BRYCE["key"]])
+        job = out["jobs"][0]
+        self.assertEqual(job["comp"]["min"], 130000)
+        self.assertTrue(job["url"].startswith("https://jobs.smartrecruiters.com/BryceTech/"))
+        self.assertIn("Qualifications", read_jds(home)[BRYCE["key"]]["full"])
+        self.assertTrue(job["jd"])
+        self.assertEqual([c["key"] for c in out["closed"]], [BRYCE_GONE["key"]])
+        self.assertEqual(out["requests"], 2)
 
     def test_ashby_from_a_fresh_cached_board(self):
         with open(os.path.join(FIXTURES, "e81a421f50a9d5e6.json"), encoding="utf-8") as f:

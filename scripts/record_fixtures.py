@@ -26,13 +26,16 @@ TRIM = 3
 GH = "https://boards-api.greenhouse.io/v1/boards/%s/jobs"
 ASHBY = "https://api.ashbyhq.com/posting-api/job-board/%s?includeCompensation=true"
 LEVER = "https://api.lever.co/v0/postings/%s?mode=json"
+SR = "https://api.smartrecruiters.com/v1/companies/%s/postings"
 # Single jobs the adapter tests read (ids were open on 2026-10-19; if one closes, pick a new
-# open id from the same board and update the test that names it).
+# open id from the same board and update the test that names it). SmartRecruiters /1 is a 404.
 SINGLE_JOBS = [
     "https://boards-api.greenhouse.io/v1/boards/airtable/jobs/8403107002?pay_transparency=true",
     "https://boards-api.greenhouse.io/v1/boards/figma/jobs/5426468004?pay_transparency=true",
     "https://api.lever.co/v0/postings/airslate/9a4add3b-1bbc-453d-94da-502113da3c53?mode=json",
     "https://api.lever.co/v0/postings/airslate/00000000-0000-0000-0000-000000000000?mode=json",
+    SR % "BryceTech" + "/744000154771568",
+    SR % "BryceTech" + "/1",
 ]
 
 
@@ -43,6 +46,7 @@ def urls():
             GH % "vercel" + "/1?pay_transparency=true"]
     out += [ASHBY % s for s in ("attention", "clerk", "raycast", "ramp", "job-scout-no-such-board")]
     out += [LEVER % s for s in ("airslate", "job-scout-no-such-board", "jobgether")]
+    out += [SR % s + "?limit=100&offset=0" for s in ("BryceTech", "GalileoLearning", "job-scout-no-such-board")]
     out += SINGLE_JOBS
     return out
 
@@ -57,8 +61,9 @@ def trim(path):
     body = json.loads(fx["body"])
     if isinstance(body, list) and len(body) > TRIM:
         body = body[:TRIM]
-    elif isinstance(body, dict) and isinstance(body.get("jobs"), list) and len(body["jobs"]) > TRIM:
-        body["jobs"] = body["jobs"][:TRIM]
+    elif isinstance(body, dict) and any(isinstance(body.get(k), list) and len(body[k]) > TRIM for k in ("jobs", "content")):
+        k = "jobs" if isinstance(body.get("jobs"), list) else "content"  # SmartRecruiters pages use "content"
+        body[k] = body[k][:TRIM]
     else:
         return
     fx["body"], fx["trimmed"] = json.dumps(body), True

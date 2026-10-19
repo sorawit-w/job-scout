@@ -150,6 +150,9 @@ def probe(boards, budget, refresh=False, denylist=frozenset()):
                     jobs.append(module.normalize(raw, slug, company))
                 except (KeyError, TypeError, ValueError) as e:
                     summary["errors"].append({"board": name, "error": "bad job record: %s" % e})
+            cap = getattr(module, "MAX_JOBS", None)  # paged adapters stop at a cap; older postings are unseen
+            if cap and len(raws) >= cap:  # an error entry keeps it out of probed_ok_boards: unseen != closed
+                summary["errors"].append({"board": name, "error": "list capped at %d jobs; not used to close roles" % cap})
         elif status == "empty":
             summary["empty"].append(name)
         elif status == "dead":

@@ -129,6 +129,31 @@ class QaFixesProbeTest(unittest.TestCase):
         with open(os.path.join(home, "runs", out["run"], "jobs.json"), encoding="utf-8") as f:
             self.assertTrue(json.load(f))
 
+    def test_smartrecruiters_row_is_selected_and_probed(self):
+        csv_path = os.path.join(tempfile.mkdtemp(), "companies.csv")
+        with open(csv_path, "w", encoding="utf-8") as f:
+            f.write("company,ats,slug,sector,status,jobs,us_share,remote_share,checked_at,source\n"
+                    "BryceTech,smartrecruiters,BryceTech,unknown,live,45,1.0,0.04,2026-10-19,corphunting\n"
+                    "Gone,smartrecruiters,gone,unknown,dead,,,,2026-10-19,corphunting\n")
+        code, out = run(["--companies", csv_path])
+        self.assertEqual(code, 0)
+        self.assertEqual((out["boards"]["selected"], out["boards"]["live"], out["jobs"]), (1, 1, 3))
+
+    def test_board_at_the_adapter_page_cap_cannot_close_roles(self):
+        import adapters
+        import state
+        sr = adapters.REGISTRY["smartrecruiters"]
+        raws = [{"id": str(i), "name": "Job %d" % i, "location": {"country": "us"}} for i in range(sr.MAX_JOBS)]
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": tempfile.mkdtemp()}), \
+                mock.patch.object(sr, "fetch_board", return_value=raws):
+            summary, jobs = probe.probe([("smartrecruiters", "bigco", "BigCo")], None)
+        self.assertEqual(summary["live"], 1)
+        self.assertEqual(summary["jobs"], sr.MAX_JOBS)  # the capped jobs are still shown
+        self.assertEqual([e["board"] for e in summary["errors"]], ["smartrecruiters:bigco"])
+        run_dir = tempfile.mkdtemp()
+        state.write_json_atomic(os.path.join(run_dir, "boards.json"), summary)
+        self.assertEqual(state.probed_ok_boards(run_dir), set())
+
     def test_dead_and_errored_boards_are_not_cached(self):
         home = tempfile.mkdtemp()
         run(["--boards", "lever:job-scout-no-such-board,ashby:no-fixture-board"], home=home)
