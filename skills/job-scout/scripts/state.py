@@ -387,11 +387,12 @@ def probed_ok_boards(run_dir):
 
 
 def live_split(jobs, jds):
-    """(open, gone): jobs split by their live check in jds.json. A gone job's posting no longer
-    exists, even while the board list (which can lag) still shows it."""
+    """(open, gone): jobs split by their live check in jds.json. A job is gone when the live check
+    found every one of its variants closed, even while the board list (which can lag) still shows
+    it; one closed variant leaves the group open while another may still be available."""
     closed = {k for k, e in (jds if isinstance(jds, dict) else {}).items()
               if isinstance(e, dict) and e.get("status") == "closed"}
-    flags = [bool(closed.intersection(job_keys(j))) for j in jobs]
+    flags = [closed.issuperset(job_keys(j)) for j in jobs]
     return [j for j, f in zip(jobs, flags) if not f], [j for j, f in zip(jobs, flags) if f]
 
 

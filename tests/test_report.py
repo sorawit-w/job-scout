@@ -212,20 +212,24 @@ class ReportTest(unittest.TestCase):
         self.assertIn('data-pay="50000"', html)
         self.assertIn('data-rank="3" data-fit="7" data-top="1" data-flags="0" data-pay=""', html)  # unknown interval: last
 
-    def test_live_closed_variant_closes_its_saved_job(self):
-        grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
-        make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]}, jds={"gh:a:2": {"status": "closed"}})  # jds: display variant
-        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
-            state.write_json_atomic(state.seen_path(), {
-                "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
-        run([], self.home)
-        html = page(self.home)
-        self.assertNotIn("Saved or applied, still open", html)
-        self.assertIn("<h2>Closed since last time</h2>", html)
+    def test_grouped_job_closes_only_when_every_variant_is_gone(self):
+        board = {"probed": 1, "available": 1, "live_boards": ["gh:a"]}
+        for closed, still_open in (({"gh:a:2"}, True), ({"gh:a:1", "gh:a:2"}, False)):
+            home = tempfile.mkdtemp()
+            grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
+            make_run(home, [grouped], rows=None, boards=board, jds={k: {"status": "closed"} for k in closed})
+            with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": home}):
+                state.write_json_atomic(state.seen_path(), {
+                    "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
+            run([], home)
+            html = page(home)
+            self.assertEqual(("Saved or applied, still open" in html, "Closed since last time" in html),
+                             (still_open, not still_open), closed)
 
     def test_live_closed_alias_keeps_its_saved_status(self):
         grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
-        make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]}, jds={"gh:a:2": {"status": "closed"}})
+        make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]},
+                 jds={"gh:a:1": {"status": "closed"}, "gh:a:2": {"status": "closed"}})
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {"gh:a:9": {  # matches the job only through an alias
                 "status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": "", "aliases": ["gh:a:2"]}})
