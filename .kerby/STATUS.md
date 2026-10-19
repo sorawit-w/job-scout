@@ -15,7 +15,7 @@
 |-------|-------|
 | **Phase** | Deployment — released; install smoke tests pending |
 | **Milestone** | deploy-launch (M6) — open until the smoke tests pass |
-| **Milestone Goal** | Every install surface smoke-tested; the agent-skills entry merged |
+| **Milestone Goal** | Every install surface smoke-tested |
 
 ---
 
