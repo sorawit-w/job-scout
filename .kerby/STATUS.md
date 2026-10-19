@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Integration — evals complete and in review; more hiring tools next |
-| **Milestone** | int-more-ats (M5b) |
-| **Milestone Goal** | SmartRecruiters, Workday (verified company list) and opt-in USAJOBS, without crowding tech boards out of the cap |
+| **Phase** | Integration — more hiring tools in review; launch next |
+| **Milestone** | int-more-ats (M5b), then deploy-launch (M6) |
+| **Milestone Goal** | First public release: docs, release zip, install smoke tests; going public is the maintainer's call |
 
 ---
 
@@ -23,9 +23,9 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M5b C1–C2 — SmartRecruiters adapter, fixtures, seed import and seed check | evals merged |
-| 2 | M5b C3–C4 — Workday adapter (keyword search) and a verified Workday company list | C1 |
-| 3 | M5b C5–C9 — USAJOBS opt-in, keyword-source support and field-aware board selection, SKILL.md coverage text, nurse re-run, skill-evaluator | C3, C4 |
+| 1 | M5b PR — review findings fixed, squash-merged | skill-evaluator clean |
+| 2 | M6 L1–L5 — root and skill README, PRIVACY (search titles go to Workday/USAJOBS), CONTRIBUTING, NOTICE | M5b merged |
+| 3 | M6 L6–L8 — release zip script, version bump + CHANGELOG, trim SKILL.md toward ~300 lines, install smoke tests | L1–L5 |
 
 ---
 

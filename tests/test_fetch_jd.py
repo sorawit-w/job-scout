@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 import io
 import json
 import os
@@ -48,6 +49,22 @@ FIGMA = row("greenhouse", "figma", "5426468004", "Figma")
 VERCEL = row("greenhouse", "vercel", "1", "Vercel")
 AIRSLATE = row("lever", "airslate", "9a4add3b-1bbc-453d-94da-502113da3c53", "airSlate")
 AIRSLATE_GONE = row("lever", "airslate", "00000000-0000-0000-0000-000000000000", "airSlate")
+BRYCE = row("smartrecruiters", "BryceTech", "744000154771568", "BryceTech")
+BRYCE_GONE = row("smartrecruiters", "BryceTech", "1", "BryceTech")
+WORKDAY = os.path.join(FIXTURES, "workday")
+SHARP = "sharp.wd1.External"
+SHARP_GONE = row("workday", SHARP, "Clinical-Nurse_JR0000000-1", "Sharp HealthCare")  # recorded 404
+USAJOBS = os.path.join(FIXTURES, "usajobs")
+USAJOBS_OPEN_ID = "887700000"  # real Historic JOA record: accepting applications until 2026-11-06
+
+
+def sharp_open():
+    """The first posting of the recorded "nurse" search, as filter.py would pass it on."""
+    with open(os.path.join(WORKDAY, "b810e0c228ba0cfc.json"), encoding="utf-8") as f:
+        posting = json.loads(json.load(f)["body"])["jobPostings"][0]
+    job_id = posting["externalPath"].rsplit("/", 1)[-1]
+    return row("workday", SHARP, job_id, "Sharp HealthCare", title=posting["title"],
+               locations=[posting["locationsText"]], workplace=None, remote_scope=[])
 
 
 def make_home(rows, jds=None):
@@ -72,8 +89,8 @@ def save_profile(home, **over):
         json.dump(p, f)
 
 
-def run(argv, home):
-    env = {"JOB_SCOUT_REPLAY_DIR": FIXTURES, "JOB_SCOUT_HOME": home}
+def run(argv, home, replay_dir=FIXTURES):
+    env = {"JOB_SCOUT_REPLAY_DIR": replay_dir, "JOB_SCOUT_HOME": home}
     out = io.StringIO()
     with mock.patch.dict(os.environ, env), contextlib.redirect_stdout(out):
         code = fetch_jd.main(argv)
@@ -181,6 +198,19 @@ class LiveCheckTest(unittest.TestCase):
         self.assertTrue(read_jds(home)[AIRSLATE["key"]]["full"])
         self.assertEqual([c["key"] for c in out["closed"]], [AIRSLATE_GONE["key"]])
 
+    def test_smartrecruiters_open_with_description_and_pay_and_closed(self):
+        home = make_home([BRYCE, BRYCE_GONE])
+        code, out = run(["--keys", "%s,%s" % (BRYCE["key"], BRYCE_GONE["key"])], home)
+        self.assertEqual(code, 0)
+        self.assertEqual([j["key"] for j in out["jobs"]], [BRYCE["key"]])
+        job = out["jobs"][0]
+        self.assertEqual(job["comp"]["min"], 130000)
+        self.assertTrue(job["url"].startswith("https://jobs.smartrecruiters.com/BryceTech/"))
+        self.assertIn("Qualifications", read_jds(home)[BRYCE["key"]]["full"])
+        self.assertTrue(job["jd"])
+        self.assertEqual([c["key"] for c in out["closed"]], [BRYCE_GONE["key"]])
+        self.assertEqual(out["requests"], 2)
+
     def test_ashby_from_a_fresh_cached_board(self):
         with open(os.path.join(FIXTURES, "e81a421f50a9d5e6.json"), encoding="utf-8") as f:
             board = json.loads(json.load(f)["body"])["jobs"]
@@ -269,6 +299,89 @@ class LiveCheckTest(unittest.TestCase):
         jds = read_jds(home)
         self.assertEqual(jds["lever:old:1"]["full"], "kept")
         self.assertEqual(jds[VERCEL["key"]]["status"], "closed")
+
+
+class SearchSourceLiveCheckTest(unittest.TestCase):
+    def test_workday_open_with_description_and_closed(self):
+        sharp = sharp_open()
+        home = make_home([sharp, SHARP_GONE])
+        save_profile(home, target_roles=["nurse"], commute_cities=["San Diego"])
+        code, out = run(["--top", "2"], home, replay_dir=WORKDAY)
+        self.assertEqual(code, 0)
+        self.assertEqual([j["key"] for j in out["jobs"]], [sharp["key"]])
+        job = out["jobs"][0]
+        self.assertTrue(job["url"].startswith("https://sharp.wd1.myworkdayjobs.com/External/job/"), job["url"])
+        self.assertEqual(job["first_published"], "2026-10-18")  # live detail field, not the search row's
+        self.assertTrue(job["jd"])
+        self.assertTrue(read_jds(home)[sharp["key"]]["full"])
+        self.assertEqual([c["key"] for c in out["closed"]], [SHARP_GONE["key"]])
+        self.assertEqual(out["requests"], 2)
+
+    def test_workday_live_data_is_refiltered_against_the_brief(self):
+        sharp = sharp_open()
+        home = make_home([sharp])
+        save_profile(home, target_roles=["nurse"], work_modes=["onsite"], commute_cities=["Boston"])
+        code, out = run(["--top", "1"], home, replay_dir=WORKDAY)
+        self.assertEqual((code, out["jobs"]), (0, []))
+        self.assertEqual(read_jds(home)[sharp["key"]]["status"], "open")
+        self.assertTrue(out["unverified"][0]["error"].startswith("changed since the search"), out["unverified"])
+
+    def test_workday_place_still_unknown_after_the_live_check_is_not_shown(self):
+        # "3 Locations" in the list, and a detail record with an empty location: the fit is never confirmed.
+        r = row("workday", SHARP, "RN_JR1", "Far Health", title="Registered Nurse", locations=[], workplace=None,
+                remote=None, remote_scope=None, description_text="Duties\nPatient care.")
+        detail = {"jobPostingInfo": {"jobPostingId": "RN_JR1", "title": "Registered Nurse", "location": "",
+                                     "jobDescription": "<p>Patient care.</p>"}}
+        home = make_home([r])
+        save_profile(home, target_roles=["Registered Nurse"], work_modes=["onsite"], commute_cities=["Sacramento"])
+        with mock.patch.object(adapters.REGISTRY["workday"], "fetch_job", return_value=detail):
+            code, out = run(["--top", "1"], home, replay_dir=WORKDAY)
+        self.assertEqual((code, out["jobs"]), (0, []))
+        self.assertIn("still unknown after the live check", out["unverified"][0]["error"])
+
+    def test_usajobs_live_record_without_description_keeps_the_board_description(self):
+        # The Historic JOA live check has no description; the search result the row came from does.
+        text = "Duties\nProvide nursing care to veterans.\n\nRequirements\n- Active RN license"
+        with_text = row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS", description_text=text)
+        home = make_home([with_text])
+        with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
+            code, out = run(["--top", "1"], home, replay_dir=USAJOBS)
+        self.assertEqual(code, 0)
+        self.assertEqual([j["key"] for j in out["jobs"]], [with_text["key"]])
+        self.assertIn("Active RN license", out["jobs"][0]["jd"])
+        self.assertEqual(read_jds(home)[with_text["key"]]["full"], text)
+        self.assertEqual(out["jobs"][0]["url"], "https://www.usajobs.gov/job/%s" % USAJOBS_OPEN_ID)
+
+    def test_usajobs_remote_search_result_stays_remote_after_the_live_check(self):
+        # The Historic JOA record has no remote field (only telework), so the search row's remote fields win.
+        remote = row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS", title="Equipment Specialist (Electronic)",
+                     remote=True, description_text="Duties\nMaintain equipment.")
+        home = make_home([remote])
+        save_profile(home, target_roles=["Equipment Specialist"], work_modes=["remote"], commute_cities=[])
+        with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
+            code, out = run(["--top", "1"], home, replay_dir=USAJOBS)
+        self.assertEqual((code, out["unverified"]), (0, []))
+        self.assertEqual((out["jobs"][0]["workplace"], out["jobs"][0]["remote_scope"]), ("remote", ["US"]))
+
+    def test_usajobs_non_remote_row_takes_the_live_telework_answer(self):
+        # Only the remote indicator is missing from the JOA; its telework answer is current, so it wins.
+        r = row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS", title="Equipment Specialist (Electronic)",
+                remote=False, workplace="hybrid", remote_scope=None, locations=["Washington, District of Columbia"],
+                description_text="Duties\nMaintain equipment.")
+        home = make_home([r])
+        save_profile(home, target_roles=["Equipment Specialist"], work_modes=["onsite", "hybrid"],
+                     home_base="Washington, DC", commute_cities=["Washington"], remote_scope=[])
+        with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
+            code, out = run(["--top", "1"], home, replay_dir=USAJOBS)
+        self.assertEqual(code, 0)
+        self.assertIsNone(out["jobs"][0]["workplace"])  # the JOA says no telework: not "hybrid" any more
+
+    def test_usajobs_with_no_description_anywhere_is_unverified(self):
+        home = make_home([row("usajobs", "all", USAJOBS_OPEN_ID, "USAJOBS")])
+        with mock.patch("adapters.usajobs._today", return_value=datetime.date(2026, 10, 19)):
+            code, out = run(["--top", "1"], home, replay_dir=USAJOBS)
+        self.assertEqual((code, out["jobs"], out["closed"]), (0, [], []))
+        self.assertIn("no description", out["unverified"][0]["error"])
 
 
 class UsageTest(unittest.TestCase):

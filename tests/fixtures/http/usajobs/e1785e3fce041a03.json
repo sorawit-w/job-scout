@@ -1,0 +1,5 @@
+{
+ "url": "https://data.usajobs.gov/api/Search?Keyword=pharmacist&ResultsPerPage=100&Page=1&SortField=opendate&SortDirection=Desc",
+ "status": 200,
+ "body": "{\"LanguageCode\": \"EN\", \"SearchParameters\": {}, \"SearchResult\": {\"SearchResultCount\": 0, \"SearchResultCountAll\": 0, \"SearchResultItems\": [], \"UserArea\": {\"NumberOfPages\": \"0\", \"IsRadialSearch\": false}}, \"synthetic\": true}"
+}

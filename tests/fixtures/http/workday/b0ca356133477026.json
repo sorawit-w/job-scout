@@ -1,0 +1,11 @@
+{
+ "url": "https://zzqxjobscout.wd1.myworkdayjobs.com/wday/cxs/zzqxjobscout/careers/jobs",
+ "status": 422,
+ "body": "{\"errorCode\":\"HTTP_422\",\"errorCaseId\":\"959CF2MVF1WTJQ\",\"httpStatus\":422,\"message\":\"\",\"messageParams\":{}}",
+ "post": {
+  "appliedFacets": {},
+  "limit": 20,
+  "offset": 0,
+  "searchText": ""
+ }
+}

@@ -5,10 +5,10 @@ from unittest import mock
 
 import adapters
 import net
-from adapters import ashby, greenhouse, lever
+from adapters import ashby, greenhouse, lever, smartrecruiters
 
 FIXTURES = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "http")
-HOSTS = ("greenhouse.io", "ashbyhq.com", "lever.co")
+HOSTS = ("greenhouse.io", "ashbyhq.com", "lever.co", "jobs.smartrecruiters.com")
 
 
 def replay():
@@ -17,10 +17,18 @@ def replay():
 
 
 class RegistryTest(unittest.TestCase):
-    def test_registry_has_the_three_adapters(self):
-        self.assertEqual(sorted(adapters.REGISTRY), ["ashby", "greenhouse", "lever"])
+    def test_registry_has_the_six_adapters(self):
+        self.assertEqual(sorted(adapters.REGISTRY),
+                         ["ashby", "greenhouse", "lever", "smartrecruiters", "usajobs", "workday"])
         for module in adapters.REGISTRY.values():
             self.assertEqual(adapters.missing(module), [])
+
+    def test_only_search_sources_are_partial_and_declare_their_caps(self):
+        partial = sorted(k for k, m in adapters.REGISTRY.items() if getattr(m, "PARTIAL", False))
+        self.assertEqual(partial, ["usajobs", "workday"])
+        for name in partial:
+            module = adapters.REGISTRY[name]
+            self.assertGreater(module.MAX_TERMS * module.MAX_PAGES, 0, name)
 
 
 class SchemaMixin:
@@ -146,6 +154,96 @@ class LeverTest(SchemaMixin, unittest.TestCase):
     def test_unknown_board_is_none(self):
         with replay():
             self.assertIsNone(lever.fetch_board("job-scout-no-such-board"))
+
+
+def sr_page(n, total, start=0):
+    return {"offset": start, "limit": 100, "totalFound": total,
+            "content": [{"id": str(start + i), "name": "Job %d" % (start + i)} for i in range(n)]}
+
+
+class SmartRecruitersTest(SchemaMixin, unittest.TestCase):
+    def test_board_lists_and_normalizes(self):
+        with replay():
+            raws = smartrecruiters.fetch_board("BryceTech")
+        self.assertEqual(len(raws), 3)  # trimmed fixture: a short page ends the paging
+        job = smartrecruiters.normalize(raws[0], "BryceTech", "BryceTech")
+        self.check_job(job, "smartrecruiters", "BryceTech")
+        self.assertEqual(job["key"], "smartrecruiters:BryceTech:" + raws[0]["id"])
+        self.assertEqual(job["url"], "https://jobs.smartrecruiters.com/BryceTech/" + raws[0]["id"])
+        self.assertEqual(job["locations"], ["El Segundo, CA, United States"])
+        self.assertEqual(job["countries"], ["US"])
+        self.assertEqual(job["department"], "Aerospace and Defense")
+        self.assertIsNone(job["remote"])  # remote/hybrid both false: the posting does not say
+        self.assertIsNone(job["comp"])  # the list carries no pay and no description
+        self.assertIsNone(job["description_text"])
+
+    def test_remote_and_hybrid_flags(self):
+        with replay():
+            raws = smartrecruiters.fetch_board("GalileoLearning")
+        remote, hybrid = [smartrecruiters.normalize(r, "GalileoLearning", "Galileo") for r in raws[:2]]
+        self.assertEqual((remote["remote"], remote["workplace"], remote["remote_scope"]), (True, "remote", ["US"]))
+        self.assertEqual((hybrid["remote"], hybrid["workplace"]), (False, "hybrid"))
+
+    def test_unknown_company_is_an_empty_list(self):
+        # SmartRecruiters answers 200 with totalFound 0 for any unknown company (checked 2026-10-19)
+        with replay():
+            self.assertEqual(smartrecruiters.fetch_board("job-scout-no-such-board"), [])
+
+    def test_detail_has_description_pay_and_posting_page(self):
+        with replay():
+            raw = smartrecruiters.fetch_job("BryceTech", "744000154771568")
+        job = smartrecruiters.normalize(raw, "BryceTech", "BryceTech")
+        self.check_job(job, "smartrecruiters", "BryceTech")
+        self.assertEqual(job["comp"], {"min": 130000, "max": 170000, "currency": "USD", "interval": "year",
+                                       "source": "ats_field"})
+        self.assertTrue(job["url"].startswith("https://jobs.smartrecruiters.com/BryceTech/744000154771568-"))
+        self.assertIn("Qualifications", job["description_text"])
+        self.assertNotIn("<p>", job["description_text"])
+
+    def test_closed_or_inactive_posting_is_none(self):
+        with replay():
+            self.assertIsNone(smartrecruiters.fetch_job("BryceTech", "1"))
+        with mock.patch.object(net, "get_json", return_value={"id": "9", "active": False}):
+            self.assertIsNone(smartrecruiters.fetch_job("BryceTech", "9"))
+
+    def test_fetch_job_respects_the_budget(self):
+        with replay(), self.assertRaises(net.BudgetExceeded):
+            smartrecruiters.fetch_job("BryceTech", "744000154771568", net.Budget(0))
+
+    def test_pages_until_total_found(self):
+        pages = [sr_page(100, 150), sr_page(50, 150, 100)]
+        with mock.patch.object(net, "get_json", side_effect=pages) as get:
+            raws = smartrecruiters.fetch_board("acme")
+        self.assertEqual(len(raws), 150)
+        self.assertEqual([c.args[0].split("?")[1] for c in get.call_args_list],
+                         ["limit=100&offset=0", "limit=100&offset=100"])
+
+    def test_paging_stops_at_the_page_cap(self):
+        with mock.patch.object(net, "get_json", side_effect=lambda url, budget=None: sr_page(100, 10 ** 5)) as get:
+            raws = smartrecruiters.fetch_board("bigco")
+        self.assertEqual(len(raws), smartrecruiters.MAX_JOBS)
+        self.assertEqual(get.call_count, smartrecruiters.MAX_JOBS // 100)
+
+    def test_gone_board_is_none(self):
+        with mock.patch.object(net, "get_json", return_value=None):
+            self.assertIsNone(smartrecruiters.fetch_board("gone"))
+
+    def test_board_gone_mid_paging_is_an_error_not_a_short_list(self):
+        # a short list would let probe.py treat it as the whole board and close the missing roles
+        with mock.patch.object(net, "get_json", side_effect=[sr_page(100, 300), None]):
+            with self.assertRaises(net.NetError):
+                smartrecruiters.fetch_board("acme")
+
+    def test_hourly_pay_and_location_without_full_text(self):
+        raw = {"id": "7", "name": "Barista", "releasedDate": "2026-10-01T10:00:00.000Z", "company": {"identifier": "Acme"},
+               "location": {"city": "Austin", "region": "TX", "country": "us", "remote": False, "hybrid": False},
+               "compensation": {"min": 18, "max": 22, "currency": "USD", "period": "HOURLY"}}
+        job = smartrecruiters.normalize(raw, "acme", "Acme")
+        self.assertEqual(job["locations"], ["Austin, TX, US"])
+        self.assertEqual(job["countries"], ["US"])
+        self.assertEqual(job["url"], "https://jobs.smartrecruiters.com/Acme/7")
+        self.assertEqual(job["first_published"], "2026-10-01")
+        self.assertEqual(job["comp"]["interval"], "hour")
 
 
 class QaFixesAdapterTest(unittest.TestCase):

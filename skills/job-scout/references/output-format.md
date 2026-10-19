@@ -64,6 +64,8 @@ Want me to include Americas-wide remote roles?"). Never fill the table with weak
 
 ## 5. End with the feedback prompt
 
+Skip it when no roles are shown; end with the question from §4 instead.
+
 ```
 Tell me what to do with any of these — "save 1", "applied 3", "dismiss 2: too senior".
 I'll remember them next time and show you only what's new.

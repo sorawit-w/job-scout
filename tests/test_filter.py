@@ -109,6 +109,59 @@ class WorkModeLocationTest(unittest.TestCase):
     def test_city_match_is_word_boundary(self):
         self.assertEqual(outcome(local(city="Orangeburg, SC"), commute_cities=["Orange"])[0], "location")
 
+    def test_commute_city_in_another_state_removed(self):
+        self.assertEqual(outcome(local(city="Burbank, WA"))[0], "location")
+        self.assertEqual(outcome(local(city="Burbank, Washington, United States"))[0], "location")
+
+    def test_commute_city_same_or_unstated_state_kept(self):
+        self.assertEqual(outcome(local(city="Burbank, California"))[0], "strong")
+        self.assertEqual(outcome(local(city="Burbank Medical Pavilion"))[0], "strong")
+
+    def test_city_named_like_a_state_uses_the_explicit_code(self):
+        pa = local(city="Washington, PA")
+        self.assertEqual(outcome(pa, home_base="Washington, DC", commute_cities=["Washington"])[0], "location")
+
+    def test_each_commute_city_keeps_its_own_state(self):
+        pa = local(city="Pasadena, OR")
+        self.assertEqual(outcome(pa, home_base="Pasadena, CA", commute_cities=["Portland, OR"])[0], "location")
+        self.assertEqual(outcome(local(city="Portland, OR"), home_base="Pasadena, CA",
+                                 commute_cities=["Portland, OR"])[0], "strong")
+
+    def test_home_without_a_comma_turns_the_state_check_off(self):
+        dc = local(city="Washington, DC")
+        self.assertEqual(outcome(dc, home_base="Washington DC", commute_cities=["Washington"])[0], "strong")
+
+    def test_commute_city_written_with_its_state_allows_that_state(self):
+        md = local(city="Bethesda, MD")
+        self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda"])[0], "location")
+        self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda, MD"])[0], "strong")
+
+    def test_workday_row_without_a_mode_is_kept_for_the_live_check(self):
+        # Workday search rows never say remote or onsite; the detail record (fetch_job) does.
+        wd = job(ats="workday", locations=("Denver, CO",), remote=None, scope=None, workplace=None)
+        match, cand = outcome(wd, work_modes=["remote"])
+        self.assertEqual(match, "strong")
+        self.assertIn(jfilter.MODE_ON_DETAIL_FLAG, cand["flags"])
+        far = job(ats="workday", locations=("London, United Kingdom",), remote=None, scope=None, workplace=None)
+        self.assertEqual(outcome(far, work_modes=["remote"])[0], "location")
+        gh = job(ats="greenhouse", locations=("Denver, CO",), remote=None, scope=None, workplace=None)
+        self.assertEqual(outcome(gh, work_modes=["remote"])[0], "location")
+
+    def test_workday_row_with_only_a_location_count_is_kept_for_the_live_check(self):
+        # "3 Locations" gives no place; the detail record lists them, and fetch_jd.py re-filters on it.
+        wd = job(ats="workday", locations=(), remote=None, scope=None, workplace=None)
+        match, cand = outcome(wd, work_modes=["hybrid"])
+        self.assertEqual(match, "strong")
+        self.assertIn(jfilter.LOCATION_ON_DETAIL_FLAG, cand["flags"])
+        gh = job(ats="greenhouse", locations=(), remote=None, scope=None, workplace=None)
+        self.assertEqual(outcome(gh, work_modes=["hybrid"])[0], "location")
+
+    def test_rows_waiting_on_the_live_check_rank_after_every_clean_match(self):
+        wd = job(ats="workday", locations=(), remote=None, scope=None, workplace=None)
+        clean = local(title="Frontend Developer")  # a borderline title, but a confirmed place
+        _, cands = run([wd, clean], work_modes=["hybrid"])
+        self.assertEqual([c["key"] for c in cands], [clean["key"], wd["key"]])
+
     def test_onsite_removed_when_only_remote_and_hybrid_wanted(self):
         self.assertEqual(outcome(local(workplace="onsite"))[0], "work_mode")
 

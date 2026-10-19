@@ -253,6 +253,32 @@ class ReplayRecordTest(NetTestCase):
         with open(os.path.join(rec, net.fixture_key(URL + "/1") + ".json"), encoding="utf-8") as f:
             self.assertEqual(json.load(f)["status"], 404)
 
+    def test_post_body_and_headers(self):
+        fake = self.opener(ok({"jobPostings": []}))
+        rec = os.path.join(self.dir, "post")
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_RECORD_DIR": rec}):
+            net.get_json(URL, body={"searchText": "nurse", "limit": 20}, headers={"Authorization-Key": "SECRET"})
+        req = fake.calls[0][0]
+        self.assertEqual(req.get_method(), "POST")
+        self.assertEqual(json.loads(req.data.decode()), {"searchText": "nurse", "limit": 20})
+        self.assertEqual(req.get_header("Authorization-key"), "SECRET")
+        self.assertEqual(req.get_header("Content-type"), "application/json")
+        name = net.fixture_key(URL, {"limit": 20, "searchText": "nurse"}) + ".json"  # key order does not matter
+        with open(os.path.join(rec, name), encoding="utf-8") as f:
+            text = f.read()
+        self.assertNotIn("SECRET", text)  # headers are never recorded
+        self.assertEqual(json.loads(text)["post"], {"limit": 20, "searchText": "nurse"})
+        self.assertNotEqual(net.fixture_key(URL, {"searchText": "other"}), net.fixture_key(URL, {"searchText": "nurse"}))
+        self.assertEqual(net.fixture_key(URL), net.fixture_key(URL, None))  # GET fixtures keep their names
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_REPLAY_DIR": rec}):
+            self.assertEqual(net.get_json(URL, body={"searchText": "nurse", "limit": 20}), {"jobPostings": []})
+
+    def test_204_empty_body_is_an_empty_object(self):
+        # USAJOBS's keyless JOA endpoint answers an unknown control number with 204 and no body.
+        net.write_fixture(self.dir, URL, 204, "")
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_REPLAY_DIR": self.dir}):
+            self.assertEqual(net.get_json(URL), {})
+
     def test_record_skips_network_exceptions(self):
         self.opener(urllib.error.URLError(socket.gaierror(8, "x")))
         with mock.patch.dict(os.environ, {"JOB_SCOUT_RECORD_DIR": self.dir}):

@@ -1,0 +1,5 @@
+{
+ "url": "https://api.smartrecruiters.com/v1/companies/Zzqx1/postings?limit=100&offset=0",
+ "status": 200,
+ "body": "{\"offset\":0,\"limit\":100,\"totalFound\":0,\"content\":[]}"
+}

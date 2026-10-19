@@ -25,7 +25,8 @@ What it does NOT do:
     * No judging or scoring — that is the LLM step in SKILL.md; cite_check.py verifies its quotes.
     * Never rewords description text: trim_jd only selects whole lines, so quotes stay checkable.
     * Never treats a network error as open or closed — that row is "unverified", as is a 200
-      response without a description or for a different job.
+      response for a different job, or one with no description when the candidate row (from the
+      board list) has none either. A live check without a description (USAJOBS) keeps the row's.
     * Never parses pay out of description text; comp comes only from ATS pay fields.
 """
 import argparse
@@ -115,10 +116,18 @@ def check(row, budget):
     except (AttributeError, KeyError, TypeError, ValueError) as e:  # AttributeError: a list or string body
         entry["error"] = "bad job record: %s" % e
         return entry, None
-    full = job.get("description_text")
-    if not full or str(job.get("job_id")) != str(row["job_id"]):  # a 200 with {} or an error object
-        entry["error"] = "bad job record: no description, or not the requested job"
+    if str(job.get("job_id")) != str(row["job_id"]):  # a 200 with {} or an error object
+        entry["error"] = "bad job record: not the requested job"
         return entry, None
+    if row.get("remote"):  # the live record cannot say "remote" (JOB_LACKS): keep the search's answer
+        for k in getattr(module, "JOB_LACKS", ()):
+            job[k] = row.get(k)
+    # Some live checks carry no description (USAJOBS Historic JOA): keep the board list's text.
+    full = job.get("description_text") or row.get("description_text")
+    if not full:
+        entry["error"] = "bad job record: no description"
+        return entry, None
+    job["description_text"] = full
     entry.update(status="open", full=full, trimmed=trim_jd(full), comp=job.get("comp"))
     return entry, job
 
@@ -199,6 +208,9 @@ def main(argv=None):
             fresh, removed_by = refilter(row, live, profile)
             if removed_by:
                 unverified.append({"key": row["key"], "error": "changed since the search: now removed by %s" % removed_by})
+                continue
+            if set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
+                unverified.append({"key": row["key"], "error": "location or work mode still unknown after the live check"})
                 continue
             job = {k: fresh.get(k) for k in ("key", "company", "title", "url", "locations", "workplace",
                                              "remote_scope", "first_published")}

@@ -4,7 +4,6 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 1: v0 (M1–M6)
 
-- [~] M5b — More hiring tools: SmartRecruiters, Workday (with a verified company list), opt-in USAJOBS
 - [ ] M6 — Launch 0.1.0: README, PRIVACY, CONTRIBUTING, NOTICE, release zip, install smoke tests (going public is the maintainer's call)
 
 ## Follow-ups
@@ -16,13 +15,17 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 - [ ] Read up to 60 job descriptions when more than ~30 candidates are strong (M5 scorecard: generic titles miss the 40-pick cut)
 - [ ] Human re-label of the 2026-10-19 key (it is two-model consensus today)
 - [ ] CSV export with the full 11-column table
-- [ ] Sector tagging beyond the 49 eval boards
+- [ ] Sector tagging beyond the 49 eval boards (today `industries_prefer` matches company names as a stand-in)
 - [ ] Job connectors (Indeed / Dice / ZipRecruiter) as an employer-discovery source only, resolved to employer links — worth doing once Workday ships (M5b), so most employers a connector finds have a board job-scout can read
-- [ ] More hiring tools after M5b: SuccessFactors, TalentBrew, JazzHR, Recruitee, iCIMS, Taleo
+- [ ] More hiring tools after M5b: iCIMS, Taleo and Phenom first (Sacramento's large hospital systems use them), then SuccessFactors, TalentBrew, JazzHR, Recruitee
+- [ ] Location-aware board order: boards near the user's home base before far ones (Workday locations often name a building, not a city or state)
+- [ ] Workday jobs carry no remote/onsite field: a "Remote … California Residents Only" role reads as onsite
+- [ ] Workday rows with no place or mode spend live-check reads (21 of 40 in the nurse run, none shown): read their detail records outside the 40-description budget, or cap them
 - [ ] claude.ai Team/Enterprise egress test
 
 ## Shipped
 
+- [x] M5b — More hiring tools: SmartRecruiters, Workday (verified company list), opt-in USAJOBS; board order by the brief's field; nurse live run 19/19 open (2026-10-19)
 - [x] M5 — Evals: E1–E11, consensus ground truth (Codex + Gemini), scorecard vs jobscope (top 15: 13/33 vs 2/33), filter fixes from the fix loop (2026-10-19)
 - [x] M4 — State and reruns: seen/diff, closed detection, rerun view, add-a-company (2026-10-19)
 - [x] M3 — Matching: hard filters, title prefilter, live check, cite check, rubric, output format, relocation (2026-10-19)

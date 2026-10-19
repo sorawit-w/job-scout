@@ -205,7 +205,7 @@ phases:
           end_state: "nurse persona gets hospital roles with employer links; coverage line names the new tools"
           cases:
             - {case: happy path, input: "E8 nurse, live", expected: "Workday/USAJOBS roles, each open on the live check, employer link"}
-            - {case: edge, input: "frontend persona, live, after M5b", expected: "still 18/18 ground truth in candidates; board selection by the user's field keeps tech boards inside the 400 cap"}
+            - {case: edge, input: "frontend persona, live, after M5b", expected: "no drop from the M5 scorecard (30/33 of the 2026-10-19 key in the default candidate list); board selection by the user's field keeps tech boards inside the 400 cap"}
             - {case: edge, input: "USAJOBS key not set", expected: "USAJOBS skipped and said once; the run continues"}
             - {case: failure, input: "Workday changes its response shape", expected: "those boards are errors/unverified; never shown as open; run continues"}
 

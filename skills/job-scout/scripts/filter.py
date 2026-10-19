@@ -40,6 +40,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import adapters  # noqa: E402
 import normalize  # noqa: E402
 import state  # noqa: E402
 
@@ -56,7 +57,12 @@ AMER_FLAG = "Americas — check US eligibility"
 MODE_NOT_STATED = "work mode not stated"
 RELOCATE_FLAG = "relocation: %s in %s"
 DESC_FLAG = "title is generic — matched on the description"
-LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED)
+MODE_ON_DETAIL_FLAG = "work mode unknown — checked on the live job"
+LOCATION_ON_DETAIL_FLAG = "location not listed — checked on the live job"
+LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED, MODE_ON_DETAIL_FLAG, LOCATION_ON_DETAIL_FLAG)
+# Hiring tools whose board list never states a work mode, and may give only a location count
+# (adapters with MODE_ON_DETAIL): fetch_jd.py re-filters their rows on the detail record.
+_MODE_ON_DETAIL = {name for name, m in adapters.REGISTRY.items() if getattr(m, "MODE_ON_DETAIL", False)}
 
 _ALIASES = {"sr": "senior", "jr": "junior", "swe": "software engineer", "eng": "engineer"}
 _LEVEL_WORDS = {"senior", "staff", "lead", "principal"}  # ignored when matching a target role
@@ -106,7 +112,8 @@ def _place_check(job, p, ctx):
         else:
             remote_fail = "work_mode"
     if ("hybrid" in modes or "onsite" in modes) and any(
-            has_phrase(words(loc), c) for loc in job.get("locations") or [] for c in cities):
+            has_phrase(words(loc), city) and not (states and states.isdisjoint(normalize.us_states(loc) or states))
+            for loc in job.get("locations") or [] for city, states in cities):  # "Lincoln, NE" for a CA home
         wp = job.get("workplace")
         if wp is None:
             return None, [MODE_NOT_STATED], "local"
@@ -121,7 +128,20 @@ def _place_check(job, p, ctx):
             return None, [MODE_NOT_STATED, RELOCATE_FLAG % ("onsite or hybrid", where)], "local"
         if wp in ("hybrid", "onsite") and wp in modes:
             return None, [RELOCATE_FLAG % (wp, where)], "local"
+    if job.get("ats") in _MODE_ON_DETAIL and job.get("remote") is None and not job.get("locations"):
+        return None, [LOCATION_ON_DETAIL_FLAG], "local"  # "3 Locations": the detail record lists them
+    if ("remote" in modes and job.get("ats") in _MODE_ON_DETAIL and job.get("remote") is None
+            and wp is None and _scope_could_fit(job, p["remote_scope"])):
+        return None, [MODE_ON_DETAIL_FLAG], "remote"
     return remote_fail or "location", [], None
+
+
+def _scope_could_fit(job, want):
+    """False only when the job's locations name countries all outside the wanted remote scope."""
+    codes = {c for loc in job.get("locations") or [] for c in normalize.place_codes(loc)}
+    want = set(want)
+    return (not want or "ANY" in want or not codes or bool(codes & want)
+            or ("AMER" in want and bool(codes & _AMER)))
 
 
 def _relocation_countries(p):
@@ -293,7 +313,8 @@ def _judge(job, p, ctx):
 def _rank_key(row, p):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
-    return (_STATE_TIER.get(row["state"], 2), row["match"] != "strong",
+    on_detail = any(f in (MODE_ON_DETAIL_FLAG, LOCATION_ON_DETAIL_FLAG) for f in row["flags"])  # unconfirmed fit: last
+    return (_STATE_TIER.get(row["state"], 2), on_detail, row["match"] != "strong",
             any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]),
             -_desc_hits(row, p), newest is None, newest or 0)
 
@@ -310,9 +331,12 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_a
     seen is seen.json's content; empty or None is a first run (nothing dropped, all "new")."""
     p = state.with_profile_defaults(profile)
     limit = max(1, min(int(limit), MAX_LIMIT))
-    home_city = (p.get("home_base") or "").split(",")[0].strip()
+    home_states = normalize.us_states(p.get("home_base") or "")
     ctx = {"excluded": {normalize.company_norm(c) for c in p["companies_exclude"]},
-           "cities": [c for c in p["commute_cities"] + [home_city] if c.strip()],
+           # (city, states a job there may name): a commute city's own state ("Jersey City, NJ"),
+           # else the home base's; an empty set means no state check.
+           "cities": [(c.split(",")[0].strip(), normalize.us_states(c) if "," in c else home_states)
+                      for c in p["commute_cities"] + [p.get("home_base") or ""] if c.split(",")[0].strip()],
            "senior_only": _senior_only(p["seniority"]),
            "relocate": _relocation_countries(p),
            # A "Product Manager" target keeps "manager" titles: only phrases not in their own roles count.

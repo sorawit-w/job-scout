@@ -1,7 +1,7 @@
 import unittest
 import normalize
 
-from normalize import classify, place_codes, split_locations
+from normalize import classify, place_codes, split_locations, us_states
 
 
 class SplitLocationsTest(unittest.TestCase):
@@ -214,3 +214,19 @@ class CodexReviewLocationTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UsStatesTest(unittest.TestCase):
+    def test_codes_after_a_comma_and_full_names(self):
+        for loc, expected in (("Lincoln, NE, United States", {"NE"}), ("Sacramento, California", {"CA"}),
+                              ("Davis Pavilion North - Pavilion D", set()), ("NE corner, Remote", set()),
+                              ("Toronto, ON", set()), ("", set()),
+                              ("Washington, PA", {"PA"}), ("Washington, DC", {"DC"}), ("Washington", set()),
+                              ("Washington DC", set()), ("Burbank, Washington, United States", {"WA"})):
+            self.assertEqual(us_states(loc), expected, loc)
+
+
+class AnywhereInACountryTest(unittest.TestCase):
+    def test_anywhere_with_a_country_is_that_country(self):
+        self.assertEqual(classify(["Anywhere in the U.S. (remote job)"], True)["remote_scope"], ["US"])
+        self.assertEqual(classify(["Remote - Anywhere"], True)["remote_scope"], ["ANY"])

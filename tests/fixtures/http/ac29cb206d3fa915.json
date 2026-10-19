@@ -1,0 +1,5 @@
+{
+ "url": "https://api.smartrecruiters.com/v1/companies/BryceTech/postings/1",
+ "status": 404,
+ "body": "{\"id\":\"b5efde79-a9e9-4490-8e53-5cc3a5a3bb95\",\"httpCode\":404,\"code\":\"RESOURCE_NOT_FOUND\",\"message\":\"[MDC: ppa-887a398a-d933-4351-9e88-ce90db9c6465] Response code: 404. Reason: Resource not found\"}"
+}

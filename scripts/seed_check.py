@@ -6,9 +6,19 @@ Usage:
                                 [--only ats:slug,...] [--changed-only] [--workers 8]
 
   live        200 with at least one job  → jobs, us_share, remote_share filled
-  unverified  200 with zero jobs (wrong slug or the company moved ATS) — never coverage
-  dead        404/410
+  unverified  200 with zero jobs (wrong slug or the company moved ATS) — never coverage;
+              SmartRecruiters answers this way for an unknown company too (it never 404s a company)
+  dead        404/410 (Workday: 404/410/422 on its own host and on every host the seed uses)
   error       network/HTTP failure → the row keeps its previous status
+
+  jobs is what the adapter's list returned, so a SmartRecruiters board stops at its page cap
+  (adapters/smartrecruiters.py MAX_JOBS) and a Workday board at its first search page (20), and
+  neither is ever flagged as a possible aggregator.
+
+  Workday: one blank search (fetch_board with no terms). Tenants move between wdN hosts and the
+  old host answers 422, so a board that answers None is tried on every other host the seed uses,
+  with the same site; when one answers, the row's slug is rewritten to that host ("moved"). The shares come
+  from that first page's locationsText, so a "3 Locations" posting counts as neither US nor remote.
 
 If more than 10% of the checked boards error, nothing is written (exit 1), so a bad
 network day can't wipe the seed. --changed-only checks only rows whose status is
@@ -29,6 +39,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "skills", "job-scout", "scripts"))
 import adapters  # noqa: E402
 import net  # noqa: E402
+from adapters import workday  # noqa: E402
+
+REGISTRY = adapters.REGISTRY
+WORKDAY_HOSTS = ("wd1", "wd3", "wd5", "wd12", "wd103", "wd501", "wd503", "wd504")  # most common hosts
 
 DEFAULT_COMPANIES = os.path.join(ROOT, "skills", "job-scout", "data", "companies.csv")
 ERROR_ABORT_SHARE = 0.10
@@ -45,27 +59,50 @@ def shares(jobs):
     return round(us / len(jobs), 2), round(remote / len(jobs), 2)
 
 
-def check_board(row):
-    """Return (status, jobs, us_share, remote_share, error) for one CSV row."""
-    module = adapters.REGISTRY.get(row["ats"])
+def workday_hosts(rows):
+    """WORKDAY_HOSTS, then every other host a Workday row in the seed uses (a board can move to any)."""
+    seen = [r["slug"].split(".")[1] for r in rows if r.get("ats") == "workday" and r.get("slug", "").count(".") >= 2]
+    return WORKDAY_HOSTS + tuple(sorted(set(seen) - set(WORKDAY_HOSTS)))
+
+
+def fetch(module, row, hosts=WORKDAY_HOSTS):
+    """(raws, slug that answered). A Workday board that answers None (404/410/422) is tried on
+    the other hosts with the same site — fetch_board maps all three to None, so a 404 costs the
+    same extra tries as a moved board's 422."""
+    raws = module.fetch_board(row["slug"])
+    if raws is not None or row["ats"] != "workday":
+        return raws, row["slug"]
+    tenant, host, site = row["slug"].split(".", 2)
+    for other in hosts:
+        if other != host:
+            slug = "%s.%s.%s" % (tenant, other, site)
+            raws = module.fetch_board(slug)
+            if raws is not None:
+                return raws, slug
+    return None, row["slug"]
+
+
+def check_board(row, hosts=WORKDAY_HOSTS):
+    """Return (status, jobs, us_share, remote_share, error, slug) for one CSV row; slug may be a new host."""
+    module = REGISTRY.get(row["ats"])
     if module is None:
-        return "error", None, None, None, "unknown ats %s" % row["ats"]
+        return "error", None, None, None, "unknown ats %s" % row["ats"], row["slug"]
     try:
-        raws = module.fetch_board(row["slug"])
+        raws, slug = fetch(module, row, hosts)
     except net.NetError as e:
-        return "error", None, None, None, str(e)
+        return "error", None, None, None, str(e), row["slug"]
     if raws is None:
-        return "dead", "", "", "", None
+        return "dead", "", "", "", None, slug
     if not raws:
-        return "unverified", "0", "", "", None
+        return "unverified", "0", "", "", None, slug
     jobs = []
     for raw in raws:
         try:
-            jobs.append(module.normalize(raw, row["slug"], row["company"]))
+            jobs.append(module.normalize(raw, slug, row["company"]))
         except (KeyError, TypeError, ValueError):
             continue
     us, remote = shares(jobs)
-    return "live", str(len(raws)), str(us), str(remote), None
+    return "live", str(len(raws)), str(us), str(remote), None, slug
 
 
 def write_csv(rows, fieldnames, path):
@@ -103,23 +140,27 @@ def main(argv=None):
 
     workers = max(1, min(args.workers, net.MAX_WORKERS))
     with cf.ThreadPoolExecutor(max_workers=workers) as pool:
-        results = list(pool.map(check_board, todo))
+        hosts = workday_hosts(rows)
+        results = list(pool.map(lambda r: check_board(r, hosts), todo))
 
     today = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     counts = {"live": 0, "unverified": 0, "dead": 0, "error": 0}
-    flagged, errors = [], []
-    for row, (status, jobs, us, remote, err) in zip(todo, results):
+    flagged, errors, moved = [], [], 0
+    for row, (status, jobs, us, remote, err, slug) in zip(todo, results):
         counts[status] += 1
         if status == "error":
             errors.append("%s:%s — %s" % (row["ats"], row["slug"], err))
             continue  # keep the previous status
-        row.update({"status": status, "jobs": jobs, "us_share": us, "remote_share": remote, "checked_at": today})
+        moved += slug != row["slug"]
+        row.update({"slug": slug, "status": status, "jobs": jobs, "us_share": us, "remote_share": remote,
+                    "checked_at": today})
         if jobs and int(jobs) > AGGREGATOR_JOBS:
             flagged.append("%s:%s (%s jobs)" % (row["ats"], row["slug"], jobs))
 
     share = counts["error"] / len(todo)
-    print("seed-check: %d boards · live %d · unverified %d · dead %d · errors %d (%.0f%%)" % (
-        len(todo), counts["live"], counts["unverified"], counts["dead"], counts["error"], share * 100))
+    print("seed-check: %d boards · live %d · unverified %d · dead %d · errors %d (%.0f%%)%s" % (
+        len(todo), counts["live"], counts["unverified"], counts["dead"], counts["error"], share * 100,
+        " · moved %d" % moved if moved else ""))
     for line in errors[:20]:
         print("  error: " + line)
     for line in flagged:

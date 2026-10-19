@@ -5,10 +5,40 @@ This project includes or builds on the following third-party work:
 
 corpHuntingMCP — https://github.com/ZmoleCristian/corpHuntingMCP
   License: 0BSD (no attribution required; credited anyway)
-  Used: the Greenhouse, Ashby and Lever board slugs and company names in
-  skills/job-scout/data/companies.csv were imported from src/tenants/*.rs at commit
-  92fab3600f36d470f1bd4f1e84c06fcf5609ac86 by scripts/seed_import.py, then checked
+  Used: the Greenhouse, Ashby, Lever, SmartRecruiters and Workday board slugs and company
+  names in skills/job-scout/data/companies.csv were imported from src/tenants/*.rs at
+  commit 92fab3600f36d470f1bd4f1e84c06fcf5609ac86 by scripts/seed_import.py, then checked
   live by scripts/seed_check.py.
+
+ats-scrapers — https://github.com/kalil0321/ats-scrapers
+  License: MIT (notice below)
+  Used: the Workday tenant list. Rows with source "kalil0321" in
+  skills/job-scout/data/companies.csv (Workday tenant, host, site and company name) were
+  imported from ats-companies/workday.csv at commit
+  6b44a1badc9bfbf5cf176f75265cc5729e520e99 by scripts/seed_import.py, then checked live
+  by scripts/seed_check.py. No code was copied.
+
+  MIT License
+
+  Copyright (c) 2026 Kalil Bouzigues
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 
 jobscope — https://github.com/canmenzo/jobscope
   License: MIT
