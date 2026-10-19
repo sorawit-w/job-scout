@@ -27,6 +27,12 @@ All notable changes to `job-scout` are documented here. Format follows
   `filter.json`, and the live row or drop reason in `jds.json`).
 - Evals E12 and E13; design tokens in `docs/report-design.md`.
 
+### Changed
+- A saved or applied role whose live check finds the posting gone now counts as closed, even
+  while the board list still shows it and on partially searched boards (Workday, USAJOBS).
+  `seen record`, `seen diff` and the report agree on it. A grouped role stays open while any of
+  its postings is still listed, and then links to a live one.
+
 ## [0.1.0] — 2026-10-19
 
 **First release.** job-scout finds open roles that fit a resume, from employer job boards.
