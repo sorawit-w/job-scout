@@ -1,0 +1,5 @@
+{
+ "url": "https://api.ashbyhq.com/posting-api/job-board/raycast?includeCompensation=true",
+ "status": 200,
+ "body": "{\"jobs\":[],\"apiVersion\":\"1\"}"
+}

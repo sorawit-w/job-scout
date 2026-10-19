@@ -1,0 +1,5 @@
+{
+ "url": "https://api.lever.co/v0/postings/job-scout-no-such-board?mode=json",
+ "status": 404,
+ "body": "{\"ok\":false,\"error\":\"Document not found\"}"
+}
