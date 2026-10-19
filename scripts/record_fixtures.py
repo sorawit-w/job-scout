@@ -26,6 +26,14 @@ TRIM = 3
 GH = "https://boards-api.greenhouse.io/v1/boards/%s/jobs"
 ASHBY = "https://api.ashbyhq.com/posting-api/job-board/%s?includeCompensation=true"
 LEVER = "https://api.lever.co/v0/postings/%s?mode=json"
+# Single jobs the adapter tests read (ids were open on 2026-10-19; if one closes, pick a new
+# open id from the same board and update the test that names it).
+SINGLE_JOBS = [
+    "https://boards-api.greenhouse.io/v1/boards/airtable/jobs/8403107002?pay_transparency=true",
+    "https://boards-api.greenhouse.io/v1/boards/figma/jobs/5426468004?pay_transparency=true",
+    "https://api.lever.co/v0/postings/airslate/9a4add3b-1bbc-453d-94da-502113da3c53?mode=json",
+    "https://api.lever.co/v0/postings/airslate/00000000-0000-0000-0000-000000000000?mode=json",
+]
 
 
 def urls():
@@ -35,10 +43,13 @@ def urls():
             GH % "vercel" + "/1?pay_transparency=true"]
     out += [ASHBY % s for s in ("attention", "clerk", "raycast", "ramp", "job-scout-no-such-board")]
     out += [LEVER % s for s in ("airslate", "job-scout-no-such-board", "jobgether")]
+    out += SINGLE_JOBS
     return out
 
 
 def trim(path):
+    if not os.path.exists(path):  # the request failed before any response was recorded
+        return
     with open(path, encoding="utf-8") as f:
         fx = json.load(f)
     if not fx.get("body") or fx["status"] != 200:
