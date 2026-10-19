@@ -23,6 +23,8 @@ skill-creator run executes the skill with its scripts, against a replay world wh
 | E9 | Chat only, non-developer: gate works, no jargon | persona-marketer-chat.md (typed in chat, not attached) | none | stated-intent |
 | E10 | Data analyst, remote US: asks pay and sponsorship; analytics roles, not data engineering | persona-data-analyst.md | none | stated-intent |
 | E11 | PM on the IC track: keeps "Product Manager" titles, never the manager track | persona-pm.md | none | stated-intent |
+| E12 | HTML report after the chat results, before `seen record`; path given | e12-report.md | none | stated-intent |
+| E13 | Rerun with nothing new still writes the report; saved/applied listed | e13-rerun-nothing-new.md | none | stated-intent |
 
 All persona files are in `files/`. They are synthetic people with fictional employers and no
 protected attributes. Any eval can also run live; the gate evals (E1, E7, E9–E11) stop before

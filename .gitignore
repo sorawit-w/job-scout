@@ -13,3 +13,4 @@ skills/job-scout/evals/snapshots/
 
 # Anything personal: real resumes, real profiles, local notes — never committed
 private/
+.playwright-mcp/
