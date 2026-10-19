@@ -166,7 +166,8 @@ def build_view(files, profile, seen, run_id, probed_ok=()):
             scores={s: scores.get(s) for s in SCORES}, gates={g: gates.get(g) or "unknown" for g in GATES},
             why=_items(row.get("why")), risk=_items(row.get("risk")),
             state=cand.get("state") if seen and cand.get("state") in ("new", "changed") else None,  # all new on a first run
-            flags=[f for f in job.get("flags") or cand.get("flags") or [] if isinstance(f, str)]))
+            flags=[f for f in (job["flags"] if isinstance(job.get("flags"), list) else cand.get("flags") or [])
+                   if isinstance(f, str)]))  # an empty live list means the live check cleared them
     summary = files.get("filter") if isinstance(files.get("filter"), dict) else {}
     for nm in summary.get("near_misses") or []:
         if isinstance(nm, dict) and nm.get("key") not in used:
@@ -289,7 +290,7 @@ q{font-style:italic;color:var(--muted)}
 .actions a{color:var(--accent-ink);font-weight:600}
 @media (prefers-color-scheme:dark){.actions a{color:var(--accent)}}
 .actions a:hover,.actions button:hover{border-color:var(--accent)}
-.pane{display:none}
+.pane{display:none}.pane-empty{display:none;margin:0;padding:16px 20px;color:var(--muted)}.pane.is-empty .pane-empty{display:block}
 .mini{width:100%;table-layout:fixed;border-collapse:collapse;background:var(--table);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .mini td{border-top:1px solid var(--line);color:var(--muted);overflow-wrap:anywhere}.mini tr:first-child td{border-top:0}.mini td:first-child{color:var(--ink);font-weight:600}
 .empty{background:var(--table);border:1px solid var(--line);border-radius:10px;padding:16px;margin:20px 0 0}
@@ -345,7 +346,7 @@ function select(r,announce){if(sel&&sel!==r){var old=sel.querySelector('.detail'
 if(old){home[old.id].appendChild(old);}setOpen(sel,false);}
 sel=r;setOpen(r,true);var det=d.getElementById(btn(r).getAttribute('aria-controls'));pane.appendChild(det);
 if(announce)live.textContent='Showing '+btn(r).textContent.trim()+(r.dataset.company?' at '+r.dataset.company:'');}
-function visible(){return rows.filter(function(r){return !r.hidden;});}
+function visible(){return Array.prototype.filter.call(table.tBodies,function(r){return !r.hidden;});}
 function mode(){var want=wide.matches;if(want===split)return;split=want;
 if(split){root.classList.add('split');pane.hidden=false;rows.forEach(function(r){setOpen(r,false);});
 var v=visible();if(v.length)select(v[0],false);}
@@ -369,7 +370,9 @@ return (asc?c:-c)||a.dataset.rank-b.dataset.rank;}).forEach(function(r){table.ap
 var f=d.getElementById('filter'),count=d.getElementById('count');
 if(f)f.addEventListener('input',function(){var q=f.value.trim().toLowerCase(),n=0;
 rows.forEach(function(r){var hit=!q||r.dataset.text.indexOf(q)>=0;r.hidden=!hit;if(hit)n++;});
-count.textContent=n+' of '+rows.length+' shown';if(split&&sel&&sel.hidden){var v=visible();if(v.length)select(v[0],true);}});
+count.textContent=n+' of '+rows.length+' shown';if(!split)return;var v=visible();
+if(!v.length){if(sel){var det=pane.querySelector('.detail');if(det)home[det.id].appendChild(det);setOpen(sel,false);sel=null;}pane.classList.add('is-empty');}
+else{pane.classList.remove('is-empty');if(!sel||sel.hidden)select(v[0],true);}});
 function toast(msg){var t=d.createElement('div');t.className='toast';t.setAttribute('role','status');t.textContent=msg;
 d.body.appendChild(t);setTimeout(function(){t.remove();},1800);}
 function fallback(text){var a=d.createElement('textarea');a.value=text;a.setAttribute('readonly','');a.style.position='fixed';a.style.opacity='0';
@@ -519,7 +522,7 @@ def render(view):
         parts.append(
             '<div class="layout"><table class="roles"><caption class="sr">Roles that fit your brief, in rank order. '
             'Open a role to see why it fits.</caption><thead><tr>%s%s%s%s%s%s</tr></thead>%s</table>'
-            '<aside class="pane" id="pane" aria-label="Role details" hidden></aside></div>'
+            '<aside class="pane" id="pane" aria-label="Role details" hidden><p class="pane-empty">No roles match the filter.</p></aside></div>'
             '<div class="sr" id="live" aria-live="polite"></div>' % (
                 th("rank", "#", "c-rank", current=True), th("title", "Role", "c-role"),
                 th("where", "Where", "c-where", sort=False), th("pay", "Pay", "c-pay"),

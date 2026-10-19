@@ -81,7 +81,7 @@ class ReportTest(unittest.TestCase):
         # no-JS default: every detail sits open under its row; the script collapses them
         self.assertIn('aria-expanded="true" aria-controls="d1"', html)
         self.assertIn('<tr class="det"><td class="det-cell" colspan="6"><div class="detail" id="d1"', html)
-        self.assertIn('<aside class="pane" id="pane" aria-label="Role details" hidden></aside>', html)
+        self.assertIn('<aside class="pane" id="pane" aria-label="Role details" hidden><p class="pane-empty">', html)
         self.assertNotIn(">CHANGED<", html)  # first run (no seen.json): tags would be noise
         self.assertIn('<td dir="auto">UI Engineer</td><td dir="auto">Figma</td><td dir="auto">fit 3/8, below 5</td>', html)
         self.assertIn('<td dir="auto">Web Engineer</td><td dir="auto">Ramp</td><td dir="auto">pay tops out below your floor</td>', html)
@@ -142,6 +142,13 @@ class ReportTest(unittest.TestCase):
         self.assertIn("New title", html)
         self.assertIn("https://jobs.example.com/live", html)
         self.assertIn("pay not listed", html)  # comp from the live check, which had none
+
+    def test_live_check_that_cleared_the_flags_wins(self):
+        stale = job("gh:a:1", flags=["work mode unknown — checked on the live job"])
+        live = dict(job("gh:a:1"), flags=[])
+        make_run(self.home, [stale], [row("gh:a:1")], jds={"gh:a:1": {"status": "open", "comp": None, "job": live}})
+        run([], self.home)
+        self.assertNotIn("work mode unknown", page(self.home))
 
     def test_duplicate_and_unknown_keys(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1", 7), row("gh:a:1", 2), row("gh:zz:9")])

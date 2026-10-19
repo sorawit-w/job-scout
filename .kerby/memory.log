@@ -107,3 +107,9 @@ Commit: 313d192..HEAD (branch feature/html-report)
 Status: DONE
 Notes: skill-evaluator: clean (13/14, 0 fail, 1 unclear — rubric layer) at 7ab9dcb — 2026-10-19 (E12 5/5, E13 5/5, N6 3/4 + 1 unclear: the reply asked its question and then listed the options, while the assertion wanted the question last)
 Observations: Phase 5 says "stop" at zero candidates while output-format §7 says the report still runs; the N6 executor resolved it correctly but flagged the wording — tighten Phase 5 in a later change. Frontend recall unchanged 30/33. Live 49-board agent run with the report was not done; the replay run plus E12/E13 cover the step.
+
+Task: M7 redesign — master–detail table (user request after review of the card version)
+Action: team-composer discussion → expandable rows at every width plus a split pane at ≥1200px (user chose both) and the "Signal refined" theme; impeccable shaped it (PRODUCT.md written; docs/report-design.md rewritten; craft floor applied: no 2px colored edge, inline SVG icon sprite instead of glyphs, themed selection/scrollbars) and its detector run (only theme-mixing false positives left); report.py render rewritten (tbody per role, aria-expanded rows, aria-sort headers, pane with live announcement, ↑/↓, print restores inline); short pay/dates in cells; NEW/CHANGED only on reruns; rerun coverage wording (Codex P2). screenwright/axe: 0 violations across 15-role split/inline/phone × light/dark plus replay, zero and rerun pages; 320px reflow clean. Codex round 2 fixes: live empty flags win, ↑/↓ follow on-screen order, empty filter clears the pane.
+Status: DONE
+Notes: skill-evaluator: E12 re-run 5/5 on the reworded output-format §7 (SKILL.md unchanged since 7ab9dcb).
+
