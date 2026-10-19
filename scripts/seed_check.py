@@ -72,7 +72,7 @@ def write_csv(rows, fieldnames, path):
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(os.path.abspath(path)), suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=fieldnames)
+            w = csv.DictWriter(f, fieldnames=fieldnames, lineterminator="\n")
             w.writeheader()
             w.writerows(rows)
         os.replace(tmp, path)
