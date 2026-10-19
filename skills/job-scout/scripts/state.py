@@ -386,6 +386,13 @@ def probed_ok_boards(run_dir):
     return set(b.get("live_boards") or []) - bad
 
 
+def live_open(jobs, jds):
+    """jobs minus those whose live check (jds.json) found the posting gone: the board list can lag."""
+    gone = {k for k, e in (jds if isinstance(jds, dict) else {}).items()
+            if isinstance(e, dict) and e.get("status") == "closed"}
+    return [j for j in jobs if not gone.intersection(job_keys(j))]
+
+
 def diff(jobs, probed_ok, seen):
     """Lists of keys: new / changed / saved_open / applied_open (current job keys) and closed
     (seen.json keys whose boards were all probed ok this run but no current job matches)."""
@@ -425,7 +432,8 @@ def _shown_url(job, row_key):
 def record(run_dir, now=None):
     """Mark results.json rows with show true as seen (sig, title and url refreshed on every matching
     entry); for every job in jobs.json that matches an entry, refresh aliases and last_seen but not
-    sig, so an unshown job can still read "changed"; set or clear closed_at; return counts.
+    sig, so an unshown job can still read "changed"; set or clear closed_at; return counts. A job whose
+    live check in jds.json found the posting gone counts as absent, even while the board still lists it.
     A run with no results.json (a rerun with nothing new) records closures only.
     Raises FileNotFoundError when the run has no jobs.json or an unreadable results.json,
     ValueError (nothing written) when seen.json is unreadable."""
@@ -458,6 +466,7 @@ def record(run_dir, now=None):
             seen[key].update(last_seen=stamp, sig=job_sig(job), snap=job_snap(job), title=job.get("title"),
                              company=job.get("company"), url=_shown_url(job, row.get("key")))
     index = seen_index(seen)
+    jobs = live_open(jobs, read_json(run_dir / "jds.json", {}))  # a live-closed role closes here, not reopens
     for job in jobs:  # unshown too: filter drops unchanged roles, and their variants keep moving
         keys = job_keys(job)
         for key in _matches(job, index):
@@ -526,7 +535,7 @@ def _seen_cli(args):
                     print(json.dumps({"error": "run %s has no jobs.json — run probe.py first" % run.name}))
                     return 2
                 seen = load_seen()
-                out = diff(jobs, probed_ok_boards(run), seen)
+                out = diff(live_open(jobs, read_json(run / "jds.json", {})), probed_ok_boards(run), seen)
                 index, by_key = seen_index(seen), {j.get("key"): j for j in jobs}
                 out = dict(out, counts={k: len(v) for k, v in out.items()},
                            changed_details=[{"key": k, "before": _deciding_entry(by_key[k], seen, index).get("snap"),

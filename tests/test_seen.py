@@ -243,6 +243,14 @@ class RecordTest(HomeCase):
         self.assertEqual(state.record(run, now=NOW)["closed"], 1)
         self.assertEqual(state.load_seen()["ashby:acme:1"]["closed_at"], state.now_iso(NOW))
 
+    def test_live_check_closure_is_recorded_though_the_board_list_lags(self):
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
+        run = self.make_run([job()], [])  # still on the board list, but fetch_jd found the posting gone
+        state.write_json_atomic(run / "jds.json", {"ashby:acme:1": {"status": "closed"}})
+        counts = state.record(run, now=NOW)
+        self.assertEqual((counts["closed"], counts["reopened"]), (1, 0))
+        self.assertEqual(state.load_seen()["ashby:acme:1"]["closed_at"], state.now_iso(NOW))
+
     def test_empty_board_never_closes_a_role(self):
         state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
         run = self.make_run([], [], live=(), empty=("ashby:acme",))  # board briefly returned {"jobs": []}

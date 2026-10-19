@@ -283,7 +283,8 @@ shows everything). Lead with what moved:
   `changed_details` (`before` → `after`: title, pay or locations).
 - **Saved or applied, still open** (`saved_open`, `applied_open`) — a short list, so nothing
   they cared about is lost.
-- **Closed since last time** — the saved or applied roles in `closed_details` that are gone.
+- **Closed since last time** — the saved or applied roles in `closed_details` that are gone (from
+  the board, or found gone by the live check).
   Only boards checked successfully this run can close a role; never call a role closed
   because a board failed.
 

@@ -212,14 +212,9 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     top = max(removed, key=removed.get) if removed else None
     boards = files.get("boards") if isinstance(files.get("boards"), dict) else {}
     jobs = [j for j in files.get("jobs") or [] if isinstance(j, dict)]
-    lists = state.diff(jobs, set(probed_ok), seen) if seen else {}
-    closed_keys = {k for k, e in jds.items() if isinstance(e, dict) and e.get("status") == "closed"}
-    # jds.json is keyed by the display variant; diff() returns the collapsed job's own key
-    live_closed = {j.get("key") for j in jobs if closed_keys.intersection(state.job_keys(j))}
-    saved = [k for k in lists.get("saved_open", []) if k not in live_closed]
-    applied = [k for k in lists.get("applied_open", []) if k not in live_closed and k not in saved]  # saved wins, as in job_state
-    gone_saved = [k for k in lists.get("saved_open", []) if k in live_closed]  # diff() already chose the status,
-    gone_applied = [k for k in lists.get("applied_open", []) if k in live_closed and k not in gone_saved]  # even via aliases
+    lists = state.diff(state.live_open(jobs, jds), set(probed_ok), seen) if seen else {}  # as seen record does
+    saved = lists.get("saved_open", [])
+    applied = [k for k in lists.get("applied_open", []) if k not in saved]  # saved wins, as in job_state
 
     by_key = {j.get("key"): j for j in jobs}
 
@@ -243,7 +238,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
                                  if isinstance(e, dict) and e.get("status") == "open" and not e.get("dropped"))},
         "top_removed": {"reason": REASON_TEXT.get(top, top), "n": removed[top], "of": counts.get("input")} if top else None,
         "still_open": listed(saved, "saved") + listed(applied, "applied"),
-        "closed": listed(lists.get("closed", [])) + listed(gone_saved, "saved") + listed(gone_applied, "applied"),
+        "closed": listed(lists.get("closed", [])),
     }
 
 
@@ -427,11 +422,11 @@ table.addEventListener('keydown',function(e){var b=e.target.closest('.toggle');i
 var v=visible(),i=v.indexOf(b.closest('tbody.role')),n=v[i+(e.key==='ArrowDown'?1:-1)];if(!n)return;e.preventDefault();
 btn(n).focus();if(split)select(n,true);});
 var dir={rank:true};d.querySelectorAll('th[data-sort] button').forEach(function(h){h.addEventListener('click',function(){
-var th=h.parentNode,k=th.dataset.sort,asc=dir[k]===undefined?(k==='rank'||k==='title'):!dir[k];dir={};dir[k]=asc;
+var th=h.parentNode,k=th.dataset.sort,asc=dir[k]===undefined?(k==='rank'||k==='title'||k==='where'):!dir[k];dir={};dir[k]=asc;
 d.querySelectorAll('th[data-sort]').forEach(function(x){x.removeAttribute('aria-sort');var u=x.querySelector('use');if(u)u.setAttribute('href','#i-up');});
 th.setAttribute('aria-sort',asc?'ascending':'descending');th.querySelector('use').setAttribute('href',asc?'#i-up':'#i-down');
 rows.slice().sort(function(a,b){var x=a.dataset[k],y=b.dataset[k],c;
-if(k==='title')c=x.localeCompare(y);else{var nx=x===''?null:+x,ny=y===''?null:+y;
+if(k==='title'||k==='where')c=x.localeCompare(y);else{var nx=x===''?null:+x,ny=y===''?null:+y;
 if(nx===null&&ny===null)c=0;else if(nx===null)return 1;else if(ny===null)return -1;else c=nx-ny;}
 return (asc?c:-c)||a.dataset.rank-b.dataset.rank;}).forEach(function(r){table.appendChild(r);});});});
 var f=d.getElementById('filter'),count=d.getElementById('count'),quick={};
@@ -554,7 +549,7 @@ def _row(r):
     text = " ".join((r["title"], r["company"], r["where"], r["pay"])).lower()
     return (
         '<tbody class="role" data-rank="%d" data-fit="%s" data-top="%d" data-flags="%d" data-pay="%s" data-since="%s" '
-        'data-title="%s" data-company="%s" data-text="%s">'
+        'data-title="%s" data-where="%s" data-company="%s" data-text="%s">'
         '<tr class="sum"><td class="c-rank">%d</td>'
         '<td class="c-role"><button type="button" class="toggle" id="b%d" aria-expanded="true" aria-controls="d%d">'
         '%s<span dir="auto">%s</span></button>%s%s'
@@ -565,7 +560,7 @@ def _row(r):
         '<tr class="det"><td class="det-cell" colspan="6">%s</td></tr></tbody>'
     ) % (r["rank"], "" if total is None else total, 1 if total is not None and total >= 7 else 0, n,
          "" if r["pay_sort"] is None else r["pay_sort"],
-         _e(r["since"].replace("-", "")), _e(r["title"].lower()), _e(r["company"]), _e(text),
+         _e(r["since"].replace("-", "")), _e(r["title"].lower()), _e(r["where"].lower()), _e(r["company"]), _e(text),
          r["rank"], r["rank"], r["rank"], _icon("chev", "i chev"), _e(r["title"]),
          '<span class="tag">%s</span>' % tag if tag else "", flagnote,
          _e(r["company"]) or "company not listed", _e(r["where"]), _e(r["pay_short"]),
@@ -623,7 +618,7 @@ def render(view):
             '<aside class="pane" id="pane" aria-label="Role details" hidden><p class="pane-empty">No roles match the filter.</p></aside></div>'
             '<div class="sr" id="live" aria-live="polite"></div>' % (
                 th("rank", "#", "c-rank", current=True), th("title", "Role", "c-role"),
-                th("where", "Where", "c-where", sort=False), th("pay", "Pay", "c-pay"),
+                th("where", "Where", "c-where"), th("pay", "Pay", "c-pay"),
                 th("fit", "Fit", "c-fit"), th("since", "Open since", "c-since"),
                 "".join(_row(r) for r in roles)))
     else:

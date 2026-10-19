@@ -191,7 +191,7 @@ class ReportTest(unittest.TestCase):
         self.assertIn("Gone Role", html)
 
     def test_live_closed_saved_role_is_not_still_open(self):
-        make_run(self.home, [job("gh:a:1", state_="changed")], rows=None, jds={"gh:a:1": {"status": "closed"}})
+        make_run(self.home, [job("gh:a:1", state_="changed")], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]}, jds={"gh:a:1": {"status": "closed"}})
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {
                 "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
@@ -213,7 +213,7 @@ class ReportTest(unittest.TestCase):
 
     def test_live_closed_variant_closes_its_saved_job(self):
         grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
-        make_run(self.home, [grouped], rows=None, jds={"gh:a:2": {"status": "closed"}})  # jds keys the display variant
+        make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]}, jds={"gh:a:2": {"status": "closed"}})  # jds: display variant
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {
                 "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
@@ -224,9 +224,9 @@ class ReportTest(unittest.TestCase):
 
     def test_live_closed_alias_keeps_its_saved_status(self):
         grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
-        make_run(self.home, [grouped], rows=None, jds={"gh:a:2": {"status": "closed"}})
+        make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]}, jds={"gh:a:2": {"status": "closed"}})
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
-            state.write_json_atomic(state.seen_path(), {"gh:old:9": {  # matches the job only through an alias
+            state.write_json_atomic(state.seen_path(), {"gh:a:9": {  # matches the job only through an alias
                 "status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": "", "aliases": ["gh:a:2"]}})
         run([], self.home)
         html = page(self.home)
