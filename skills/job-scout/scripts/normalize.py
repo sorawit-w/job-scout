@@ -194,11 +194,15 @@ def classify(locations, remote_flag=None, workplace_hint=None):
     hint = _mode(workplace_hint)
     remote_locs = [loc for loc in locs if _REMOTE_RE.search(loc)]
 
+    # A location saying "Remote" or an explicit mode wins over the bare flag: Ashby sets
+    # isRemote=True on every Hybrid job, so the flag alone only means "not onsite".
     remote = None
-    if remote_flag is True or remote_locs or hint == "remote":
+    if remote_locs or hint == "remote":
         remote = True
-    elif remote_flag is False or hint == "onsite":
+    elif hint in ("hybrid", "onsite"):
         remote = False
+    elif remote_flag is not None:
+        remote = bool(remote_flag)
 
     scope = None
     if remote:
@@ -279,6 +283,10 @@ def company_norm(name):
     return " ".join(words)
 
 
+VARIANT_KEYS = ("job_id", "key", "ats", "slug", "title", "url", "locations", "first_published",
+                "countries", "remote", "remote_scope", "workplace", "comp")
+
+
 def collapse_variants(jobs):
     """Merge postings with the same company, title stem and department into one role row with
     variants[]. Department is part of the key: big boards post "Software Engineer" in many teams."""
@@ -299,7 +307,7 @@ def collapse_variants(jobs):
         row["remote_scope"] = sorted({c for s in scopes for c in s}) if scopes else None
         if row["remote"]:
             row["workplace"] = "remote"  # some posting of this role can be done remotely
-        row["variants"] = [{k: m.get(k) for k in ("job_id", "key", "title", "url", "locations", "first_published")}
-                           for m in members]
+        # Each variant keeps its own place, scope and pay, so a display variant can stand alone.
+        row["variants"] = [{k: m.get(k) for k in VARIANT_KEYS} for m in members]
         rows.append(row)
     return rows

@@ -1,4 +1,5 @@
 import os
+import tempfile
 import unittest
 from unittest import mock
 
@@ -11,7 +12,8 @@ HOSTS = ("greenhouse.io", "ashbyhq.com", "lever.co")
 
 
 def replay():
-    return mock.patch.dict(os.environ, {"JOB_SCOUT_REPLAY_DIR": FIXTURES})
+    # A temp home too: Ashby's fetch_job caches the board, and tests must never touch ~/.job-scout.
+    return mock.patch.dict(os.environ, {"JOB_SCOUT_REPLAY_DIR": FIXTURES, "JOB_SCOUT_HOME": tempfile.mkdtemp()})
 
 
 class RegistryTest(unittest.TestCase):
@@ -166,6 +168,24 @@ class QaFixesAdapterTest(unittest.TestCase):
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": tempfile.mkdtemp(), "JOB_SCOUT_REPLAY_DIR": tempfile.mkdtemp()}):
             state.cache_put("ashby", "acme", [{"id": "j1", "title": "A"}])
             self.assertEqual(ashby.fetch_job("acme", "j1")["id"], "j1")
+
+    def test_ashby_fetch_job_refetches_a_board_cached_over_15_minutes_ago(self):
+        import tempfile
+        import time
+        import state
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": tempfile.mkdtemp()}):
+            state.cache_put("ashby", "acme", [{"id": "j1"}], now=time.time() - 16 * 60)
+            with mock.patch.object(net, "get_json", return_value={"jobs": [{"id": "j2"}]}) as get:
+                self.assertIsNone(ashby.fetch_job("acme", "j1"))
+                self.assertEqual(ashby.fetch_job("acme", "j2")["id"], "j2")
+            self.assertEqual(get.call_count, 1)  # the refetched list is cached for the next job
+
+    def test_ashby_fetch_job_on_an_empty_board_is_unverified_not_closed(self):
+        import tempfile
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": tempfile.mkdtemp()}), \
+                mock.patch.object(net, "get_json", return_value={"jobs": []}):
+            with self.assertRaises(net.NetError):
+                ashby.fetch_job("acme", "j1")
 
 if __name__ == "__main__":
     unittest.main()

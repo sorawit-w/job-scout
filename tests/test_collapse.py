@@ -102,8 +102,30 @@ class CollapseVariantsTest(unittest.TestCase):
         self.assertEqual([v["job_id"] for v in row["variants"]], ["a1", "a2", "a3", "a4"])
         self.assertEqual(
             sorted(row["variants"][0]),
-            ["first_published", "job_id", "key", "locations", "title", "url"],
+            ["ats", "comp", "countries", "first_published", "job_id", "key", "locations", "remote",
+             "remote_scope", "slug", "title", "url", "workplace"],
         )
+
+    def test_variant_from_another_board_keeps_its_board(self):
+        jobs = self.ashby_four()[:2]
+        for j, (ats, slug) in zip(jobs, (("ashby", "acme"), ("greenhouse", "acme-eu"))):
+            j.update(ats=ats, slug=slug)
+        v = collapse_variants(jobs)[0]["variants"]
+        self.assertEqual([(x["ats"], x["slug"]) for x in v], [("ashby", "acme"), ("greenhouse", "acme-eu")])
+
+    def test_variant_keeps_its_own_pay_and_scope(self):
+        jobs = self.ashby_four()
+        jobs[0]["comp"] = {"min": 150000, "max": 200000, "currency": "USD", "interval": "year", "source": "ats_field"}
+        jobs[2]["comp"] = {"min": 70000, "max": 90000, "currency": "EUR", "interval": "year", "source": "ats_field"}
+        v = collapse_variants(jobs)[0]["variants"]
+        self.assertEqual(v[0]["comp"]["currency"], "USD")
+        self.assertEqual(v[0]["remote_scope"], ["US"])
+        self.assertEqual(v[0]["countries"], ["US"])
+        self.assertIs(v[0]["remote"], True)
+        self.assertEqual(v[0]["workplace"], "remote")
+        self.assertEqual(v[2]["comp"]["currency"], "EUR")
+        self.assertEqual(v[2]["remote_scope"], ["PT"])
+        self.assertIsNone(v[1]["comp"])
 
     def test_staff_title_is_a_separate_role(self):
         jobs = self.ashby_four() + [

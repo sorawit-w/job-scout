@@ -149,6 +149,20 @@ class ClassifyTest(unittest.TestCase):
         self.assertEqual(r["remote_scope"], ["CA"])
         self.assertEqual(r["countries"], ["CA"])
 
+    def test_hybrid_hint_beats_ashby_is_remote(self):
+        # Ashby sets isRemote=True on every Hybrid job (1,352 of 1,352 on the 49 boards, 2026-10-19);
+        # the JDs say "in-office" / "relocate". An explicit Hybrid/OnSite wins over the flag.
+        r = classify("San Francisco", remote_flag=True, workplace_hint="Hybrid")
+        self.assertFalse(r["remote"])
+        self.assertIsNone(r["remote_scope"])
+        self.assertEqual(r["workplace"], "hybrid")
+
+    def test_hybrid_job_with_a_remote_location_stays_remote(self):
+        r = classify(["New York, NY (HQ)", "San Francisco, CA", "Remote (US)"], remote_flag=True,
+                     workplace_hint="Hybrid")
+        self.assertTrue(r["remote"])
+        self.assertEqual(r["remote_scope"], ["US"])
+
     def test_remote_indiana(self):
         self.assertEqual(classify("Remote, IN")["remote_scope"], ["US"])
 

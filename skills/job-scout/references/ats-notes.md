@@ -20,7 +20,8 @@ url              employer ATS URL only (never an aggregator)
 comp             {min, max, currency, interval, source: "ats_field"} | null
 description_text str | null                   plain text (html_to_text); filled at list time when the list includes it
 fetched_at       "YYYY-MM-DDTHH:MM:SSZ"
-variants         [ {job_id, key, title, url, locations, first_published} ]   (added by collapse_variants)
+variants         [ {job_id, key, title, url, locations, first_published,
+                    countries, remote, remote_scope, workplace, comp} ]       (added by collapse_variants)
 ```
 
 **Pay comes only from structured fields.** Scripts never parse pay out of description text; the

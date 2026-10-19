@@ -16,7 +16,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 - [ ] SmartRecruiters adapter — field check done 2026-10-19 (works; paged lists, one request per description); corpHuntingMCP also lists SmartRecruiters tenants, so it is the first coverage expansion
 - [ ] Lever EU host (`api.eu.lever.co`) — not needed in v0: every sampled seed slug answered on `api.lever.co`
-- [ ] Location table gaps: cities missing from `normalize.py`'s table resolve to no country; "Lima, PE" reads PE as a Canadian province; "Porto Alegre" matches Porto (PT)
+- [ ] Location table gaps: cities missing from `normalize.py`'s table resolve to no country; "Lima, PE" reads PE as a Canadian province; "Porto Alegre" matches Porto (PT); "Stuttgart, DE" reads DE as Delaware
+- [ ] Region-to-country matching in filter.py: only "Americas" maps to countries today, so a DE or GB user's "Remote - Europe" role is removed by remote scope instead of kept with a flag
 - [ ] Workable adapter
 - [ ] Workday adapter (v0.1; jobscope's MIT adapter as reference)
 - [ ] CSV export with the full 11-column table

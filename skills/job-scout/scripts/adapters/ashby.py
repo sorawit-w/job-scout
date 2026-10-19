@@ -1,6 +1,7 @@
 """Ashby adapter (api.ashbyhq.com posting API). Field notes: references/ats-notes.md.
 
-Ashby has no single-job endpoint: a job missing from a fresh board list is closed.
+Ashby has no single-job endpoint: a job missing from a fresh (15-minute) board list is closed;
+an empty board list is unverified, never a reason to call a job closed.
 
 What it does NOT do: no caching (probe.py) and no pay parsing from description text —
 pay comes only from `compensation` salary components.
@@ -12,6 +13,7 @@ import state  # the module; `normalize` below is this adapter's contract functio
 from adapters import _common
 
 BASE = "https://api.ashbyhq.com/posting-api/job-board/%s?includeCompensation=true"
+LIVE_CHECK_MAX_AGE = 15 * 60  # a board list older than this is refetched before a live check
 _INTERVALS = {"1 YEAR": "year", "1 MONTH": "month", "1 WEEK": "week", "1 DAY": "day", "1 HOUR": "hour"}
 
 
@@ -24,13 +26,16 @@ def fetch_board(slug, budget=None):
 
 
 def fetch_job(slug, job_id, budget=None):
-    """The job from a board list younger than the cache TTL (a live check per HANDOFF §9),
-    fetching the list only when no fresh copy is cached; None if it is no longer listed."""
-    jobs = state.cache_get("ashby", slug)
+    """The job from a board list at most LIVE_CHECK_MAX_AGE old (a live check per HANDOFF §9),
+    refetching and re-caching the list when the cached copy is older; None if it is no longer
+    listed or the board is gone. Raises net.NetError for an empty board (unverified, not closed)."""
+    jobs = state.cache_get("ashby", slug, ttl=LIVE_CHECK_MAX_AGE)
     if jobs is None:
         jobs = fetch_board(slug, budget)
-        if jobs is not None:
+        if jobs:
             state.cache_put("ashby", slug, jobs)
+    if jobs == []:
+        raise net.NetError("board returned no jobs")
     for raw in jobs or []:
         if str(raw.get("id")) == str(job_id):
             return raw

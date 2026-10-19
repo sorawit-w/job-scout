@@ -92,7 +92,8 @@ people trust results more when they have seen the assumptions behind them.
 
 **"Just go" never means guessing the three ask-only fields.** For work mode, pay floor and
 sponsorship, use the defaults that filter nothing out — all work modes (remote limited to the
-home-base country), `base_pay_floor: null`, `needs_sponsorship: "undisclosed"` — label each
+home-base country, `open_to_relocation: true` so hybrid or onsite roles elsewhere in that country
+stay in, flagged), `base_pay_floor: null`, `needs_sponsorship: "undisclosed"` — label each
 `default`, and list those three as optional follow-ups after the brief ("these three answers
 would sharpen the results"). A wrong guess here silently hides roles; a non-filtering default
 only costs some extra results.
@@ -128,6 +129,7 @@ conversation), or **`needs you`**. Anything the user stated earlier in the conve
 | Title exclusions (e.g. mechanical, RF, "Product Designer" for an engineer) | Infer; show only if non-obvious. |
 | **Work mode** (remote / hybrid / onsite) | **Never guess. Ask.** |
 | **Remote scope** | Ask if they chose remote — many remote roles are limited to one country. |
+| **Relocation** | Ask if they chose hybrid or onsite: would they move for the right role? Never infer it from past moves. If yes, roles elsewhere in their home or remote-scope countries stay in, flagged "relocation". |
 | **Visa sponsorship** | **Never guess or infer.** Ask plainly: yes / no / prefer not to say. Used only as a filter. |
 | **Base pay floor** | **Never guess. Ask** (a number, or "no floor"). Roles with no listed pay are kept and labelled "pay not listed" unless the user says hide them. |
 | Industries | Infer softly; label `inferred`. |
@@ -138,7 +140,7 @@ conversation), or **`needs you`**. Anything the user stated earlier in the conve
 
 - Ask only what is missing or critical: **at most about 5 questions, in one message.** Number
   them and offer the choices inline (e.g. "1. Work mode: remote (US) / LA-area hybrid / onsite —
-  pick any").
+  pick any; for hybrid or onsite, would you relocate?").
 - Use a structured choice tool if your environment has one (e.g. an ask-the-user tool);
   otherwise plain text.
 - Write for anyone, not just engineers: no "ATS", "slug", "JSON", or "API" in questions or
@@ -161,7 +163,8 @@ python3 scripts/state.py profile save --stdin <<'JSON'
 {"schema": 1, "target_roles": [...], "title_synonyms": [...], "title_exclusions": [...],
  "seniority": [...], "track": "ic", "home_base": "...", "work_modes": ["remote", "hybrid"],
  "commute_cities": ["Los Angeles", "Pasadena", ...], "remote_scope": ["US"],
- "needs_sponsorship": "no", "base_pay_floor": {"amount": 180000, "currency": "USD", "interval": "year"},
+ "open_to_relocation": false, "needs_sponsorship": "no",
+ "base_pay_floor": {"amount": 180000, "currency": "USD", "interval": "year"},
  "hide_no_pay": false, "industries_prefer": [...], "industries_exclude": [], "companies_include": [],
  "companies_exclude": ["Acme"], "must_haves": [], "dealbreakers": [], "recency_flag_days": 90,
  "result_count": 15, "sources": {"target_roles": "resume", "work_modes": "you", ...}}
@@ -169,6 +172,8 @@ JSON
 ```
 
 - `needs_sponsorship` is `yes`, `no`, or `undisclosed`; `base_pay_floor` is `null` for "no floor".
+- `remote_scope` uses two-letter country codes (`"US"`, `"CA"`) or a region (`"AMER"`, `"EU"`,
+  `"ANY"`), never country names.
 - `commute_cities`: if they accept hybrid or onsite, list the cities within a reasonable commute
   of their home base and include them in the brief so they can correct it.
 - If `save` prints `errors`, fix the JSON and save again — never drop the user's answer to make
@@ -194,12 +199,64 @@ Run `python3 scripts/probe.py --health`.
   **Do not fall back to web search.** A web-search list is exactly what job-scout exists to
   replace: aggregator links, closed roles, wrong dates.
 
-## Phases 4–9 — Search, judge, report, remember (not built yet)
+## Phase 4 — Probe the job boards
 
-The search, fit judgment, results table and memory of seen roles arrive in the next
-milestones. Until they do: after Phase 3 passes, tell the user the brief is saved and the
-network check passed, and that the search step of job-scout is not built yet. Do not improvise
-a search with other tools.
+Run `python3 scripts/probe.py`. It picks up to 400 company boards (the user's named companies
+first), fetches them politely with a cache, merges regional duplicates, and prints one JSON
+summary: `run` (the run id), `boards.probed` / `boards.available`, `jobs`, `collapsed`.
+The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<run>/`).
+
+- Exit 3 → the network is blocked: give the Phase 3 stop message.
+- Exit 4 → the request cap was hit: continue with the partial results and say so.
+
+## Phase 5 — Narrow, then read the job descriptions
+
+1. Run `python3 scripts/filter.py`. It applies the confirmed brief deterministically (work mode,
+   location, remote scope, level, track, excluded companies and titles, pay floor) and prints
+   `counts`, ranked `candidates` (each `strong` or `borderline`, with `flags`) and up to 5
+   `near_misses`. With **zero candidates**, stop and explain using `counts.removed` (see
+   `references/output-format.md` §4) — never pad.
+2. Choose **up to 40** candidates whose descriptions are worth reading: all plausible `strong`
+   ones, then `borderline` titles that could be the target role in substance (a title like
+   "Software Engineer, Product" may be exactly a design-engineering job). Skip ones the title
+   already rules out.
+3. Run `python3 scripts/fetch_jd.py --keys <key1>,<key2>,...`. It re-checks each job on the
+   employer's board (the live check) and returns `jobs` (open, with a trimmed `jd`), `closed`,
+   and `unverified`. **Show only `open` jobs**; never present a closed or unverified job as open.
+   Exit 4 → the request cap stopped the checks: show the open ones and say the rest couldn't be
+   checked.
+
+## Phase 6 — Judge fit, with quotes
+
+Read `references/rubric.md` and follow it: four pass/fail gates (location, sponsorship, pay,
+exclusions), four 0–2 scores, a quote from the job description for every claim. Write the result to
+`<run dir>/results.json`, then run:
+
+```
+python3 scripts/cite_check.py < <run dir>/results.json
+```
+
+If it reports `failed` claims, re-read the description and fix or delete each one, then run it
+again until `"ok": true`. Why: a confident claim the description doesn't support is exactly the
+failure job-scout exists to prevent.
+
+## Phase 7 — Show the results
+
+Follow `references/output-format.md`: one coverage line, the six-column table (employer links
+only), one notes line per row with the quoted why/risk and "open since", 3–5 "close but
+excluded" lines, then the feedback prompt.
+
+## Phase 8 — Feedback
+
+Ask what to do with the roles ("save 1", "applied 3", "dismiss 2: too senior"). Remembering
+them across runs arrives in the next milestone; until then, say the feedback can't be saved yet.
+If feedback implies a brief change ("I keep dismissing hybrid roles"), propose the change and
+confirm it — never change the brief silently.
+
+## Phase 9 — Reruns (not built yet)
+
+Showing only what's new since last time arrives in the next milestone. For now a rerun is a
+fresh search from the saved brief (Phase 1 already starts from it).
 
 ## Cross-skill integration
 

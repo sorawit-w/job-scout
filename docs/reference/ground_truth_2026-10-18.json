@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-18",
+  "persona": "senior frontend / design engineer, LA area, remote US or hybrid; open to relocating within the US (12 of the 18 are hybrid or in-office outside LA, per their descriptions)",
+  "roles": [
+    {"ats": "ashby", "slug": "replit", "title": "Design Engineer", "first_published": "2026-10-16"},
+    {"ats": "ashby", "slug": "elevenlabs", "title": "Full-Stack Engineer (Frontend Leaning) - Studio", "first_published": "2026-10-09"},
+    {"ats": "ashby", "slug": "openai", "title": "Frontend Software Engineer, ChatGPT Space", "first_published": "2026-10-08"},
+    {"ats": "ashby", "slug": "ramp", "title": "Design Systems Lead", "first_published": "2026-09-30"},
+    {"ats": "ashby", "slug": "vapi", "title": "Member of Technical Staff, Frontend", "first_published": "2026-09-22"},
+    {"ats": "ashby", "slug": "ramp", "title": "Software Engineer, Frontend, Growth", "first_published": "2026-09-21"},
+    {"ats": "greenhouse", "slug": "vercel", "title": "Design Engineer", "first_published": "2026-09-15"},
+    {"ats": "greenhouse", "slug": "affirm", "title": "Senior Software Engineer, Frontend (Auth Experiences)", "first_published": "2026-09-10"},
+    {"ats": "ashby", "slug": "perplexity", "title": "Member of Technical Staff (Software Engineer, Design System)", "first_published": "2026-08-11"},
+    {"ats": "ashby", "slug": "harvey", "title": "Frontend Platform Engineer", "first_published": "2026-07-31"},
+    {"ats": "ashby", "slug": "ramp", "title": "Design Engineer", "first_published": "2026-07-08"},
+    {"ats": "ashby", "slug": "harvey", "title": "Staff Software Engineer, Frontend", "first_published": "2026-06-24"},
+    {"ats": "ashby", "slug": "harvey", "title": "Senior Software Engineer, Frontend", "first_published": "2026-06-24"},
+    {"ats": "ashby", "slug": "ashby", "title": "Design Engineer - Americas", "first_published": "2026-06-12"},
+    {"ats": "ashby", "slug": "harvey", "title": "Senior Frontend Platform Engineer", "first_published": "2026-04-28"},
+    {"ats": "ashby", "slug": "ashby", "title": "Staff Design Engineer - Americas", "first_published": "2025-11-14"},
+    {"ats": "ashby", "slug": "harvey", "title": "Staff Software Engineer, Frontend", "first_published": "2025-08-22"},
+    {"ats": "ashby", "slug": "harvey", "title": "Senior Software Engineer, Frontend", "first_published": "2024-03-08"}
+  ]
+}

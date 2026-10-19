@@ -50,6 +50,13 @@ class ValidateTest(unittest.TestCase):
         self.assertTrue(state.validate_profile(good(result_count=500)))
         self.assertTrue(state.validate_profile("not a dict"))
 
+    def test_remote_scope_must_be_country_or_region_codes(self):
+        for bad in (["United States"], ["USA"], ["us"], ["U.S."], ["US", "Canada"]):
+            errors = state.validate_profile(good(remote_scope=bad))
+            self.assertTrue(any("remote_scope" in e and '"US"' in e for e in errors), (bad, errors))
+        for ok in (["US"], ["US", "CA"], ["ANY"], ["EU", "GB"], ["AMER"], []):
+            self.assertEqual(state.validate_profile(good(remote_scope=ok)), [], ok)
+
     def test_empty_work_modes_is_rejected(self):
         self.assertTrue(any("work_modes" in e for e in state.validate_profile(good(work_modes=[]))))
 
@@ -62,7 +69,12 @@ class ValidateTest(unittest.TestCase):
         self.assertEqual(p["result_count"], 15)
         self.assertEqual(p["recency_flag_days"], 90)
         self.assertIs(p["hide_no_pay"], False)
+        self.assertIs(p["open_to_relocation"], False)
         self.assertEqual(p["companies_exclude"], [])
+
+    def test_open_to_relocation_must_be_a_bool(self):
+        self.assertEqual(state.validate_profile(good(open_to_relocation=True)), [])
+        self.assertTrue(state.validate_profile(good(open_to_relocation="yes")))
 
 
 class ProfileCliTest(unittest.TestCase):
