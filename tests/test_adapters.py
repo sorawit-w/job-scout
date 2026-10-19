@@ -228,6 +228,12 @@ class SmartRecruitersTest(SchemaMixin, unittest.TestCase):
         with mock.patch.object(net, "get_json", return_value=None):
             self.assertIsNone(smartrecruiters.fetch_board("gone"))
 
+    def test_board_gone_mid_paging_is_an_error_not_a_short_list(self):
+        # a short list would let probe.py treat it as the whole board and close the missing roles
+        with mock.patch.object(net, "get_json", side_effect=[sr_page(100, 300), None]):
+            with self.assertRaises(net.NetError):
+                smartrecruiters.fetch_board("acme")
+
     def test_hourly_pay_and_location_without_full_text(self):
         raw = {"id": "7", "name": "Barista", "releasedDate": "2026-10-01T10:00:00.000Z", "company": {"identifier": "Acme"},
                "location": {"city": "Austin", "region": "TX", "country": "us", "remote": False, "hybrid": False},

@@ -40,6 +40,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
+import adapters  # noqa: E402
 import normalize  # noqa: E402
 import state  # noqa: E402
 
@@ -56,7 +57,10 @@ AMER_FLAG = "Americas — check US eligibility"
 MODE_NOT_STATED = "work mode not stated"
 RELOCATE_FLAG = "relocation: %s in %s"
 DESC_FLAG = "title is generic — matched on the description"
-LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED)
+MODE_ON_DETAIL_FLAG = "work mode unknown — checked on the live job"
+LOCATION_FLAGS = (SCOPE_NOT_STATED, AMER_FLAG, MODE_NOT_STATED, MODE_ON_DETAIL_FLAG)
+# Hiring tools whose board list never states a work mode (adapters with MODE_ON_DETAIL).
+_MODE_ON_DETAIL = {name for name, m in adapters.REGISTRY.items() if getattr(m, "MODE_ON_DETAIL", False)}
 
 _ALIASES = {"sr": "senior", "jr": "junior", "swe": "software engineer", "eng": "engineer"}
 _LEVEL_WORDS = {"senior", "staff", "lead", "principal"}  # ignored when matching a target role
@@ -122,7 +126,18 @@ def _place_check(job, p, ctx):
             return None, [MODE_NOT_STATED, RELOCATE_FLAG % ("onsite or hybrid", where)], "local"
         if wp in ("hybrid", "onsite") and wp in modes:
             return None, [RELOCATE_FLAG % (wp, where)], "local"
+    if ("remote" in modes and job.get("ats") in _MODE_ON_DETAIL and job.get("remote") is None
+            and wp is None and _scope_could_fit(job, p["remote_scope"])):
+        return None, [MODE_ON_DETAIL_FLAG], "remote"
     return remote_fail or "location", [], None
+
+
+def _scope_could_fit(job, want):
+    """False only when the job's locations name countries all outside the wanted remote scope."""
+    codes = {c for loc in job.get("locations") or [] for c in normalize.place_codes(loc)}
+    want = set(want)
+    return (not want or "ANY" in want or not codes or bool(codes & want)
+            or ("AMER" in want and bool(codes & _AMER)))
 
 
 def _relocation_countries(p):

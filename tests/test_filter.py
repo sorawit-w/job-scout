@@ -132,6 +132,17 @@ class WorkModeLocationTest(unittest.TestCase):
         self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda"])[0], "location")
         self.assertEqual(outcome(md, home_base="Arlington, VA", commute_cities=["Bethesda, MD"])[0], "strong")
 
+    def test_workday_row_without_a_mode_is_kept_for_the_live_check(self):
+        # Workday search rows never say remote or onsite; the detail record (fetch_job) does.
+        wd = job(ats="workday", locations=("Denver, CO",), remote=None, scope=None, workplace=None)
+        match, cand = outcome(wd, work_modes=["remote"])
+        self.assertEqual(match, "strong")
+        self.assertIn(jfilter.MODE_ON_DETAIL_FLAG, cand["flags"])
+        far = job(ats="workday", locations=("London, United Kingdom",), remote=None, scope=None, workplace=None)
+        self.assertEqual(outcome(far, work_modes=["remote"])[0], "location")
+        gh = job(ats="greenhouse", locations=("Denver, CO",), remote=None, scope=None, workplace=None)
+        self.assertEqual(outcome(gh, work_modes=["remote"])[0], "location")
+
     def test_onsite_removed_when_only_remote_and_hybrid_wanted(self):
         self.assertEqual(outcome(local(workplace="onsite"))[0], "work_mode")
 

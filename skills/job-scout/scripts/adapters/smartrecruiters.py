@@ -28,7 +28,9 @@ def fetch_board(slug, budget=None):
     for page in range(MAX_PAGES):
         data = net.get_json(BASE % _common.quote_slug(slug) + "?limit=%d&offset=%d" % (PAGE, page * PAGE), budget)
         if data is None:
-            return None if page == 0 else out
+            if page:  # gone mid-paging: a partial list must not count as the whole board
+                raise net.NetError("SmartRecruiters board %s answered 404/410 on page %d" % (slug, page + 1))
+            return None
         content = data.get("content") or []
         out.extend(content)
         if len(content) < PAGE or len(out) >= (data.get("totalFound") or 0):
