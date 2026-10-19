@@ -83,3 +83,11 @@ Commit: 4be062a..HEAD (branch feature/evals)
 Status: DONE
 Notes: SKILL.md and references unchanged in M5 — skill-evaluator: clean (44/44) at fde6b92 still covers the exact text; E10 6/6, E11 6/6 (E10 needed one rubric-layer clarification).
 Observations: shortlist 79% vs the §11 ~83% bar on a larger key — follow-up: read up to 60 descriptions when many candidates are strong.
+
+Task: M5b — more hiring tools (implementation-plan.yaml int-more-ats, C1–C9)
+Action: SmartRecruiters adapter + seed (6,214 live); Workday adapter (keyword search, partial, never closes roles) + verified list from corpHuntingMCP and kalil0321 at pinned SHAs (2,550 live); opt-in USAJOBS (env key, never asked in chat); net.py POST/headers/204; probe search words = target titles only; board order by the brief's field; companies.py SmartRecruiters guesses and Workday --board URLs; SKILL.md coverage text. C8 live nurse run (Sacramento) first found 1 candidate (Denver, false city match): tech eval boards took 46 slots and industries_prefer matched nothing. Fixes: seed49 leads tech briefs only; industries_prefer words match company names; a commute-city match naming another US state is removed; no feedback prompt when no roles are shown. Re-run: 19 candidates, 19/19 open, all employer links. Frontend no-regression: 30/33 of the 2026-10-19 key, unchanged.
+Files: skills/job-scout/scripts/{adapters/,net.py,probe.py,filter.py,normalize.py,fetch_jd.py,companies.py}, skills/job-scout/{SKILL.md,references/output-format.md,data/companies.csv,evals/results/2026-10-19-nurse.md}, scripts/{seed_import,seed_check}.py, tests/, NOTICE, ROADMAP.md
+Commit: 977d7ab..HEAD (branch feature/more-hiring-tools)
+Status: DONE
+Notes: skill-evaluator: clean (24/24) at 56c148f — 2026-10-19 (N1–N5 16/16 on the coverage text; N6–N7 8/8 on the zero-result and commute-state text)
+Observations: Sacramento's large hospital systems use Phenom, iCIMS and Taleo — none readable yet (ROADMAP).
