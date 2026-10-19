@@ -184,6 +184,10 @@ class RelocationTest(unittest.TestCase):
         res, cand = outcome(j, open_to_relocation=True)
         self.assertIn("relocation: hybrid in Austin, TX", cand["flags"])
 
+    def test_amer_scope_lets_relocation_reach_canada(self):
+        res, _ = outcome(elsewhere("Toronto", ["CA"]), open_to_relocation=True, remote_scope=["AMER"])
+        self.assertEqual(res, "strong")
+
     def test_no_resolvable_country_means_no_relocation(self):
         p = state.with_profile_defaults(profile(open_to_relocation=True, home_base=None, remote_scope=["EU"]))
         self.assertIsNone(jfilter._relocation_countries(p))

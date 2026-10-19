@@ -121,7 +121,9 @@ def _relocation_countries(p):
     if "ANY" in p["remote_scope"]:
         return frozenset()
     home = normalize.place_codes(p.get("home_base") or "")
-    return frozenset(c for c in set(home) | set(p["remote_scope"]) if c not in normalize.REGION_CODES) or None
+    wanted = set(home) | set(p["remote_scope"]) | (_AMER if "AMER" in p["remote_scope"] else set())
+    # shortcut: only AMER expands to countries; other regions need the ROADMAP region map.
+    return frozenset(c for c in wanted if c not in normalize.REGION_CODES) or None
 
 
 def _pick_variant(job, p, ctx):
