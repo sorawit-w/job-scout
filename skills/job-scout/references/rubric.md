@@ -17,6 +17,7 @@ An unknown gate keeps the job and shows the unknown label.
 | **Location / mode** | The description clearly rules the user out: onsite-only in another city, remote limited to countries outside the user's remote scope, required relocation they didn't accept. Quote it. | `location unclear` |
 | **Sponsorship** | The user needs sponsorship (`needs_sponsorship: "yes"`) and the description says it won't sponsor, or requires citizenship / permanent residency. Quote it. (If the user said `no` or `undisclosed`, this gate always passes.) | `sponsorship not stated` |
 | **Pay floor** | Listed pay (structured `comp`, or a pay range quoted from the description) tops out below the user's floor, in the same currency and interval. Quote it, or cite the structured range. Also fail when the user chose `hide_no_pay` and the job has neither. | `pay not listed` |
+| **Exclusions** | The description shows the job is in one of the user's `industries_exclude`, or hits one of their `dealbreakers`. Quote it as a `risk` item. A score total never overrides this gate. | — (not stated = pass; never guess) |
 
 Never infer a gate from the company's reputation, size, or what "usually" happens.
 
@@ -27,7 +28,7 @@ Never infer a gate from the company's reputation, size, or what "usually" happen
 | **Role** | The job is one of the target roles in substance (what you'd do day to day), whatever its title. | Adjacent: overlaps heavily but leans elsewhere (e.g. full-stack, backend-leaning, for a frontend target). | A different job family. |
 | **Skills** | The description's must-haves are mostly skills the resume shows. | About half overlap, or the key skill is a near neighbour. | Little overlap, or a hard requirement the user clearly lacks. |
 | **Level** | The level (title or years asked) matches the user's seniority. | One step off (e.g. Senior for a Staff, Staff for a Senior). | Two or more steps off. |
-| **Domain** | Matches `industries_prefer`, or the user stated no preference. | Neutral. | In `industries_exclude` (that also fails the job outright). |
+| **Domain** | Matches `industries_prefer`, or the user stated no preference. | Neutral. | In `industries_exclude` (that also fails the Exclusions gate). |
 
 `total` = sum of the four (0–8).
 
@@ -43,7 +44,7 @@ One row per judged job, in your ranked order, including jobs you excluded (they 
 ```json
 {"rows": [
   {"key": "greenhouse:vercel:6129441004",
-   "gates": {"location": "pass", "sponsorship": "unknown", "pay": "pass"},
+   "gates": {"location": "pass", "sponsorship": "unknown", "pay": "pass", "exclusions": "pass"},
    "scores": {"role": 2, "skills": 2, "level": 1, "domain": 2},
    "total": 7,
    "show": true,

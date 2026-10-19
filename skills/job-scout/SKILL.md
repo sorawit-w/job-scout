@@ -228,8 +228,8 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
 
 ## Phase 6 — Judge fit, with quotes
 
-Read `references/rubric.md` and follow it: three pass/fail gates (location, sponsorship, pay),
-four 0–2 scores, a quote from the job description for every claim. Write the result to
+Read `references/rubric.md` and follow it: four pass/fail gates (location, sponsorship, pay,
+exclusions), four 0–2 scores, a quote from the job description for every claim. Write the result to
 `<run dir>/results.json`, then run:
 
 ```
