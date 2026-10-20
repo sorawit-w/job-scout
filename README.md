@@ -7,7 +7,7 @@ today, links straight to the employer, and explains its fit with quotes from the
 - **Works in:** Claude Code, Codex, claude.ai (Pro/Max), and any agent that reads `SKILL.md`.
 - **Reads:** Greenhouse, Ashby, Lever, SmartRecruiters and Workday boards, plus USAJOBS with
   your own free key.
-- **Status:** Current release: `0.4.0`. See [Status](#status).
+- **Status:** Current release: `0.5.0`. See [Status](#status).
 
 job-scout is not affiliated with any job board or employer.
 
@@ -184,9 +184,11 @@ requires them. There is no telemetry. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Status
 
-Current release, `0.4.0`: rerun memory. A rerun shows one ranked list with new, changed and saved
-roles marked, and reuses what it already judged instead of reading the same postings again.
-Earlier releases added the HTML report (`0.2.0`) and work-style match (`0.3.0`); see
+Current release, `0.5.0`: claude.ai memory and fresher data. On claude.ai the skill says once that
+the chat can't keep history and hands you a block that restores your brief and your saved,
+applied and dismissed roles in the next chat. Installed copies in Claude Code and Codex now pick
+up the weekly company list. Earlier releases added the HTML report (`0.2.0`), work-style match
+(`0.3.0`) and rerun memory (`0.4.0`); see
 [CHANGELOG.md](CHANGELOG.md). Milestones M1–M9 in [`ROADMAP.md`](ROADMAP.md) are done, except
 the launch milestone's install smoke tests. Planned next: more hiring tools (iCIMS, Taleo,
 Phenom), job connectors as a way to discover employers, and board order by distance from home.

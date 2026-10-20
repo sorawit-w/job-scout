@@ -216,3 +216,7 @@ Commit: c939c5d (fix), ba3fb28 (squash merge on main)
 Status: DONE — merged.
 Notes: skill-evaluator: clean (21/21) at 70382a1 — 2026-10-20; the skill text did not change after that pass (c939c5d touches only state.py and tests). Release not cut; CHANGELOG lists the change under Unreleased. The feature branch is left on the remote.
 Observations: A paste does not carry a dismissal's reason or a role's first-shown date (a restored role's is the restore date). Seen-only roles show as NEW again after a paste. When a pasted brief is rejected, the block offered before the user confirms has no profile: line. Gate on main: 720 tests on 3.14.7 and 3.9.6.
+
+Task: v0.5.0 release prep
+Action: bumped VERSION, .codex-plugin/plugin.json, CHANGELOG ([Unreleased] → [0.5.0]) and README status to 0.5.0. Contents: claude.ai memory (#23/#26), weekly seed check auto-merge with seed_guard (#24), Claude Code manifests without version so updates follow the git commit (#25).
+Status: DONE (pending merge and release publish)

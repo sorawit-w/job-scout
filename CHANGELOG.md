@@ -3,7 +3,10 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
-## [Unreleased]
+## [0.5.0] — 2026-10-20
+
+**claude.ai memory and fresher data.** claude.ai users can carry their history into the next chat,
+and installed copies now pick up the weekly company list.
 
 ### Changed
 - **claude.ai memory.** On claude.ai the skill says once, in its first reply, that the chat can't
