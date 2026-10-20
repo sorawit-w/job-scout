@@ -13,7 +13,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Rerun memory (M9) released; launch smoke tests still open |
+| **Phase** | claude.ai memory (notice once, paste block with saved, applied and dismissed roles) on main, not yet released; launch smoke tests still open |
 | **Milestone** | none in progress; deploy-launch (M6) open until the smoke tests pass |
 | **Milestone Goal** | pick the next milestone from the ROADMAP follow-ups |
 
@@ -24,7 +24,8 @@
 | Priority | Task | Dependencies |
 |----------|------|--------------|
 | 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
-| 2 | Choose the next milestone from the ROADMAP follow-ups | — |
+| 2 | Maintainer: decide whether to cut a release for the Unreleased changes (claude.ai memory, seed-check auto-merge) | — |
+| 3 | Choose the next milestone from the ROADMAP follow-ups | — |
 
 ---
 
