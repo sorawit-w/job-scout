@@ -304,6 +304,33 @@ class LiveCheckTest(unittest.TestCase):
         self.assertEqual(jds[VERCEL["key"]]["status"], "closed")
 
 
+class CheckOnlyTest(unittest.TestCase):
+    """--check-only: the live check for carried judgments, without printing a description to read."""
+
+    def test_keys_are_checked_and_saved_but_no_description_is_printed(self):
+        home = make_home([FIGMA, VERCEL])
+        code, out = run(["--check-only", "--keys", "%s,%s" % (FIGMA["key"], VERCEL["key"])], home)
+        self.assertEqual(code, 0)
+        self.assertEqual([j["key"] for j in out["jobs"]], [FIGMA["key"]])
+        self.assertNotIn("jd", out["jobs"][0])
+        self.assertEqual([c["key"] for c in out["closed"]], [VERCEL["key"]])
+        self.assertIn("Enterprise Account Executive", read_jds(home)[FIGMA["key"]]["full"])  # for cite_check
+
+    def test_alone_it_checks_the_cached_candidates(self):
+        home = make_home([dict(VERCEL, cached=False), dict(FIGMA, cached=True)])
+        code, out = run(["--check-only"], home)
+        self.assertEqual((code, [j["key"] for j in out["jobs"]], out["closed"]), (0, [FIGMA["key"]], []))
+        self.assertEqual(out["requests"], 1)
+        self.assertNotIn(VERCEL["key"], read_jds(home))
+
+    def test_cached_rows_past_the_limit_are_reported(self):
+        rows = [dict(FIGMA, key="greenhouse:figma:%d" % i, cached=True) for i in range(fetch_jd.MAX_JOBS + 2)]
+        with mock.patch.object(fetch_jd, "check", lambda row, budget: ({"status": "closed"}, None)):
+            code, out = run(["--check-only"], make_home(rows))
+        self.assertEqual((code, len(out["closed"])), (0, fetch_jd.MAX_JOBS))
+        self.assertEqual([u["key"] for u in out["unverified"]], [r["key"] for r in rows[fetch_jd.MAX_JOBS:]])
+
+
 class SearchSourceLiveCheckTest(unittest.TestCase):
     def test_workday_open_with_description_and_closed(self):
         sharp = sharp_open()

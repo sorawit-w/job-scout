@@ -11,6 +11,9 @@ Purpose:
 Usage (paths relative to the skill folder):
     python3 scripts/fetch_jd.py [--run latest] --top [N]        # first N rows (default 40, max 60)
     python3 scripts/fetch_jd.py [--run latest] --keys k1,k2,...  # rows by key (keys past 60 are unverified)
+    python3 scripts/fetch_jd.py [--run latest] --check-only [--keys ...]  # rows filter.py marked cached
+        --check-only: the live check for judgments `state.py judged carry` reuses. The full text is
+        still saved for cite_check, but no description is printed (no "jd"): nothing to read again.
 
     Writes <run>/jds.json (merged with any existing file):
       {key: {status: open|closed|unverified, full, trimmed, comp, checked_at, error}}
@@ -159,11 +162,12 @@ def main(argv=None):
     ap.add_argument("--run", default="latest")
     ap.add_argument("--keys")
     ap.add_argument("--top", type=int, nargs="?", const=DEFAULT_JOBS)
+    ap.add_argument("--check-only", action="store_true", help="no descriptions printed; alone: the cached rows")
     try:
         args = ap.parse_args(argv)
     except SystemExit:
         return 2
-    if not args.keys and args.top is None:
+    if not args.keys and args.top is None and not args.check_only:
         return _fail("give --keys k1,k2,... or --top N")
     try:
         run = state.resolve_run(args.run)
@@ -180,10 +184,13 @@ def main(argv=None):
         wanted = list(dict.fromkeys(k.strip() for k in args.keys.split(",") if k.strip()))
         unverified += [{"key": k, "error": "unknown key: not in candidates.json"} for k in wanted if k not in by_key]
         selected = [by_key[k] for k in wanted if k in by_key]
+    elif args.top is not None:
+        selected = rows[:max(args.top, 0)]
+    else:
+        selected = [r for r in rows if r.get("cached") is True]
+    if args.top is None:  # --top is clamped; listed or cached rows past the limit are reported
         unverified += [{"key": r["key"], "error": "not checked: over the %d-job limit" % MAX_JOBS}
                        for r in selected[MAX_JOBS:]]
-    else:
-        selected = rows[:max(args.top, 0)]
     selected = selected[:MAX_JOBS]
 
     budget = net.Budget(len(selected) + RETRY_ALLOWANCE)
@@ -219,7 +226,7 @@ def main(argv=None):
                                              "remote_scope", "first_published")}
             job.update(comp=entry["comp"], status="open", jd=entry["trimmed"], flags=fresh.get("flags") or [])
             entry["job"] = {k: v for k, v in job.items() if k != "jd"}  # live display fields, for report.py
-            jobs.append(job)
+            jobs.append(entry["job"] if args.check_only else job)
         elif entry["status"] == "closed":
             closed.append({"key": row["key"], "company": row.get("company"), "title": row.get("title")})
         else:
