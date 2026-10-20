@@ -138,8 +138,10 @@ hosts listed in [PRIVACY.md](PRIVACY.md). Files don't persist between claude.ai 
 see [Where job-scout remembers](#where-job-scout-remembers).
 
 **Updating:** the company list is refreshed every week. In Claude Code, run
-`/plugin marketplace update job-scout`, or turn on auto-update for the job-scout marketplace
-under `/plugin` → Marketplaces. In Codex, run `codex plugin marketplace upgrade job-scout`. On
+`/plugin marketplace update job-scout` to refresh the catalog, then update the installed copy
+from your shell with `claude plugin update job-scout@job-scout`; it loads in your next session,
+or after `/reload-plugins`. Or turn on auto-update for the job-scout marketplace under
+`/plugin` → Marketplaces. In Codex, run `codex plugin marketplace upgrade job-scout`. On
 claude.ai, upload the newest zip from the Releases page.
 
 **Optional, US federal jobs:** request a free key at
