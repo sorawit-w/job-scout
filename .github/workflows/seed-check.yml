@@ -1,8 +1,11 @@
 name: seed-check
 
 # Weekly: re-check every board in companies.csv and open a PR with the changes.
-# Never pushes to main. If more than 10% of boards error, seed_check.py exits 1
+# Never pushes to main directly. If more than 10% of boards error, seed_check.py exits 1
 # and no PR is opened (a bad network day must not wipe the seed).
+# The PR merges itself only when the tests pass and seed_guard.py calls the update routine
+# (under 1% status changes, under 1% live drop, no hiring tool losing over 5% of its live
+# boards). Otherwise it stays open with a comment saying why.
 on:
   schedule:
     - cron: "17 6 * * 1"   # Mondays 06:17 UTC
@@ -27,21 +30,45 @@ jobs:
           python-version: "3.13"
       - name: check every board
         run: python scripts/seed_check.py
-      - name: open a PR if anything changed
+      - name: open a PR if anything changed, and merge it when routine
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if git diff --quiet -- skills/job-scout/data/companies.csv; then
+          CSV=skills/job-scout/data/companies.csv
+          if git diff --quiet -- "$CSV"; then
             echo "companies.csv unchanged"; exit 0
           fi
+          git show "HEAD:$CSV" > "$RUNNER_TEMP/base.csv"
+          verdict=routine
+          # A bot push starts no CI, so the tests run here, on the updated list.
+          python scripts/seed_guard.py --base "$RUNNER_TEMP/base.csv" > "$RUNNER_TEMP/guard.txt" || verdict=review
+          if ! (python -m compileall -q skills scripts tests && python scripts/check-skill-compat.py \
+                && python -m unittest discover -s tests -t .) > "$RUNNER_TEMP/tests.txt" 2>&1; then
+            verdict=review
+            echo "  tests failed on the updated list (see the workflow log)" >> "$RUNNER_TEMP/guard.txt"
+            tail -40 "$RUNNER_TEMP/tests.txt"
+          fi
+          cat "$RUNNER_TEMP/guard.txt"
           stamp="$(date -u +%Y-%m-%d-%H%M)"
           branch="chore/seed-check-$stamp"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
-          git add skills/job-scout/data/companies.csv
+          git add "$CSV"
           git commit -m "chore: weekly seed check $stamp"
           git push origin "$branch"
-          gh pr create --base main --head "$branch" \
-            --title "chore: weekly seed check $stamp" \
-            --body "Automated run of \`scripts/seed_check.py\`. Before merging, review boards that turned dead or unverified, and any \"possible aggregator\" lines in the workflow log (candidates for \`skills/job-scout/data/denylist.txt\`)."
+          {
+            echo "Automated run of \`scripts/seed_check.py\`."
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/guard.txt"
+            echo '```'
+            echo
+            echo "Any \"possible aggregator\" lines in the workflow log are candidates for \`skills/job-scout/data/denylist.txt\`; they never block a merge."
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --base main --head "$branch" --title "chore: weekly seed check $stamp" --body-file "$RUNNER_TEMP/body.md"
+          if [ "$verdict" = routine ]; then
+            gh pr merge "$branch" --squash --delete-branch
+          else
+            gh pr comment "$branch" --body "Not merged automatically: this update needs a human review. See the reasons in the description above."
+          fi

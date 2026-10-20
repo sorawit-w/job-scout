@@ -38,4 +38,4 @@
 
 - Seed check flagged six boards with more than 2,000 jobs as possible aggregators (ashby:bjakcareer, greenhouse:andurilindustries, greenhouse:spacex, lever:aogarciaagency, lever:boxlunch, lever:tsmg). SpaceX and Anduril are real employers; none were added to the denylist without verification.
 - Ground truth 2026-10-19 is two-model consensus (Codex + Gemini), not human-labelled; a human re-label is a ROADMAP follow-up.
-- Branch protection on `main` is a repo setting only the maintainer can turn on (the seed-check workflow token has write access).
+- Branch protection on `main` is a repo setting only the maintainer can turn on (the seed-check workflow token has write access). The weekly seed check now merges routine updates itself; a rule that requires CI checks on `main` would block that merge, because a bot push starts no CI.
