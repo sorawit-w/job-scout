@@ -288,7 +288,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
 
 
 # ---------- render: view -> one HTML string ----------
-# Design spec: docs/report-design.md ("Signal refined", teal accent). One table, master–detail: details expand
+# Design spec: DESIGN.md at the repo root ("Signal refined", teal accent). One table, master–detail: details expand
 # inline under their row; at >= 1200px (JS on) a sticky side pane shows the selected role instead.
 
 CSS = """

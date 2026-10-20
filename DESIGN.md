@@ -2,8 +2,9 @@
 version: alpha
 name: job-scout report — Signal refined (teal)
 description: >-
-  Design tokens and layout spec for the per-run HTML report written by
-  skills/job-scout/scripts/report.py (CSS and JS are constants in that file). Operate-mode
+  The repo's design-token authority. job-scout's only UI is the per-run HTML report written by
+  skills/job-scout/scripts/report.py (CSS and JS are constants in that file), so this file
+  specifies that report; a new UI surface adds its own section here. Operate-mode
   surface: a master–detail table. Shaped with impeccable (M7 redesign), refined after a
   Codex + Antigravity design critique (design pass v2); audited with screenwright. Badge pass v3
   (2026-10-20): NEW/CHANGED/SAVED became pills, merged from blind impeccable, screenwright and
