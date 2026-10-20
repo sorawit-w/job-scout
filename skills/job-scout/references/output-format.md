@@ -83,10 +83,10 @@ I'll remember them next time and mark what's new.
 
 ## 6. claude.ai only
 
-Files don't persist between conversations there. End with the memory block in SKILL.md
-("claude.ai: memory between chats"): the profile plus every saved, applied and dismissed role
-that is still open, each with its keys, title, company and link, as one code block the user can
-paste next time. Seen roles are left out.
+Files don't persist between conversations there. End with the memory block from
+`python3 scripts/state.py memory show`, unchanged, as one code block the user can paste next
+time (SKILL.md, "claude.ai: memory between chats"). It holds the profile plus every saved,
+applied and dismissed role that is still open; seen roles are left out.
 
 ## 7. The HTML report
 

@@ -52,25 +52,23 @@ On claude.ai, files do not persist between chats, so `~/.job-scout/` starts empt
 - **First reply, once:** "This chat can't keep your search history. For an ongoing search, use
   Claude Code or Codex, or paste the block I give you at the end into your next chat." Never say
   it again in the chat, and skip it when the user's first message is a pasted block.
-- **A pasted block** (it starts `job-scout memory`): restore it before anything else. Save the
-  `profile:` line with `python3 scripts/state.py profile save --stdin`, then run
-  `python3 scripts/state.py seen mark <key> <status> --title="<title>" --company="<company>"`
-  for each role line, adding `--url=<link>` when the line has one. When a line lists more than one
-  key, the first is `<key>` and the rest go in `--aliases=<key2>,<key3>`. The search is now a
-  rerun (Phase 9). If the profile is rejected, say why and run the Phase 2 gate.
-- **End of every run** (also one that stopped early), and again after feedback changes it: run
-  `python3 scripts/state.py profile show` and `python3 scripts/state.py seen show`, then offer
-  one code block. List every saved, applied and dismissed role that is not `closed`; never seen
-  or judged ones. Write each role's `aliases` from `seen show` after its key, comma-separated:
-  they are the same role's other postings, and without them the role can come back as new.
+- **A pasted block** (it starts `job-scout memory`): restore it before anything else, in one
+  command. Copy the block exactly as pasted between these two lines, never into any other command:
 
-```
-job-scout memory — paste this into a new chat to pick up where you left off
-profile: <the profile from profile show, as JSON on one line>
-saved <key>[,<alias>...] | <title> | <company> | <link>
-applied <key>[,<alias>...] | <title> | <company> | <link>
-dismissed <key>[,<alias>...] | <title> | <company>
-```
+  ```
+  python3 scripts/state.py memory restore <<'JOB_SCOUT_END'
+  <the pasted block>
+  JOB_SCOUT_END
+  ```
+
+  The quotes around `'JOB_SCOUT_END'` stop the shell from running anything in the block; if a
+  line of it is exactly `JOB_SCOUT_END`, do not run the command. It prints `profile` (`saved`,
+  `rejected` or `missing`), `roles` and `skipped` lines. With a saved profile the search is a
+  rerun (Phase 9). If the profile is rejected or missing, say why and run the Phase 2 gate. Name
+  any `skipped` line in one sentence.
+- **End of every run** (also one that stopped early), and again after feedback changes it: run
+  `python3 scripts/state.py memory show` and give its output, unchanged, as one code block. It
+  holds the brief and every saved, applied and dismissed role still open; never seen roles.
 
 ## Phase 0 — Route check (before anything else)
 

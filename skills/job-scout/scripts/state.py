@@ -326,7 +326,6 @@ JUDGED_DAYS = 60  # a judged entry not listed on any board for this long is prun
 _OPEN_STATUSES = ("saved", "applied")  # only roles the user cared about are reported closed
 _KEY_RE = re.compile(r"^[a-z_]+:[^:/\\\s]+:\S+$")  # ats:slug:job_id
 MAX_REASON = 200
-MAX_URL = 2048  # employer links (Workday paths) run long; a restore must never reject a real one
 
 
 def seen_path():
@@ -752,51 +751,136 @@ def rank(run_dir):
     return {"shown": shown, "matches": sum(1 for (_, ok), _ in keyed if ok)}
 
 
-def mark(key, status, reason=None, now=None, aliases=(), title=None, company=None, url=None):
-    """Set a role's status (creating the entry if record never saw it), adding any other posting keys
-    as aliases. title/company/url fill only fields the entry lacks: the claude.ai paste block restores
-    them, and record's fresher values win. ValueError on bad input, including "judged", which only
-    `seen record` sets."""
+def mark(key, status, reason=None, now=None):
+    """Set a role's status (creating the entry if record never saw it). ValueError on bad input,
+    including "judged", which only `seen record` sets."""
     if status not in MARK_STATUSES:
         raise ValueError("status must be one of %s" % "/".join(MARK_STATUSES))
-    for k in [key] + list(aliases):
-        if not isinstance(k, str) or not _KEY_RE.match(k):
-            raise ValueError("bad job key %r (want ats:slug:job_id)" % (k,))
+    if not isinstance(key, str) or not _KEY_RE.match(key):
+        raise ValueError("bad job key %r (want ats:slug:job_id)" % (key,))
     if reason is not None and (not isinstance(reason, str) or len(reason) > MAX_REASON):
         raise ValueError("reason must be a string of at most %d characters" % MAX_REASON)
-    for name, v, cap in (("title", title, MAX_REASON), ("company", company, MAX_REASON), ("url", url, MAX_URL)):
-        if v is not None and not (isinstance(v, str) and 0 < len(v) <= cap):
-            raise ValueError("%s must be a non-empty string of at most %d characters" % (name, cap))
-    if url is not None and not re.match(r"https?://", url, re.I):
-        raise ValueError("url must start with http:// or https://")
     seen = load_seen()
     target = seen_index(seen).get(key, key)
     e = seen.setdefault(target, {"first_seen": now_iso(now), "last_seen": now_iso(now), "closed_at": None,
                                  "sig": None, "aliases": []})
     e.update(status=status, reason=reason)
-    _merge_aliases(e, target, list(aliases))
-    e.update((f, v) for f, v in (("title", title), ("company", company), ("url", url)) if v and not e.get(f))
     write_json_atomic(seen_path(), seen)
     return dict(e, key=target)
 
 
 def seen_summary():
-    """{"counts": {status: n}, "saved"/"applied"/"dismissed": [{key, aliases, title, company, url, closed}]} — `seen show`,
-    which also feeds the claude.ai paste block."""
+    """{"counts": {status: n}, "saved"/"applied": [{key, title, company, url, closed}]} — `seen show`."""
     seen = load_seen()
     counts = {}
     for e in seen.values():
         counts[e.get("status")] = counts.get(e.get("status"), 0) + 1
     out = {"counts": counts}
-    for status in ("saved", "applied", "dismissed"):
-        out[status] = [{"key": k, "aliases": list(e.get("aliases") or []), "title": e.get("title"),
-                        "company": e.get("company"), "url": e.get("url"), "closed": bool(e.get("closed_at"))}
-                       for k, e in seen.items() if e.get("status") == status]
+    for status in ("saved", "applied"):
+        out[status] = [{"key": k, "title": e.get("title"), "company": e.get("company"), "url": e.get("url"),
+                        "closed": bool(e.get("closed_at"))} for k, e in seen.items() if e.get("status") == status]
     return out
 
 
+MEMORY_HEADER = "job-scout memory — paste this into a new chat to pick up where you left off"
+MEMORY_STATUSES = ("saved", "applied", "dismissed")  # seen and judged roles are never carried: the list gets too long
+MAX_URL = 2048  # employer links (Workday paths) run long; a restore must never reject a real one
+_LINK_RE = re.compile(r"^https?://\S+$", re.I)
+
+
+def _one_line(v):
+    """A block field on one line with no field separator, so no title can split a line or end a heredoc."""
+    return " ".join(str(v or "").replace("|", "/").split())
+
+
+def memory_block():
+    """The claude.ai paste block (`memory show`): the profile, then every saved, applied and dismissed
+    role that is not closed, as `<status> <key>[,<alias>...] | <title> | <company> [| <link>]`.
+    Closed roles are left out: restored without closed_at, they would be reported closed in every chat.
+    shortcut: a key holding a comma would split on restore; no board's job ids use one today."""
+    lines = [MEMORY_HEADER]
+    profile = read_json(profile_path())
+    if isinstance(profile, dict):
+        lines.append("profile: " + json.dumps(profile, ensure_ascii=False))
+    seen = load_seen()
+    for status in MEMORY_STATUSES:
+        for key, e in seen.items():
+            if e.get("status") != status or e.get("closed_at"):
+                continue
+            fields = [",".join([key] + list(e.get("aliases") or [])), _one_line(e.get("title")),
+                      _one_line(e.get("company"))]
+            url = e.get("url")
+            if status != "dismissed" and isinstance(url, str) and _LINK_RE.match(url):
+                fields.append(url)
+            lines.append("%s %s" % (status, " | ".join(fields)))
+    return "\n".join(lines)
+
+
+def _memory_role(line):
+    """(status, keys, title, company, url) from one role line of a pasted block; ValueError says what is wrong."""
+    status, _, rest = line.partition(" ")
+    if status not in MEMORY_STATUSES:
+        raise ValueError("a role line starts with %s" % "/".join(MEMORY_STATUSES))
+    parts = [p.strip() for p in rest.split("|", 3)]
+    if len(parts) < 3:
+        raise ValueError("want <key>[,<alias>...] | <title> | <company> [| <link>]")
+    keys = [k.strip() for k in parts[0].split(",") if k.strip()]
+    for k in keys or [parts[0]]:
+        if not _KEY_RE.match(k):
+            raise ValueError("bad job key %r (want ats:slug:job_id)" % (k,))
+    for name, v in (("title", parts[1]), ("company", parts[2])):
+        if len(v) > MAX_REASON:
+            raise ValueError("%s is longer than %d characters" % (name, MAX_REASON))
+    url = parts[3] if len(parts) > 3 and parts[3] else None
+    if url is not None and not (len(url) <= MAX_URL and _LINK_RE.match(url)):
+        raise ValueError("the link must be an http(s) address of at most %d characters" % MAX_URL)
+    return status, keys, parts[1] or None, parts[2] or None, url
+
+
+def memory_restore(text, now=None):
+    """Restore a pasted block (`memory restore`, on stdin) in one step: the profile if it is valid, and
+    every valid role line. Each line's own key gets its entry before any alias is merged, so two
+    overlapping roles stay two entries with their own statuses. Title/company/link fill only fields an
+    entry lacks. Returns {"profile": saved|rejected|missing, "profile_errors", "roles", "skipped"}."""
+    profile, profile_errors, roles, skipped = None, [], [], []
+    state = "missing"
+    for n, raw in enumerate(text.splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("```") or line.startswith("job-scout memory"):
+            continue
+        if line.startswith("profile:"):
+            try:
+                profile = json.loads(line[len("profile:"):])
+                profile_errors = validate_profile(profile)
+            except ValueError as e:
+                profile_errors = ["invalid JSON: %s" % e]
+            state = "rejected" if profile_errors else "saved"
+            continue
+        try:
+            roles.append(_memory_role(line))
+        except ValueError as e:
+            skipped.append({"line": n, "error": str(e)})
+    seen = load_seen()  # an unreadable seen.json raises here, before anything is written
+    index = seen_index(seen)  # resolved before this block adds any alias
+    placed = []
+    for status, keys, title, company, url in roles:
+        target = index.get(keys[0], keys[0])
+        e = seen.setdefault(target, {"first_seen": now_iso(now), "last_seen": now_iso(now), "closed_at": None,
+                                     "sig": None, "aliases": []})
+        e["status"] = status
+        e.update((f, v) for f, v in (("title", title), ("company", company), ("url", url)) if v and not e.get(f))
+        placed.append((e, target, keys[1:]))
+    for e, target, aliases in placed:
+        _merge_aliases(e, target, aliases)
+    if roles:
+        write_json_atomic(seen_path(), seen)
+    if state == "saved":
+        write_json_atomic(profile_path(), profile)
+    return {"profile": state, "profile_errors": profile_errors, "roles": len(roles), "skipped": skipped}
+
+
 def _seen_cli(args):
-    """seen diff|record [--run] · seen mark KEY STATUS [--reason] [--aliases] [--title] [--company] [--url] · seen show. Exit 0 ok, 1 bad input
+    """seen diff|record [--run] · seen mark KEY STATUS [--reason] · seen show. Exit 0 ok, 1 bad input
     (including an unreadable seen.json, which is left unchanged), 2 no run."""
     try:
         if args.action in ("diff", "record"):
@@ -827,8 +911,7 @@ def _seen_cli(args):
                                             "status": seen[k].get("status"), "url": seen[k].get("url")}
                                            for k in out["closed"]])
         elif args.action == "mark":
-            e = mark(args.key, args.status, args.reason, aliases=[a for a in (args.aliases or "").split(",") if a],
-                     title=args.title, company=args.company, url=args.url)
+            e = mark(args.key, args.status, args.reason)
             out = {"ok": True, "key": e["key"], "status": e["status"], "reason": e["reason"]}
         else:
             out = seen_summary()
@@ -841,9 +924,11 @@ def _seen_cli(args):
 
 def main(argv=None):
     """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout);
-    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] [--aliases K,K] [--title T] [--company C] [--url U] · seen show;
+    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] · seen show;
     state.py judged carry|rank [--run latest] (reuse cached judgments; order results.json by the rubric) ·
-    judged forget (drop every cached judgment, e.g. after a new resume). Exit 2 = no run."""
+    judged forget (drop every cached judgment, e.g. after a new resume);
+    state.py memory show (print the claude.ai paste block) · memory restore (the pasted block on stdin;
+    exit 1 when the profile or a role line was rejected — the rest is still restored). Exit 2 = no run."""
     import argparse
     import sys
     ap = argparse.ArgumentParser(prog="state.py")
@@ -859,10 +944,9 @@ def main(argv=None):
     mark_p.add_argument("key")
     mark_p.add_argument("status")  # checked by mark(), so a bad status is exit 1, not argparse's 2
     mark_p.add_argument("--reason")
-    mark_p.add_argument("--aliases", help="other posting keys of the same role, comma-separated")
-    for field in ("--title", "--company", "--url"):  # restored from a claude.ai paste block
-        mark_p.add_argument(field)
     seen_sub.add_parser("show")
+    memory = sub.add_parser("memory")  # the claude.ai paste block
+    memory.add_argument("action", choices=("show", "restore"))
     judged = sub.add_parser("judged")
     judged.add_argument("action", choices=("carry", "rank", "forget"))
     judged.add_argument("--run", default="latest")
@@ -878,6 +962,17 @@ def main(argv=None):
 
     if args.area == "seen":
         return _seen_cli(args)
+    if args.area == "memory":
+        try:
+            if args.action == "show":
+                print(memory_block())
+                return 0
+            out = memory_restore(sys.stdin.read())
+        except ValueError as e:  # unreadable seen.json, left unchanged
+            print(json.dumps({"error": str(e)}, ensure_ascii=False))
+            return 1
+        print(json.dumps(out, ensure_ascii=False))
+        return 0 if out["profile"] != "rejected" and not out["skipped"] else 1
     if args.area == "judged":
         try:
             if args.action == "forget":

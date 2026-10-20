@@ -15,21 +15,29 @@ floor $170k. Find me jobs — just go."
 You judged all four; `judged rank` → {"shown": 4, "matches": 4}; cite_check → {"ok": true}
 `python3 scripts/report.py` → {"report": "/tmp/js/runs/r1/report.html"}
 `python3 scripts/state.py seen record` → {"inserted": 4}
+`python3 scripts/state.py memory show` → prints these lines:
+```
+job-scout memory — paste this into a new chat to pick up where you left off
+profile: {"schema": 1, "target_roles": ["Senior Frontend Engineer"], "work_modes": ["remote"], "remote_scope": ["US"], "needs_sponsorship": "no", "base_pay_floor": {"amount": 170000, "currency": "USD", "interval": "year"}, "home_base": "Denver, CO", "track": "ic"}
+```
 
 ### Chat 1 — second message (after the results)
 "save 1, dismiss 3: too senior"
 
 `python3 scripts/state.py seen mark greenhouse:linear:101 saved` → {"ok": true}
 `python3 scripts/state.py seen mark lever:acme:3c dismissed --reason="too senior"` → {"ok": true}
-`python3 scripts/state.py profile show` → {"schema": 1, "target_roles": ["Senior Frontend Engineer"], "work_modes": ["remote"], "remote_scope": ["US"], "needs_sponsorship": "no", "base_pay_floor": {"amount": 170000, "currency": "USD", "interval": "year"}, "home_base": "Denver, CO", "track": "ic", "result_count": 15, "recency_flag_days": 90, "hide_no_pay": false, "open_to_relocation": false, "sources": {}}
-`python3 scripts/state.py seen show` → {"counts": {"saved": 1, "dismissed": 1, "seen": 2}, "saved": [{"key": "greenhouse:linear:101", "aliases": [], "title": "Senior Frontend Engineer", "company": "Linear", "url": "https://jobs.linear.app/101", "closed": false}], "applied": [], "dismissed": [{"key": "lever:acme:3c", "aliases": ["lever:acme:3d"], "title": "Staff Frontend Engineer", "company": "Acme", "url": "https://jobs.lever.co/acme/3c", "closed": false}]}
+`python3 scripts/state.py memory show` → prints these lines:
+```
+job-scout memory — paste this into a new chat to pick up where you left off
+profile: {"schema": 1, "target_roles": ["Senior Frontend Engineer"], "work_modes": ["remote"], "remote_scope": ["US"], "needs_sponsorship": "no", "base_pay_floor": {"amount": 170000, "currency": "USD", "interval": "year"}, "home_base": "Denver, CO", "track": "ic"}
+saved greenhouse:linear:101 | Senior Frontend Engineer | Linear | https://jobs.linear.app/101
+dismissed lever:acme:3c,lever:acme:3d | Staff Frontend Engineer | Acme
+```
 
 ## Chat 2 — a new chat, first message
 The block you offered at the end of chat 1, pasted in full, followed by "anything new?"
 
 ### Command outputs (use exactly)
-`python3 scripts/state.py profile save --stdin` → {"ok": true, "saved": true}
-`python3 scripts/state.py seen mark <key> <status> ...` (any flags) → {"ok": true}
+`python3 scripts/state.py memory restore` (the block on stdin) → {"profile": "saved", "profile_errors": [], "roles": 2, "skipped": []}
 The search then runs as a rerun with no new roles: filter.py keeps Linear (SAVED), Vercel and Ramp come back NEW, Acme is not in the list.
-`python3 scripts/state.py profile show` (at the end) → the same profile as in chat 1
-`python3 scripts/state.py seen show` (at the end) → {"counts": {"saved": 1, "dismissed": 1, "seen": 2}, "saved": [{"key": "greenhouse:linear:101", "aliases": [], "title": "Senior Frontend Engineer", "company": "Linear", "url": "https://jobs.linear.app/101", "closed": false}], "applied": [], "dismissed": [{"key": "lever:acme:3c", "aliases": ["lever:acme:3d"], "title": "Staff Frontend Engineer", "company": "Acme", "url": null, "closed": false}]}
+`python3 scripts/state.py memory show` (at the end) → the same lines as at the end of chat 1
