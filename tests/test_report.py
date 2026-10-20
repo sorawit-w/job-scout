@@ -184,7 +184,7 @@ class ReportTest(unittest.TestCase):
         run([], self.home)
         html = page(self.home)
         self.assertIn("Nothing new since last time.", html)
-        self.assertIn("Checked 1 of 1 company job boards — 0 new or changed since last time.", html)
+        self.assertIn("Checked 1 of 1 company job boards: 0 new or changed since last time.", html)
         self.assertNotIn("open today", html)
         self.assertIn("Saved or applied, still open", html)
         self.assertIn("Closed since last time", html)
@@ -353,6 +353,42 @@ class ReportTest(unittest.TestCase):
         make_run(empty, [job("gh:a:1")], rows=None)
         run([], empty)
         self.assertNotIn("copy-help", page(empty).split("<style>")[0] + page(empty).split("</style>")[1])
+
+    def rerun_view(self, cands, rows, boards=None):
+        make_run(self.home, cands, rows, boards=boards or {"probed": 4, "available": 4, "live_boards": []})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {"gh:old:1": {"status": "seen", "title": "Old", "sig": ""}})
+        run([], self.home)
+        return page(self.home)
+
+    def test_badges_new_only_filter_first_shown_and_what_changed(self):
+        html = self.rerun_view(
+            [job("gh:a:1", state_="new", badges=["NEW"]),
+             job("gh:b:2", "Staff Frontend", state_="seen", badges=[], first_shown="2026-10-01"),
+             job("gh:c:3", "UI Engineer", state_="changed", badges=["CHANGED", "SAVED"],
+                 changes=['title: "UI Dev" → "UI Engineer"'], first_shown="2026-09-20"),
+             job("gh:d:4", "Web Engineer", state_="judged", badges=["NEW"])],
+            [row("gh:a:1", 8), row("gh:b:2", 7), row("gh:c:3", 6), row("gh:d:4", 6, show=False)])
+        tb = lambda n: html[html.index('<tbody class="role" data-rank="%d"' % n):html.index("</tbody>", html.index(
+            '<tbody class="role" data-rank="%d"' % n))]
+        self.assertIn('<span class="tag">NEW</span>', tb(1))
+        self.assertNotIn('class="tag"', tb(2))
+        self.assertIn('<span class="tag">CHANGED</span><span class="tag">SAVED</span>', tb(3))
+        self.assertEqual([('data-new="1"' in tb(n)) for n in (1, 2, 3)], [True, False, False])
+        self.assertIn('data-quick="new" aria-pressed="false" title="Roles you have not been shown before">', html)
+        self.assertIn("New only <span class=\"n\">1</span>", html)
+        self.assertIn("first shown Oct 1", tb(2))
+        self.assertIn("<span>Changed since last time: title: &quot;UI Dev&quot; → &quot;UI Engineer&quot;</span>", tb(3))
+        self.assertIn("quick.new", html)  # the script applies the New only chip
+        self.assertIn("Checked 4 of 4 company job boards: 2 new or changed since last time · showing top 3 of 4 matches.",
+                      html)
+
+    def test_nothing_new_still_shows_the_full_list_under_one_line(self):
+        html = self.rerun_view([job("gh:a:1", state_="seen", badges=[], first_shown="2026-10-01")], [row("gh:a:1")])
+        self.assertIn('<p class="nothing-new">Nothing new since last time.</p>', html)
+        self.assertLess(html.index("Nothing new since last time."), html.index('<table class="roles">'))
+        self.assertIn("1 matching role", html)
+        self.assertNotIn('data-quick="new"', html)  # no chip with nothing to show
 
     def test_new_tag_only_on_reruns(self):
         make_run(self.home, [job("gh:a:1", state_="new")], [row("gh:a:1")])

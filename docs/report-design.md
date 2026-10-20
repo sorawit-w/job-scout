@@ -97,12 +97,13 @@ titles 600, secondary text muted, column headers 12px/500 faint.
 ### Header (all widths)
 1. `h1`: "N matching roles" ("No matching roles" when empty). No kicker above it.
 2. One muted meta line: date, then the brief fields, split by 1px vertical rules.
-3. Coverage: "Checked P of A company job boards and read K open roles in full." On a rerun it
-   counts new or changed roles instead.
+3. Coverage: "Checked P of A company job boards and read K open roles in full." On a rerun:
+   "Checked P of A company job boards: K new or changed since last time · showing top R of J matches."
+   With nothing new, one bold line, "Nothing new since last time.", sits above the full list.
 
 ### Toolbar (JS on, roles present)
 Quick-filter chips (`aria-pressed` buttons, shown only when their count is above zero):
-"Top fit n" (fit 7 or 8) and "No flags n". A pressed chip shows a check icon and the teal tint.
+"New only n" (roles badged NEW, reruns only), "Top fit n" (fit 7 or 8) and "No flags n". A pressed chip shows a check icon and the teal tint.
 Chips combine with the text filter; the count reads "n of N shown" only while a filter is on.
 
 ### Columns per width
@@ -125,7 +126,9 @@ segments (3px wide below 768) plus "N/8":
 ### Row anatomy
 `# | [chevron] Title  NEW  ! 1 flag | where | pay | fit | since`. The title is the row's button
 (it expands the detail inline, or selects the role in split view; the whole row is clickable).
-NEW / CHANGED is neutral 11px/600 text, shown only on reruns. Flags show as an amber "1 flag"
+NEW / CHANGED / SAVED badges are neutral 11px/600 text, shown only on reruns and never used for rank
+(rank is the rubric's, set by `state.py judged rank`). The detail's meta line adds "first shown <date>"
+for a role shown before, and "Check first" lists what changed (before → after) for a CHANGED one. Flags show as an amber "1 flag"
 note with an icon. In split view the chevron is hidden.
 
 ### Detail anatomy (inline row and split pane share one markup)
