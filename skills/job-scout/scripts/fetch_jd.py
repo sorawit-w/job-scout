@@ -16,7 +16,9 @@ Usage (paths relative to the skill folder):
         still saved for cite_check, but no description is printed (no "jd"): nothing to read again.
 
     Writes <run>/jds.json (merged with any existing file):
-      {key: {status: open|closed|unverified, full, trimmed, comp, checked_at, error}}
+      {key: {status: open|closed|unverified, full, trimmed, comp, checked_at, error[, variant]}}
+    A grouped role whose shown posting is closed is checked through its other variants; the first
+    open one is used ("variant" names it) and the role is closed only when every variant is.
     Stdout is one JSON object: {jobs: [open jobs, with "jd" = trimmed text], closed: [...],
     unverified: [{key, error}], requests: n}.
     Exit codes: 0 ok · 2 usage (no run / no candidates.json / neither --keys nor --top) ·
@@ -204,6 +206,13 @@ def main(argv=None):
     for i, row in enumerate(selected):
         try:
             entry, live = check(row, budget)
+            # A grouped role is closed only when every variant is (state.live_split): try the others.
+            others = [v for v in row.get("variants") or [] if isinstance(v, dict) and v.get("key") not in (None, row["key"])]
+            for v in others if entry["status"] == "closed" else ():
+                other, other_live = check(dict(row, **v), budget)
+                if other["status"] == "open":
+                    entry, live, row = dict(other, variant=v["key"]), other_live, dict(dict(row, **v), key=row["key"])
+                    break
         except net.BudgetExceeded:
             capped = True
             unverified += [{"key": r["key"], "error": "not checked: request budget used up"} for r in selected[i:]]

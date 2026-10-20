@@ -329,8 +329,9 @@ class RecordTest(HomeCase):
 
 def row(key, show, total=6):
     """A results.json row as the judgment step writes it."""
+    scores = dict(zip(("role", "skills", "level", "domain"), (min(2, max(0, total - 2 * i)) for i in range(4))))
     return {"key": key, "show": show, "total": total, "gates": {"location": "pass", "sponsorship": "unknown",
-            "pay": "pass", "exclusions": "pass"}, "scores": {"role": 2, "skills": 2, "level": 1, "domain": 1},
+            "pay": "pass", "exclusions": "pass"}, "scores": scores,  # the four scores sum to total
             "why": [{"text": "Owns the design system", "quote": "own and evolve our design system"}],
             "risk": [{"text": "sponsorship not stated", "quote": None}], "style": []}
 
@@ -642,6 +643,14 @@ class CarryRankTest(HomeCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out), mock.patch("sys.stdin", io.StringIO(json.dumps({"rows": ranked}))):
             self.assertEqual(cite_check.main(["--run", run.name]), 0, out.getvalue())
+
+    def test_rank_uses_the_sum_of_the_four_scores_like_the_report(self):
+        # an inconsistent total must not let a 4/8 role through the rubric's cutoff at 5
+        bad = dict(row("ashby:acme:1", True, 7), scores={"role": 1, "skills": 1, "level": 1, "domain": 1})
+        out, ranked = self.rank([bad, row("ashby:acme:2", True, 5)],
+                                [job("ashby:acme:1"), job("ashby:acme:2")], result_count=5)
+        self.assertEqual([(r["key"], r["show"]) for r in ranked], [("ashby:acme:2", True), ("ashby:acme:1", False)])
+        self.assertEqual(out, {"shown": 1, "matches": 1})
 
     def test_judged_cli(self):
         out = io.StringIO()

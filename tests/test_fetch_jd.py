@@ -331,6 +331,43 @@ class CheckOnlyTest(unittest.TestCase):
         self.assertEqual([u["key"] for u in out["unverified"]], [r["key"] for r in rows[fetch_jd.MAX_JOBS:]])
 
 
+class VariantFallbackTest(unittest.TestCase):
+    """A grouped role is closed only when every variant is: the shown posting closing is not enough."""
+
+    ROW = {"key": "ashby:acme:1", "ats": "ashby", "slug": "acme", "job_id": "1", "company": "Acme", "title": "Engineer",
+           "url": "https://jobs.ashbyhq.com/acme/1", "cached": True,
+           "variants": [{"key": "ashby:acme:1", "ats": "ashby", "slug": "acme", "job_id": "1"},
+                        {"key": "ashby:acme:2", "ats": "ashby", "slug": "acme", "job_id": "2",
+                         "url": "https://jobs.ashbyhq.com/acme/2"}]}
+
+    def fake_check(self, open_ids):
+        def check(row, budget):
+            if row["job_id"] not in open_ids:
+                return {"status": "closed", "full": None, "trimmed": None, "comp": None, "error": None}, None
+            job = {"job_id": row["job_id"], "title": "Engineer", "url": row["url"], "locations": ["Remote - US"],
+                   "remote": True, "remote_scope": ["US"], "workplace": "remote", "comp": None,
+                   "description_text": "Build things."}
+            return {"status": "open", "full": "Build things.", "trimmed": "Build things.", "comp": None,
+                    "error": None}, job
+        return check
+
+    def test_a_closed_shown_posting_falls_back_to_an_open_variant(self):
+        for argv in (["--keys", "ashby:acme:1"], ["--check-only"]):
+            home = make_home([self.ROW])
+            with mock.patch.object(fetch_jd, "check", self.fake_check({"2"})):
+                code, out = run(argv, home)
+            self.assertEqual((code, out["closed"]), (0, []), argv)
+            self.assertEqual([(j["key"], j["url"]) for j in out["jobs"]], [("ashby:acme:1", "https://jobs.ashbyhq.com/acme/2")])
+            entry = read_jds(home)["ashby:acme:1"]
+            self.assertEqual((entry["status"], entry["variant"]), ("open", "ashby:acme:2"))
+
+    def test_closed_only_when_every_variant_is_closed(self):
+        home = make_home([self.ROW])
+        with mock.patch.object(fetch_jd, "check", self.fake_check(set())):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual(([c["key"] for c in out["closed"]], out["jobs"]), (["ashby:acme:1"], []))
+
+
 class SearchSourceLiveCheckTest(unittest.TestCase):
     def test_workday_open_with_description_and_closed(self):
         sharp = sharp_open()

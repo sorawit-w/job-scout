@@ -163,11 +163,7 @@ def _short_date(iso, run_year):
     return day if m.group(1) == run_year else "%s, %s" % (day, m.group(1))
 
 
-def _fit(row):
-    """Fit N/8: the sum of the four scores when all are there (one source of truth), else the row's total."""
-    scores = row.get("scores") if isinstance(row.get("scores"), dict) else {}
-    parts = [scores.get(k) for k in SCORES]
-    return sum(parts) if all(isinstance(v, int) for v in parts) else row.get("total")
+_fit = state.fit  # Fit N/8: the sum of the four scores, the same number judged rank sorts by
 
 
 def _excluded_reason(row):

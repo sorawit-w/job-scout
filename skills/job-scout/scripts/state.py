@@ -632,6 +632,18 @@ def forget_judgments():
 
 
 _CARRY_FIELDS = ("total", "scores", "gates", "show", "why", "risk", "style")
+SCORES = ("role", "skills", "level", "domain")
+
+
+def fit(row):
+    """Fit out of 8: the sum of the four 0–2 scores when all are there (one source of truth, also for
+    report.py), else the row's total, else None."""
+    scores = row.get("scores") if isinstance(row.get("scores"), dict) else {}
+    parts = [scores.get(k) for k in SCORES]
+    if all(isinstance(v, int) and not isinstance(v, bool) for v in parts):
+        return sum(parts)
+    total = row.get("total")
+    return total if isinstance(total, int) and not isinstance(total, bool) else None
 
 
 def _results(run_dir):
@@ -682,7 +694,7 @@ def carry(run_dir):
 
 
 def rank(run_dir):
-    """Order results.json by rubric §2 — total, then exact remote scope before flagged, then newest
+    """Order results.json by rubric §2 — fit (fit()), then exact remote scope before flagged, then newest
     "open since" — and set show: no failed gate, total ≥ 5, within the brief's result_count. Badges
     and history never move a role. Flags and dates come from the live check when it has them.
     A row not shown loses its work-style items (rubric §4: shown rows only).
@@ -700,7 +712,7 @@ def rank(run_dir):
         live, cand = live if isinstance(live, dict) else {}, cands.get(r.get("key")) or {}
         src = {f: live[f] if f in live else cand.get(f) for f in ("flags", "first_published")}
         m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(src.get("first_published") or ""))
-        total = r.get("total") if isinstance(r.get("total"), int) and not isinstance(r.get("total"), bool) else 0
+        total = fit(r) or 0  # the four scores, as the report shows them: a stale total never passes the cutoff
         gates = r.get("gates") if isinstance(r.get("gates"), dict) else {"gates": "fail"}  # no gates: never shown
         ok = total >= 5 and "fail" not in gates.values()
         return (not ok, -total, jfilter.location_flagged(src.get("flags") or []), m is None,
