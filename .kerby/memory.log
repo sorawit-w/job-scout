@@ -229,3 +229,11 @@ Commit: caacda1
 Status: DONE (branch feature/report-design-badges, not pushed, not merged)
 Notes: Deferred to ROADMAP Follow-ups: the fit column that separates nothing on an all-top-fit list; teal off the chrome. Gates: 725 tests OK (python -m unittest discover -s tests -t .) on 3.14.7 and 3.9.6; axe 0 violations at 1440/390 light and dark; taste-skill inspect --app 0 FAIL, 1 WARN (sticky pane height, same as baseline); same view renders the same bytes. Playground: report.render() rebuilt from the downloaded page reproduces it byte for byte (scratch rebuild_view.py).
 Observations: report.py _excluded_reason prints "fit 7/8, below 5" for rows cut by the top-15 limit, not by fit (seen by three of the four arms). At 768-1199px the Where column wraps titles to 4-5 lines. Combined quick-filter chips can reach 0 rows with no "clear" control. No skill's spec loader found docs/report-design.md: each looks only for a root DESIGN.md. Running `python3 -m unittest discover -s tests` without `-t .` fails to import test_adapters on main too.
+
+[2026-10-20T17:35:14Z]
+Task: Move the report design spec to a root DESIGN.md
+Action: git mv docs/report-design.md DESIGN.md (the user's choice); description now names it the repo's design-token authority, with the report as its only surface. report.py's spec comment and the CHANGELOG [Unreleased] entry point to it. Drafted a kerby swe handoff (find a spec under another name, pass its path to the design skill, one author skill per surface, no ui-ux-pro-max routing) at docs/handoffs/2026-10-20-kerby-swe-design-skills.md, left untracked for the kerby repo.
+Files: DESIGN.md (renamed), skills/job-scout/scripts/report.py, CHANGELOG.md, .kerby/STATUS.md
+Commit: d719bc6 (move); this commit (log, status)
+Status: DONE (branch feature/report-design-badges, not pushed, not merged)
+Notes: Tests OK (python -m unittest discover -s tests -t .). The user is uninstalling ui-ux-pro-max so design skills don't conflict.
