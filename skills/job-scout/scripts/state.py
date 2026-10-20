@@ -8,8 +8,9 @@ Purpose:
       * the per-board fetch cache (6 h TTL),
       * run directories (newest 3 kept),
       * the profile (validate_profile + the `profile` CLI),
-      * seen.json: which roles the user has seen, saved, applied to or dismissed, and the
-        new / changed / saved-open / closed diff for reruns (the `seen` CLI).
+      * seen.json: which roles the user has seen, saved, applied to or dismissed, the roles an
+        earlier run screened but never showed (judged, with the cached judgment), and the
+        changed / saved-open / closed diff for reruns (the `seen` CLI).
 
 Usage:
     import state
@@ -27,6 +28,7 @@ What it does NOT do:
     * Never treats an unreadable seen.json as empty: load_seen raises and nothing is written.
     * Never caches errors: callers store only successful fetches.
 """
+import calendar
 import hashlib
 import json
 import os
@@ -283,6 +285,20 @@ def profile_path():
     return home() / "profile.json"
 
 
+# The brief fields the rubric's gates and scores read. work_style is display only (rubric §4), and
+# title/company exclusions are applied by filter.py on every run, so neither is here.
+BRIEF_FIELDS = ("target_roles", "title_synonyms", "seniority", "track", "work_modes", "commute_cities", "home_base",
+                "remote_scope", "open_to_relocation", "needs_sponsorship", "base_pay_floor", "hide_no_pay",
+                "industries_prefer", "industries_exclude", "dealbreakers")
+
+
+def brief_sig(profile):
+    """sha1[:12] of the brief fields a judgment depends on; editing any of them invalidates every cached judgment."""
+    p = with_profile_defaults(profile if isinstance(profile, dict) else {})
+    parts = {k: p.get(k) for k in BRIEF_FIELDS}
+    return hashlib.sha1(json.dumps(parts, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()[:12]
+
+
 def run_profile(run_dir):
     """The brief a run was searched with (filter.py saves a copy), else the saved profile: a later
     "change my work style" must not relabel an older run's verdicts."""
@@ -291,12 +307,18 @@ def run_profile(run_dir):
 
 
 # --- seen memory (seen.json) ---------------------------------------------------
-# {job_key: {first_seen, last_seen, status, reason, closed_at, sig, aliases, [snap, title, company, url]}}
+# {job_key: {first_seen, last_seen, status, reason, closed_at, sig, aliases, [snap, title, company, url, judgment]}}
 # snap = job_snap(): the readable fields behind sig, so `seen diff` can say what changed.
+# status judged = an earlier run screened the role but never showed it (read and cut, or never read).
+# Only `seen record` sets it; first_seen is when it was first shown once a shown row promotes it to seen.
+# judgment = the last results.json row for the role plus run, judged_at, sig (the posting it judged) and
+# brief_sig; it is reused only while both still match (cached_judgment).
 # A collapsed job's variants can close or reorder, so an entry matches a job when its key or
 # any alias equals the job's key or any variant key.
 
-SEEN_STATUSES = ("seen", "saved", "applied", "dismissed")
+MARK_STATUSES = ("seen", "saved", "applied", "dismissed")  # what `seen mark` may set
+SEEN_STATUSES = MARK_STATUSES + ("judged",)
+JUDGED_DAYS = 60  # a judged entry not listed on any board for this long is pruned; no other status is
 _OPEN_STATUSES = ("saved", "applied")  # only roles the user cared about are reported closed
 _KEY_RE = re.compile(r"^[a-z_]+:[^:/\\\s]+:\S+$")  # ats:slug:job_id
 MAX_REASON = 200
@@ -366,7 +388,7 @@ def _matches(job, index):
     return [k for i, k in enumerate(keys) if k not in keys[:i]]
 
 
-_STRENGTH = ("saved", "applied", "dismissed", "seen")  # saved must stay shown; applied/dismissed stay hidden
+_STRENGTH = ("saved", "applied", "dismissed", "seen", "judged")  # saved must stay shown; applied/dismissed stay hidden
 
 
 def _strength(e):
@@ -374,20 +396,33 @@ def _strength(e):
 
 
 def _deciding_entry(job, seen, index=None):
-    """The matching entry with the strongest status (saved > applied > dismissed > seen), or None."""
+    """The matching entry with the strongest status (saved > applied > dismissed > seen > judged), or None."""
     keys = _matches(job, seen_index(seen) if index is None else index)
     return min((seen[k] for k in keys), key=_strength) if keys else None
 
 
 def job_state(job, seen, index=None):
-    """new | changed | seen | saved | applied | dismissed for one collapsed job; with several
-    matching entries, the strongest status (saved > applied > dismissed > seen) decides."""
+    """new | changed | seen | saved | applied | dismissed | judged for one collapsed job; with several
+    matching entries, the strongest status (saved > applied > dismissed > seen > judged) decides.
+    A judged role whose posting changed is new: the user never saw either version."""
     e = _deciding_entry(job, seen, index)
     if e is None:
         return "new"
+    if e.get("status") == "judged":
+        return "new" if e.get("sig") and e["sig"] != job_sig(job) else "judged"
     if e.get("status") in ("seen", "saved") and e.get("sig") and e["sig"] != job_sig(job):  # no sig: marked before record
         return "changed"
     return e.get("status") or "seen"
+
+
+def cached_judgment(job, seen, profile, index=None):
+    """The deciding entry's judgment when it was made on this posting (same sig) with this brief (same
+    brief_sig), else None: a changed posting or an edited brief means the role is read again."""
+    e = _deciding_entry(job, seen, index)
+    j = e.get("judgment") if e else None
+    if isinstance(j, dict) and j.get("sig") == job_sig(job) and j.get("brief_sig") == brief_sig(profile):
+        return j
+    return None
 
 
 def _board(key):
@@ -424,17 +459,17 @@ def _live_face(job, closed):
 
 
 def diff(jobs, probed_ok, seen, gone=()):
-    """Lists of keys: new / changed / saved_open / applied_open (current job keys) and closed
-    (seen.json keys whose boards were all probed ok this run but no current job matches, or that
-    match a job in `gone`: a live check is direct evidence, even on a partially searched board)."""
+    """Lists of keys: changed / saved_open / applied_open (current job keys) and closed (seen.json
+    keys whose boards were all probed ok this run but no current job matches, or that match a job in
+    `gone`: a live check is direct evidence, even on a partially searched board). No "new" list: over
+    all of jobs.json it counts roles the brief rules out; filter.py's per-candidate state is the count."""
     index = seen_index(seen)
     direct = {k for job in gone for k in _matches(job, index)}
-    out = {"new": [], "changed": [], "saved_open": [], "applied_open": [], "closed": []}
+    out = {"changed": [], "saved_open": [], "applied_open": [], "closed": []}
     matched = set()
     for job in jobs:
         keys = _matches(job, index)
         if not keys:
-            out["new"].append(job.get("key"))
             continue
         matched.update(keys)
         if job_state(job, seen, index) == "changed":
@@ -461,14 +496,36 @@ def _shown_url(job, row_key):
     return v.get("url") or job.get("url")
 
 
+def _judgment(row, run_dir, stamp, job, bsig):
+    j = {f: row.get(f) for f in ("total", "scores", "gates", "show", "why", "risk", "style")}
+    return dict(j, run=Path(run_dir).name, judged_at=stamp, sig=job_sig(job), brief_sig=bsig)
+
+
+def _set_posting(e, job, row_key):
+    e.update(sig=job_sig(job), snap=job_snap(job), title=job.get("title"), company=job.get("company"),
+             url=_shown_url(job, row_key))
+
+
+def _iso_epoch(iso):
+    try:
+        return calendar.timegm(time.strptime(iso, "%Y-%m-%dT%H:%M:%SZ"))
+    except (TypeError, ValueError):
+        return None
+
+
 def record(run_dir, now=None):
-    """Mark results.json rows with show true as seen (sig, title and url refreshed on every matching
-    entry); for every job in jobs.json that matches an entry, refresh aliases and last_seen but not
-    sig, so an unshown job can still read "changed"; set or clear closed_at; return counts. A job whose
-    live check in jds.json found the posting gone counts as absent, even while the board still lists it.
-    A run with no results.json (a rerun with nothing new) records closures only.
-    Raises FileNotFoundError when the run has no jobs.json or an unreadable results.json,
-    ValueError (nothing written) when seen.json is unreadable."""
+    """Remember what this run showed and screened.
+    * results.json rows with show true: seen (a judged entry is promoted, first_seen = now); sig, snap,
+      title, url and judgment refreshed on every matching entry.
+    * every other results.json row, and every candidates.json job that was never read: judged, unless
+      a stronger entry matches. A read row's judgment is stored on any matching entry, but sig and snap
+      move only on judged entries, so a role the user saw can still read "changed".
+    * every job in jobs.json that matches an entry: aliases and last_seen refreshed; closed_at set or
+      cleared. A job whose live check in jds.json found the posting gone counts as absent, even while
+      the board still lists it. A run with no results.json (a rerun with nothing new) records closures.
+    * judged entries whose last_seen is over JUDGED_DAYS old are dropped.
+    Returns counts. Raises FileNotFoundError when the run has no jobs.json or an unreadable
+    results.json, ValueError (nothing written) when seen.json is unreadable."""
     run_dir = Path(run_dir)
     jobs = read_json(run_dir / "jobs.json")
     results = read_json(run_dir / "results.json") if (run_dir / "results.json").exists() else {"rows": []}
@@ -476,27 +533,41 @@ def record(run_dir, now=None):
         raise FileNotFoundError("run %s has no jobs.json, or results.json is unreadable" % run_dir.name)
     stamp = now_iso(now)
     seen = load_seen()
+    bsig = brief_sig(run_profile(run_dir))
     by_key = {k: j for j in jobs for k in job_keys(j)}
-    counts = {"inserted": 0, "updated": 0, "missing": 0, "closed": 0, "reopened": 0}
-    for row in results.get("rows") or []:
-        if not (isinstance(row, dict) and row.get("show") is True):
-            continue
+    counts = {"inserted": 0, "updated": 0, "judged": 0, "missing": 0, "closed": 0, "reopened": 0, "pruned": 0}
+    rows = [r for r in results.get("rows") or [] if isinstance(r, dict)]
+    read = {id(by_key.get(r.get("key"))) for r in rows}  # by job, so another variant's key still counts as read
+    unread = [{"key": c.get("key")} for c in read_json(run_dir / "candidates.json", [])
+              if isinstance(c, dict) and id(by_key.get(c.get("key"))) not in read]
+    for row, was_read in [(r, True) for r in rows] + [(c, False) for c in unread]:
         job = by_key.get(row.get("key"))
+        shown = row.get("show") is True
         if job is None:
-            counts["missing"] += 1  # shown row not in jobs.json: nothing to sign
+            if shown:
+                counts["missing"] += 1  # shown row not in jobs.json: nothing to sign
             continue
         keys = job_keys(job)
         targets = _matches(job, seen_index(seen))
         if not targets:
             targets = keys[:1]
-            seen[keys[0]] = {"first_seen": stamp, "status": "seen", "reason": None, "closed_at": None, "aliases": []}
-            counts["inserted"] += 1
+            seen[keys[0]] = {"first_seen": stamp, "status": "seen" if shown else "judged", "reason": None,
+                             "closed_at": None, "aliases": []}
+            counts["inserted" if shown else "judged"] += 1
+        elif not was_read:
+            continue  # known already: the jobs loop below refreshes it, and an earlier judgment stays
         else:
-            counts["updated"] += 1
+            counts["updated" if shown else "judged"] += 1
         for key in targets:
-            _merge_aliases(seen[key], key, keys)
-            seen[key].update(last_seen=stamp, sig=job_sig(job), snap=job_snap(job), title=job.get("title"),
-                             company=job.get("company"), url=_shown_url(job, row.get("key")))
+            e = seen[key]
+            _merge_aliases(e, key, keys)
+            e["last_seen"] = stamp
+            if shown and e["status"] == "judged":
+                e.update(status="seen", first_seen=stamp)
+            if shown or e["status"] == "judged":
+                _set_posting(e, job, row.get("key"))
+            if was_read:
+                e["judgment"] = _judgment(row, run_dir, stamp, job, bsig)
     index = seen_index(seen)
     jobs, gone = live_split(jobs, read_json(run_dir / "jds.json", {}))  # a live-closed role closes, not reopens
     for job in jobs:  # unshown too: filter drops unchanged roles, and their variants keep moving
@@ -511,14 +582,19 @@ def record(run_dir, now=None):
     for key in diff(jobs, probed_ok_boards(run_dir), seen, gone)["closed"]:
         seen[key]["closed_at"] = stamp
         counts["closed"] += 1
+    cutoff = _iso_epoch(stamp) - JUDGED_DAYS * 86400
+    for key in [k for k, e in seen.items() if e["status"] == "judged" and (_iso_epoch(e.get("last_seen")) or cutoff) < cutoff]:
+        del seen[key]
+        counts["pruned"] += 1
     write_json_atomic(seen_path(), seen)
     return counts
 
 
 def mark(key, status, reason=None, now=None):
-    """Set a role's status (creating the entry if record never saw it). ValueError on bad input."""
-    if status not in SEEN_STATUSES:
-        raise ValueError("status must be one of %s" % "/".join(SEEN_STATUSES))
+    """Set a role's status (creating the entry if record never saw it). ValueError on bad input,
+    including "judged", which only `seen record` sets."""
+    if status not in MARK_STATUSES:
+        raise ValueError("status must be one of %s" % "/".join(MARK_STATUSES))
     if not isinstance(key, str) or not _KEY_RE.match(key):
         raise ValueError("bad job key %r (want ats:slug:job_id)" % (key,))
     if reason is not None and (not isinstance(reason, str) or len(reason) > MAX_REASON):

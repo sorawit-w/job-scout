@@ -132,6 +132,26 @@ class RunsTest(StateTestCase):
             state.resolve_run("20000101T000000Z")
 
 
+class BriefSigTest(unittest.TestCase):
+    BRIEF = {"schema": 1, "target_roles": ["Design Engineer"], "work_modes": ["remote"], "needs_sponsorship": "no",
+             "base_pay_floor": None}
+
+    def test_defaults_and_display_only_fields_do_not_change_it(self):
+        sig = state.brief_sig(self.BRIEF)
+        self.assertRegex(sig, r"^[0-9a-f]{12}$")
+        self.assertEqual(state.brief_sig(state.with_profile_defaults(self.BRIEF)), sig)
+        for same in ({"work_style": {"travel": "none"}}, {"result_count": 5}, {"title_keywords": ["react"]},
+                     {"sources": {"work_modes": "you"}}, {"recency_flag_days": 30}):
+            self.assertEqual(state.brief_sig(dict(self.BRIEF, **same)), sig, same)
+
+    def test_every_judgment_field_changes_it(self):
+        sig = state.brief_sig(self.BRIEF)
+        values = {"track": "ic", "home_base": "Austin, TX", "needs_sponsorship": "yes", "open_to_relocation": True,
+                  "hide_no_pay": True, "base_pay_floor": {"amount": 1}}
+        for field in state.BRIEF_FIELDS:
+            self.assertNotEqual(state.brief_sig(dict(self.BRIEF, **{field: values.get(field, ["X"])})), sig, field)
+
+
 class NowIsoTest(unittest.TestCase):
     def test_format(self):
         self.assertEqual(state.now_iso(0), "1970-01-01T00:00:00Z")

@@ -234,5 +234,23 @@ class SearchToolInvariantTest(unittest.TestCase):
         self.assertEqual(bad, [])
 
 
+class StatusTableTest(unittest.TestCase):
+    """A seen.json status must reach every table that reads one (state strength, mark, filter's rerun drop)."""
+
+    def test_every_status_has_a_strength_and_only_record_sets_judged(self):
+        self.assertEqual(set(state._STRENGTH), set(state.SEEN_STATUSES))
+        self.assertEqual(set(state.SEEN_STATUSES) - set(state.MARK_STATUSES), {"judged"})
+        self.assertEqual(state._STRENGTH[-1], "judged")  # weakest: any other entry for the role decides
+
+    def test_filter_handles_every_state_job_state_returns(self):
+        j = {"key": "ashby:acme:1", "title": "Engineer", "variants": [{"key": "ashby:acme:1"}]}
+        states = {state.job_state(j, {"ashby:acme:1": {"status": status, "sig": sig, "aliases": []}})
+                  for status in state.SEEN_STATUSES for sig in (state.job_sig(j), "000000000000")}
+        states.add(state.job_state(j, {}))
+        self.assertEqual(states, {"new", "changed", "seen", "saved", "applied", "dismissed", "judged"})
+        self.assertTrue(set(jfilter._RERUN_DROP) <= states)
+        self.assertEqual(states - set(jfilter._RERUN_DROP), {"new", "changed", "saved", "judged"})  # kept on a rerun
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,11 +1,11 @@
 {
  "ashby:turquoise-health:806f5f93-6eb6-4aea-9483-f8f7458e6730": {
-  "first_seen": "2026-10-19T03:57:51Z",
+  "first_seen": "2026-10-20T03:10:13Z",
   "status": "applied",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-19T03:57:51Z",
+  "last_seen": "2026-10-20T03:10:13Z",
   "sig": "c1460c5d1d55",
   "snap": {
    "title": "Senior Design Engineer",
@@ -21,15 +21,43 @@
   },
   "title": "Senior Design Engineer",
   "company": "turquoise-health",
-  "url": "https://jobs.ashbyhq.com/turquoise-health/806f5f93-6eb6-4aea-9483-f8f7458e6730"
+  "url": "https://jobs.ashbyhq.com/turquoise-health/806f5f93-6eb6-4aea-9483-f8f7458e6730",
+  "judgment": {
+   "total": 7,
+   "scores": {},
+   "gates": {
+    "location": "pass",
+    "sponsorship": "unknown",
+    "pay": "pass",
+    "exclusions": "pass"
+   },
+   "show": true,
+   "why": [
+    {
+     "text": "Owns the internal design system",
+     "quote": "maintain reusable pv-components within our internal design system"
+    }
+   ],
+   "risk": [
+    {
+     "text": "Vue first, React counts as comparable",
+     "quote": "Production-level experience with Vue"
+    }
+   ],
+   "style": null,
+   "run": "20261020T031013Z",
+   "judged_at": "2026-10-20T03:10:13Z",
+   "sig": "c1460c5d1d55",
+   "brief_sig": "73e984328456"
+  }
  },
  "greenhouse:arizeai:5778086004": {
-  "first_seen": "2026-10-19T03:57:51Z",
+  "first_seen": "2026-10-20T03:10:13Z",
   "status": "saved",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-19T03:57:51Z",
+  "last_seen": "2026-10-20T03:10:13Z",
   "sig": "053647632c5a",
   "snap": {
    "title": "Senior Open Source Design Engineer",
@@ -41,15 +69,47 @@
   },
   "title": "Senior Open Source Design Engineer",
   "company": "arizeai",
-  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5778086004"
+  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5778086004",
+  "judgment": {
+   "total": 7,
+   "scores": {},
+   "gates": {
+    "location": "pass",
+    "sponsorship": "unknown",
+    "pay": "pass",
+    "exclusions": "pass"
+   },
+   "show": true,
+   "why": [
+    {
+     "text": "Design-system component work",
+     "quote": "Develop reusable components and templates for our design system"
+    },
+    {
+     "text": "React and TypeScript with design sense",
+     "quote": "Have strong frontend engineering skills (React, TypeScript)"
+    }
+   ],
+   "risk": [
+    {
+     "text": "sponsorship not stated",
+     "quote": null
+    }
+   ],
+   "style": null,
+   "run": "20261020T031013Z",
+   "judged_at": "2026-10-20T03:10:13Z",
+   "sig": "053647632c5a",
+   "brief_sig": "73e984328456"
+  }
  },
  "greenhouse:arizeai:5396420004": {
-  "first_seen": "2026-10-19T03:57:51Z",
+  "first_seen": "2026-10-20T03:10:13Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-19T03:57:51Z",
+  "last_seen": "2026-10-20T03:10:13Z",
   "sig": "c359b4e87e26",
   "snap": {
    "title": "Senior AI Product Engineer, Fullstack",
@@ -61,15 +121,38 @@
   },
   "title": "Senior AI Product Engineer, Fullstack",
   "company": "arizeai",
-  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396420004"
+  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396420004",
+  "judgment": {
+   "total": 6,
+   "scores": {},
+   "gates": {
+    "location": "pass",
+    "sponsorship": "unknown",
+    "pay": "pass",
+    "exclusions": "pass"
+   },
+   "show": true,
+   "why": [
+    {
+     "text": "Mostly React and TypeScript",
+     "quote": "primarily in Typescript and React"
+    }
+   ],
+   "risk": [],
+   "style": null,
+   "run": "20261020T031013Z",
+   "judged_at": "2026-10-20T03:10:13Z",
+   "sig": "c359b4e87e26",
+   "brief_sig": "73e984328456"
+  }
  },
  "greenhouse:koboldmetals:4286209005": {
-  "first_seen": "2026-10-19T03:57:51Z",
+  "first_seen": "2026-10-20T03:10:13Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-19T03:57:51Z",
+  "last_seen": "2026-10-20T03:10:13Z",
   "sig": "f838b49ed732",
   "snap": {
    "title": "Frontend Software Engineer",
@@ -81,15 +164,43 @@
   },
   "title": "Frontend Software Engineer",
   "company": "koboldmetals",
-  "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4286209005"
+  "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4286209005",
+  "judgment": {
+   "total": 6,
+   "scores": {},
+   "gates": {
+    "location": "pass",
+    "sponsorship": "unknown",
+    "pay": "pass",
+    "exclusions": "pass"
+   },
+   "show": true,
+   "why": [
+    {
+     "text": "Frontend-led role",
+     "quote": "architecting, developing, and maintaining frontend applications"
+    }
+   ],
+   "risk": [
+    {
+     "text": "Open to the US or Canada",
+     "quote": "anywhere in the United States or Canada"
+    }
+   ],
+   "style": null,
+   "run": "20261020T031013Z",
+   "judged_at": "2026-10-20T03:10:13Z",
+   "sig": "f838b49ed732",
+   "brief_sig": "73e984328456"
+  }
  },
  "ashby:turquoise-health:87306d91-a18e-490c-b4e6-4758d63b12a1": {
-  "first_seen": "2026-10-19T03:57:51Z",
+  "first_seen": "2026-10-20T03:10:13Z",
   "status": "dismissed",
   "reason": "too senior",
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-19T03:57:51Z",
+  "last_seen": "2026-10-20T03:10:13Z",
   "sig": "5388b24ef769",
   "snap": {
    "title": "Senior Software Engineer, Transactions",
@@ -105,15 +216,38 @@
   },
   "title": "Senior Software Engineer, Transactions",
   "company": "turquoise-health",
-  "url": "https://jobs.ashbyhq.com/turquoise-health/87306d91-a18e-490c-b4e6-4758d63b12a1"
+  "url": "https://jobs.ashbyhq.com/turquoise-health/87306d91-a18e-490c-b4e6-4758d63b12a1",
+  "judgment": {
+   "total": 4,
+   "scores": {},
+   "gates": {
+    "location": "pass",
+    "sponsorship": "unknown",
+    "pay": "pass",
+    "exclusions": "pass"
+   },
+   "show": true,
+   "why": [
+    {
+     "text": "Uses a frontend framework",
+     "quote": "Proficiency with modern front end frameworks such as Vue or React"
+    }
+   ],
+   "risk": [],
+   "style": null,
+   "run": "20261020T031013Z",
+   "judged_at": "2026-10-20T03:10:13Z",
+   "sig": "5388b24ef769",
+   "brief_sig": "73e984328456"
+  }
  },
  "greenhouse:arizeai:5396396004": {
-  "first_seen": "2026-10-19T03:57:51Z",
+  "first_seen": "2026-10-20T03:10:13Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-19T03:57:51Z",
+  "last_seen": "2026-10-20T03:10:13Z",
   "sig": "852458509123",
   "snap": {
    "title": "Senior AI Product Engineer, Backend",
@@ -125,6 +259,117 @@
   },
   "title": "Senior AI Product Engineer, Backend",
   "company": "arizeai",
-  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396396004"
+  "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396396004",
+  "judgment": {
+   "total": 3,
+   "scores": {},
+   "gates": {
+    "location": "pass",
+    "sponsorship": "unknown",
+    "pay": "pass",
+    "exclusions": "pass"
+   },
+   "show": true,
+   "why": [
+    {
+     "text": "Some TypeScript",
+     "quote": "with opportunities to work in TypeScript"
+    }
+   ],
+   "risk": [
+    {
+     "text": "Mostly backend work",
+     "quote": "backend code primarily in Go, Java, and Python"
+    }
+   ],
+   "style": null,
+   "run": "20261020T031013Z",
+   "judged_at": "2026-10-20T03:10:13Z",
+   "sig": "852458509123",
+   "brief_sig": "73e984328456"
+  }
+ },
+ "greenhouse:koboldmetals:4725284005": {
+  "first_seen": "2026-10-20T03:10:13Z",
+  "status": "judged",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-20T03:10:13Z",
+  "sig": "d860c322fed8",
+  "snap": {
+   "title": "Senior Software Engineer, Scientific Computing (Hardware/Sensors)",
+   "comp": null,
+   "locations": [
+    "North America",
+    "Remote"
+   ]
+  },
+  "title": "Senior Software Engineer, Scientific Computing (Hardware/Sensors)",
+  "company": "koboldmetals",
+  "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4725284005"
+ },
+ "greenhouse:koboldmetals:4624637005": {
+  "first_seen": "2026-10-20T03:10:13Z",
+  "status": "judged",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-20T03:10:13Z",
+  "sig": "77e97fe754d7",
+  "snap": {
+   "title": "Senior Software Engineer, Decision Science",
+   "comp": null,
+   "locations": [
+    "North America",
+    "Remote"
+   ]
+  },
+  "title": "Senior Software Engineer, Decision Science",
+  "company": "koboldmetals",
+  "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4624637005"
+ },
+ "greenhouse:koboldmetals:4624038005": {
+  "first_seen": "2026-10-20T03:10:13Z",
+  "status": "judged",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [],
+  "last_seen": "2026-10-20T03:10:13Z",
+  "sig": "318175e17a0b",
+  "snap": {
+   "title": "Senior Software Engineer, Scientific Computing",
+   "comp": null,
+   "locations": [
+    "North America",
+    "Remote"
+   ]
+  },
+  "title": "Senior Software Engineer, Scientific Computing",
+  "company": "koboldmetals",
+  "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4624038005"
+ },
+ "greenhouse:koboldmetals:4510145005": {
+  "first_seen": "2026-10-20T03:10:13Z",
+  "status": "judged",
+  "reason": null,
+  "closed_at": null,
+  "aliases": [
+   "greenhouse:koboldmetals:4678367005"
+  ],
+  "last_seen": "2026-10-20T03:10:13Z",
+  "sig": "a22e9e295491",
+  "snap": {
+   "title": "Software Engineer (All Levels)",
+   "comp": null,
+   "locations": [
+    "North America",
+    "Remote",
+    "Remote, United Kingdom"
+   ]
+  },
+  "title": "Software Engineer (All Levels)",
+  "company": "koboldmetals",
+  "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4510145005"
  }
 }
