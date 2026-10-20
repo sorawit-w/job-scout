@@ -3,6 +3,35 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [Unreleased]
+
+**Rerun memory (M9, part 1).** A rerun no longer calls every role it screened last time "new".
+
+### Fixed
+- `seen record` used to remember only the roles it showed, so every role an earlier run read and
+  cut (by a gate, by score or by the result count), or never read at all, came back as new on the
+  next run. It now remembers them too, under a new status, `judged`: screened, never shown. On a
+  rerun, filter.py keeps them as candidates with state `judged`, not `new`.
+- `seen diff` no longer reports `new`: it counted every listed role, even ones the brief rules
+  out. The per-candidate `state` from filter.py is the count of new roles.
+
+### Added
+- Each read role keeps its judgment (gates, scores, total, quoted reasons and risks) in seen.json,
+  with the posting it judged and a fingerprint of the brief fields the rubric reads. The cached
+  judgment is valid only while both are unchanged: editing the brief invalidates every one.
+  Changing your work style keeps the gates and scores, because work style never affects fit, but
+  drops the cached work-style signals so they are written again for your new choices. A cached
+  judgment also needs the same job description: an employer can edit a posting in place.
+- `state.py judged forget` drops every cached judgment and keeps every status. A new resume can
+  change the skills score, and the profile does not store the resume.
+- A judged role becomes `seen` the first time it is shown. `seen mark` cannot set `judged`.
+- Judged roles not listed on any board for 60 days are dropped from seen.json. No other status
+  is ever dropped.
+
+### Compatibility
+- A seen.json written by this version cannot be read by v0.3.0 or earlier, which rejects the
+  `judged` status. Keep using the newer version once you have run it.
+
 ## [0.3.0] — 2026-10-19
 
 **Work-style match (M8).** Each role now shows what its posting says about how you like to work.

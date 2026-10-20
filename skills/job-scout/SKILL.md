@@ -292,8 +292,9 @@ A saved profile means a rerun (Phase 1). The saved brief was confirmed on an ear
 show it as "same as last time" and search in the same reply. If the user's message changes
 anything in it ("I'm open to hybrid now"), show the changed brief and confirm it first, as in
 Phase 2. After Phases 3–4 run `python3 scripts/state.py seen diff` and
-`python3 scripts/filter.py` (on a rerun it shows only new, changed and saved roles; `--all`
-shows everything). Lead with what moved:
+`python3 scripts/filter.py` (on a rerun it keeps new, changed and saved roles, and `judged` ones:
+screened by an earlier run but never shown; `--all` shows everything). Count new and changed
+roles from each candidate's `state`, never from `seen diff`. Lead with what moved:
 
 - **New** roles first (mark them `NEW`), then **changed** ones — say what changed, from
   `changed_details` (`before` → `after`: title, pay or locations).
@@ -304,7 +305,7 @@ shows everything). Lead with what moved:
   A role closes only when a board checked successfully this run no longer lists it, or its
   live check found the posting gone; never call a role closed because a board failed.
 
-With nothing new, say so in one line and show the saved-or-applied list. End every rerun with
+With no `new` or `changed` candidate, say so in one line and show the saved-or-applied list. End every rerun with
 `python3 scripts/report.py --open` (as in Phase 7), then `python3 scripts/state.py seen record` —
 also when nothing was new — so closures are remembered and not reported again next time.
 

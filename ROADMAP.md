@@ -11,6 +11,10 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 - [x] M7 — HTML report: self-contained report.html per run (Signal theme, sort/filter, copy-a-reply, score grid); released as v0.2.0
 - [x] M8 — Work-style match: optional fixed-choice questions, quoted match / conflict / not-stated signals per role, display only; released as v0.3.0
 
+### Phase 3: v0.4
+
+- [~] M9 — Rerun memory: a `judged` status so screened-but-unshown roles stop coming back as new; one ranked rerun list with NEW / CHANGED / SAVED badges; cached judgments reused when the posting and the brief are unchanged (two PRs)
+
 ## Follow-ups
 
 - [ ] Lever EU host (`api.eu.lever.co`) — not needed in v0: every sampled seed slug answered on `api.lever.co`

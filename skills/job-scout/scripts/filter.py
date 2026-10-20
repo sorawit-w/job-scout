@@ -10,7 +10,8 @@ state, ranked, at most --limit) and prints one compact JSON object:
   {"counts": {"input", "removed": {reason: n}, "candidates"},
    "candidates": [{key, company, title, where, mode, since, pay, match, flags, state}],
    "near_misses": [{key, company, title, reason}]}
-state is new | changed | saved | applied | seen | dismissed (no seen.json: all new).
+state is new | changed | saved | applied | seen | dismissed | judged (no seen.json: all new);
+judged = an earlier run screened it but never showed it.
 Exit codes: 0 ok · 2 no profile, no run, no jobs.json, unreadable seen.json (left unchanged,
 nothing written), or bad arguments.
 
@@ -21,9 +22,10 @@ or unknown-mode job elsewhere in the home or remote-scope countries, flagged) ->
 Greenhouse lists no pay, so its pay is checked after fetch_jd).
 Old postings are flagged ("open over N days"), never removed.
 Rerun (seen.json has entries), after every rule above: unchanged seen roles are removed as
-"already_seen", applied and dismissed ones as "dismissed_or_applied"; new, changed and saved stay.
---all keeps them all (still tagged). Ranking puts new and changed before saved (then the rest),
-keeping the usual order within each group. removed + candidates always equals input.
+"already_seen", applied and dismissed ones as "dismissed_or_applied"; new, changed, saved and judged stay.
+--all keeps them all (still tagged). Ranking puts new and changed before saved, then the rest
+(judged among them), keeping the usual order within each group. removed + candidates always
+equals input.
 
 What it does NOT do:
 - No judgment of fit. "strong" and "borderline" are word matches on the title only; the LLM

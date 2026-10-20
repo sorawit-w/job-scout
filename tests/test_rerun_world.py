@@ -58,6 +58,7 @@ NEW = "greenhouse:arizeai:6311447004"  # Design Engineer, Design Systems: only o
 SHOWN = [SAVED_CLOSED, APPLIED, CHANGED, SEEN_SAME, DISMISSED, ERROR_BOARD_JOB]
 CHANGED_TITLES = ("Senior AI Product Engineer, Fullstack", "Senior AI Product Engineer, Frontend")
 TIMESTAMPS = ("first_seen", "last_seen")
+JUDGMENT_STAMPS = ("run", "judged_at")  # the run id is a timestamp too
 
 
 def _row(key, total, why, risk=()):
@@ -134,7 +135,12 @@ def day1_feedback(home):
 
 
 def without_timestamps(seen):
-    return {k: {f: v for f, v in e.items() if f not in TIMESTAMPS} for k, e in seen.items()}
+    def strip(e):
+        out = {f: v for f, v in e.items() if f not in TIMESTAMPS}
+        if "judgment" in out:
+            out["judgment"] = {f: v for f, v in out["judgment"].items() if f not in JUDGMENT_STAMPS}
+        return out
+    return {k: strip(e) for k, e in seen.items()}
 
 
 class SeenAfterFeedbackTest(unittest.TestCase):
@@ -146,6 +152,7 @@ class SeenAfterFeedbackTest(unittest.TestCase):
         cls.steps = day1_feedback(cls.home)
         cls.built = read_json(os.path.join(cls.home, "seen.json"))
         cls.stored = read_json(SEEN)
+        cls.unread = {c["key"] for c in cls.steps["filter"][1]["candidates"]} - set(SHOWN)
 
     def test_every_day1_step_succeeds(self):
         for name, (code, _) in self.steps.items():
@@ -153,7 +160,8 @@ class SeenAfterFeedbackTest(unittest.TestCase):
         self.assertEqual(self.steps["probe"][1]["boards"]["live"], 4)
         self.assertTrue(self.steps["cite_check"][1]["ok"], self.steps["cite_check"][1])
         self.assertEqual(sorted(j["key"] for j in self.steps["fetch_jd"][1]["jobs"]), sorted(SHOWN))
-        self.assertEqual(self.steps["record"][1], {"inserted": 6, "updated": 0, "missing": 0, "closed": 0, "reopened": 0})
+        self.assertEqual(self.steps["record"][1], {"inserted": 6, "updated": 0, "judged": len(self.unread), "missing": 0,
+                                                   "closed": 0, "reopened": 0, "pruned": 0})
 
     def test_shown_roles_were_day1_candidates(self):
         self.assertTrue(set(SHOWN) <= {c["key"] for c in self.steps["filter"][1]["candidates"]})
@@ -167,9 +175,12 @@ class SeenAfterFeedbackTest(unittest.TestCase):
 
     def test_feedback_statuses(self):
         status = {k: (e["status"], e["reason"]) for k, e in self.stored.items()}
-        self.assertEqual(status, {SAVED_CLOSED: ("saved", None), APPLIED: ("applied", None),
-                                  DISMISSED: ("dismissed", "too senior"), CHANGED: ("seen", None),
-                                  SEEN_SAME: ("seen", None), ERROR_BOARD_JOB: ("seen", None)})
+        self.assertEqual(status, dict({SAVED_CLOSED: ("saved", None), APPLIED: ("applied", None),
+                                       DISMISSED: ("dismissed", "too senior"), CHANGED: ("seen", None),
+                                       SEEN_SAME: ("seen", None), ERROR_BOARD_JOB: ("seen", None)},
+                                      **{k: ("judged", None) for k in self.unread}))
+        self.assertTrue(self.unread)  # day1 candidates the judgment step never read
+        self.assertFalse([k for k in self.unread if "judgment" in self.stored[k]])
         self.assertEqual(self.stored[CHANGED]["title"], CHANGED_TITLES[0])
 
 
@@ -197,10 +208,10 @@ class RerunDay2Test(unittest.TestCase):
         self.assertEqual(self.boards["blocked"], 0)
         self.assertNotIn("greenhouse:koboldmetals", state.probed_ok_boards(os.path.join(self.home, "runs", out["run"])))
 
-    def test_diff_new_changed_closed_applied(self):
+    def test_diff_changed_closed_applied(self):
         code, d = self.diff
         self.assertEqual(code, 0)
-        self.assertIn(NEW, d["new"])
+        self.assertNotIn("new", d)  # filter.py's per-candidate state counts new roles
         self.assertEqual(d["changed"], [CHANGED])
         self.assertEqual(d["closed"], [SAVED_CLOSED])  # the saved role that closed
         self.assertEqual(d["applied_open"], [APPLIED])
@@ -216,6 +227,7 @@ class RerunDay2Test(unittest.TestCase):
     def test_rerun_filter_leads_with_new_then_changed(self):
         code, out = self.filter
         self.assertEqual(code, 0)
+        # day1's unread (judged) candidates are all on the KoBold board, which errors on day2
         self.assertEqual([(c["key"], c["state"]) for c in out["candidates"]], [(NEW, "new"), (CHANGED, "changed")])
         removed = out["counts"]["removed"]
         self.assertEqual(removed["already_seen"], 1)  # SEEN_SAME
@@ -242,6 +254,98 @@ class RerunDay2Test(unittest.TestCase):
         self.assertEqual(jobs[NEW]["comp"]["min"], 175000)
         self.assertEqual(out["closed"], [])
         self.assertEqual(out["unverified"], [])
+
+
+# --- the 2026-10-19 world: 102 candidates, 38 read, 15 shown; run 2 the same day adds one posting ---
+PASSPORT = "ashby:workos:passport"  # WorkOS, Product Engineer – Passport: published on the day of run 2
+TAPCART = "ashby:tapcart:sr-product-engineer"  # 6/8, ranked 16th in run 1: cut by the 15-row limit
+BRIEF_1019 = {"schema": 1, "target_roles": ["Product Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
+              "needs_sponsorship": "no", "base_pay_floor": None, "result_count": 15}
+LIVE_1019 = {"status": "open", "full": "We build product features end to end, from the database to the UI.", "comp": None}
+
+
+def _live_job(jobs, key):
+    """The live display fields fetch_jd keeps in a jds.json entry."""
+    j = next(j for j in jobs if j["key"] == key)
+    return {f: j[f] for f in ("title", "locations", "workplace", "remote_scope")}
+
+
+def _posting(key, company, title, published):
+    ats, slug, _ = key.split(":", 2)
+    return {"key": key, "ats": ats, "company": company, "title": title, "remote": True, "remote_scope": ["US"],
+            "workplace": "remote", "locations": ["Remote - US"], "comp": None, "first_published": published,
+            "url": "https://jobs.ashbyhq.com/%s/%s" % (slug, key.rsplit(":", 1)[1]), "variants": [{"key": key}]}
+
+
+def world_1019():
+    """(run 1 jobs, run 1 results rows, run 2 jobs). Read rows 0-14 are shown (totals 8 down to 6),
+    Tapcart is row 15 (6/8, cut by the limit), rows 16-37 read and cut, rows 38-101 never read."""
+    jobs = [_posting("ashby:co%02d:%d" % (i, i), "Co %02d" % i, "Product Engineer", "2026-10-%02d" % (18 - i % 18))
+            for i in range(101)]
+    jobs.insert(15, _posting(TAPCART, "Tapcart", "Sr. Product Engineer", "2026-09-01"))
+    totals = [8, 8, 8, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6] + [4] * 22
+    rows = [{"key": j["key"], "show": i < 15, "total": t,
+             "gates": {"location": "pass", "sponsorship": "pass", "pay": "unknown", "exclusions": "pass"},
+             "scores": {"role": 2, "skills": 2, "level": 1, "domain": t - 5}, "style": [],
+             "why": [{"text": "Product engineering role", "quote": "build product features end to end"}],
+             "risk": [{"text": "pay not listed", "quote": None}]}
+            for i, (j, t) in enumerate(zip(jobs, totals))]
+    return jobs, rows, jobs + [_posting(PASSPORT, "WorkOS", "Product Engineer – Passport", "2026-10-19")]
+
+
+class Rerun20261019Test(unittest.TestCase):
+    """The bug from 2026-10-19: run 2 the same day tagged all 88 candidates new; one was."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.home = tempfile.mkdtemp()
+        jobs1, cls.rows, jobs2 = world_1019()
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": cls.home}):
+            state.write_json_atomic(state.profile_path(), BRIEF_1019)
+            run1 = state.new_run()
+            state.write_json_atomic(run1 / "jobs.json", jobs1)
+            cls.filter1 = call(jfilter.main, ["--run", run1.name])
+            state.write_json_atomic(run1 / "results.json", {"rows": cls.rows})
+            state.write_json_atomic(run1 / "jds.json", {r["key"]: dict(LIVE_1019, job=_live_job(jobs1, r["key"]))
+                                                        for r in cls.rows})
+            cls.record1 = call(state.main, ["seen", "record", "--run", run1.name])
+            cls.seen1 = state.load_seen()
+            cls.live1 = state.read_json(run1 / "jds.json")
+            run2 = state.new_run()
+            state.write_json_atomic(run2 / "jobs.json", jobs2)
+            cls.filter2 = call(jfilter.main, ["--run", run2.name])
+
+    def test_run_1_shape(self):
+        self.assertEqual(self.filter1[1]["counts"]["candidates"], 102)
+        self.assertEqual((sum(r["show"] for r in self.rows), len(self.rows)), (15, 38))
+        self.assertEqual(self.record1, (0, {"inserted": 15, "updated": 0, "judged": 87, "missing": 0,
+                                            "closed": 0, "reopened": 0, "pruned": 0}))
+
+    def test_shown_roles_are_seen_and_the_rest_judged(self):
+        status = {k: e["status"] for k, e in self.seen1.items()}
+        shown = {r["key"] for r in self.rows if r["show"]}
+        self.assertEqual({k for k, v in status.items() if v == "seen"}, shown)
+        judged = {k for k, v in status.items() if v == "judged"}
+        self.assertEqual(len(judged), 87)
+        read_cut = {k for k in judged if "judgment" in self.seen1[k]}
+        self.assertEqual(read_cut, {r["key"] for r in self.rows if not r["show"]})  # 23, Tapcart among them
+        self.assertEqual((len(read_cut), self.seen1[TAPCART]["judgment"]["total"]), (23, 6))
+
+    def test_run_2_tags_exactly_one_role_new(self):
+        code, out = self.filter2
+        self.assertEqual(code, 0)
+        states = {c["key"]: c["state"] for c in out["candidates"]}
+        self.assertEqual([k for k, v in states.items() if v == "new"], [PASSPORT])
+        self.assertEqual(len(states), 88)  # 87 screened before + Passport; the 15 shown are already seen
+        self.assertEqual(set(states.values()), {"new", "judged"})
+        self.assertEqual(out["counts"]["removed"]["already_seen"], 15)
+
+    def test_editing_the_brief_invalidates_every_cached_judgment(self):
+        jobs = {j["key"]: j for j in world_1019()[2]}
+        cached = [k for k in self.seen1 if state.cached_judgment(jobs[k], self.seen1, BRIEF_1019, self.live1.get(k))]
+        self.assertEqual(len(cached), 38)  # every read role, shown or cut
+        edited = dict(BRIEF_1019, work_modes=["remote", "hybrid"])
+        self.assertEqual([k for k in self.seen1 if state.cached_judgment(jobs[k], self.seen1, edited, self.live1.get(k))], [])
 
 
 class AddCompanyTest(unittest.TestCase):

@@ -94,14 +94,14 @@ class DiffTest(unittest.TestCase):
     def diff(self, jobs, seen, ok=None):
         return state.diff(jobs, self.OK if ok is None else ok, seen)
 
-    def test_new_job(self):
+    def test_new_job_is_in_no_list(self):
+        # filter.py's per-candidate state counts new roles; diff over all of jobs.json would not mean anything
         out = self.diff([job()], {})
-        self.assertEqual(out["new"], ["ashby:acme:1"])
-        self.assertEqual(out["changed"] + out["saved_open"] + out["closed"], [])
+        self.assertEqual(out, {"changed": [], "saved_open": [], "applied_open": [], "closed": []})
 
     def test_unchanged_seen_job_is_in_no_list(self):
         out = self.diff([job()], {"ashby:acme:1": entry()})
-        self.assertEqual(out, {"new": [], "changed": [], "saved_open": [], "applied_open": [], "closed": []})
+        self.assertEqual(out, {"changed": [], "saved_open": [], "applied_open": [], "closed": []})
 
     def test_changed_seen_and_saved(self):
         seen = {"ashby:acme:1": entry(), "ashby:acme:2": entry(status="saved")}
@@ -132,7 +132,8 @@ class DiffTest(unittest.TestCase):
     def test_match_by_variant_key(self):
         seen = {"ashby:acme:7": entry(job("ashby:acme:1", more=["ashby:acme:7"]))}
         out = self.diff([job("ashby:acme:1", more=["ashby:acme:7"])], seen)
-        self.assertEqual(out["new"] + out["closed"], [])
+        self.assertEqual(out["closed"], [])
+        self.assertEqual(state.job_state(job("ashby:acme:1", more=["ashby:acme:7"]), seen), "seen")
 
     def test_alias_survives_primary_variant_closing(self):
         first = job("ashby:acme:1", more=["ashby:acme:2"])
@@ -140,7 +141,8 @@ class DiffTest(unittest.TestCase):
         now = job("ashby:acme:2")  # primary posting closed; the other variant is the row now
         now["locations"] = first["locations"]
         out = self.diff([now], seen)
-        self.assertEqual(out["new"] + out["closed"] + out["changed"], [])
+        self.assertEqual(out["closed"] + out["changed"], [])
+        self.assertEqual(state.job_state(now, seen), "saved")
         self.assertEqual(out["saved_open"], ["ashby:acme:2"])
 
     def test_job_state(self):
@@ -157,7 +159,7 @@ class DiffTest(unittest.TestCase):
         # two roles recorded separately, now collapsed into one job
         seen = {"ashby:acme:1": entry(), "ashby:acme:2": entry(status="saved")}
         out = self.diff([job("ashby:acme:1", more=["ashby:acme:2"])], seen)
-        self.assertEqual(out["closed"] + out["new"], [])
+        self.assertEqual(out["closed"], [])
         self.assertEqual(out["saved_open"], ["ashby:acme:1"])
 
     def test_job_state_takes_the_strongest_status_of_all_matches(self):
@@ -180,19 +182,18 @@ class DiffTest(unittest.TestCase):
 
 
 class RecordTest(HomeCase):
-    def test_inserts_shown_rows_only(self):
+    def test_inserts_shown_rows_as_seen_and_unshown_rows_as_judged(self):
         jobs = [job("ashby:acme:1", more=["ashby:acme:5"]), job("ashby:acme:2")]
         run = self.make_run(jobs, [{"key": "ashby:acme:5", "show": True}, {"key": "ashby:acme:2", "show": False}])
         counts = state.record(run, now=NOW)
         seen = state.load_seen()
-        self.assertEqual(list(seen), ["ashby:acme:1"])
+        self.assertEqual({k: e["status"] for k, e in seen.items()}, {"ashby:acme:1": "seen", "ashby:acme:2": "judged"})
         e = seen["ashby:acme:1"]
         self.assertEqual((e["status"], e["first_seen"], e["last_seen"]), ("seen", state.now_iso(NOW), state.now_iso(NOW)))
         self.assertEqual(e["sig"], state.job_sig(jobs[0]))
         self.assertEqual(e["aliases"], ["ashby:acme:5"])
         self.assertIsNone(e["closed_at"])
-        self.assertEqual(counts["inserted"], 1)
-        self.assertEqual(counts["updated"], 0)
+        self.assertEqual((counts["inserted"], counts["updated"], counts["judged"]), (1, 0, 1))
 
     def test_record_keeps_the_shown_link_and_show_lists_it(self):
         j = job("ashby:acme:1", more=["ashby:acme:5"])
@@ -299,7 +300,8 @@ class RecordTest(HomeCase):
         e = state.load_seen()["ashby:acme:a"]
         self.assertEqual((e["aliases"], e["last_seen"]), (["ashby:acme:b", "ashby:acme:c"], state.now_iso(LATER)))
         out = state.diff([job("ashby:acme:c")], {"ashby:acme"}, state.load_seen())
-        self.assertEqual(out["new"] + out["closed"], [])
+        self.assertEqual(out["closed"], [])
+        self.assertEqual(state.job_state(job("ashby:acme:c"), state.load_seen()), "seen")
 
     def test_unshown_job_keeps_its_old_sig_so_it_still_reads_changed(self):
         run = self.make_run([job("ashby:acme:a")], [{"key": "ashby:acme:a", "show": True}])
@@ -322,6 +324,197 @@ class RecordTest(HomeCase):
         run = state.new_run(now=NOW)
         with self.assertRaises(FileNotFoundError):
             state.record(run, now=NOW)
+
+
+def row(key, show, total=6):
+    """A results.json row as the judgment step writes it."""
+    return {"key": key, "show": show, "total": total, "gates": {"location": "pass", "sponsorship": "unknown",
+            "pay": "pass", "exclusions": "pass"}, "scores": {"role": 2, "skills": 2, "level": 1, "domain": 1},
+            "why": [{"text": "Owns the design system", "quote": "own and evolve our design system"}],
+            "risk": [{"text": "sponsorship not stated", "quote": None}], "style": []}
+
+
+JD = "Build product features end to end. Own and evolve our design system."
+
+
+def live(text=JD, comp=None, **job_fields):
+    """A jds.json entry as fetch_jd writes it: the description plus the live pay and display fields."""
+    return {"status": "open", "full": text, "comp": comp,
+            "job": dict({"title": "Senior Frontend Engineer", "locations": ["Remote - US"], "workplace": "remote",
+                         "remote_scope": ["US"]}, **job_fields)}
+BRIEF = {"schema": 1, "target_roles": ["Product Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
+         "needs_sponsorship": "no", "base_pay_floor": None}
+
+
+class JudgedTest(HomeCase):
+    """judged = screened by an earlier run (read and cut, or never read), judgment cached, never shown."""
+
+    def setUp(self):
+        super().setUp()
+        state.write_json_atomic(state.profile_path(), BRIEF)
+
+    def run_with_jd(self, jobs, rows, text=JD):
+        run = self.make_run(jobs, rows)
+        state.write_json_atomic(run / "jds.json", {r["key"]: live(text) for r in rows})
+        return run
+
+    def test_unshown_row_is_judged_with_its_judgment_and_posting(self):
+        j = job("ashby:acme:1")
+        j["url"] = "https://jobs.ashbyhq.com/acme/1"
+        run = self.run_with_jd([j], [row("ashby:acme:1", False)])
+        state.record(run, now=NOW)
+        e = state.load_seen()["ashby:acme:1"]
+        self.assertEqual((e["status"], e["sig"], e["snap"], e["title"], e["company"], e["url"]),
+                         ("judged", state.job_sig(j), state.job_snap(j), j["title"], "Acme", j["url"]))
+        r = row("ashby:acme:1", False)
+        self.assertEqual(e["judgment"], {"total": 6, "scores": r["scores"], "gates": r["gates"], "show": False,
+                                         "why": r["why"], "risk": r["risk"], "style": [], "run": run.name,
+                                         "judged_at": state.now_iso(NOW), "sig": state.job_sig(j),
+                                         "jd_sig": state.jd_sig(live()), "brief_sig": state.brief_sig(BRIEF),
+                                         "work_style": {}})
+
+    def test_unread_candidate_is_judged_without_a_judgment(self):
+        jobs = [job("ashby:acme:1"), job("ashby:acme:2")]
+        run = self.make_run(jobs, [row("ashby:acme:1", True)])
+        state.write_json_atomic(run / "candidates.json", jobs)  # acme:2 passed filter.py but was never read
+        counts = state.record(run, now=NOW)
+        e = state.load_seen()["ashby:acme:2"]
+        self.assertEqual((e["status"], e["sig"]), ("judged", state.job_sig(jobs[1])))
+        self.assertNotIn("judgment", e)
+        self.assertEqual(counts["judged"], 1)
+
+    def test_unread_candidate_keeps_an_earlier_judgment(self):
+        run = self.make_run([job()], [row("ashby:acme:1", False)])
+        state.record(run, now=NOW)
+        run = self.make_run([job()], [])
+        state.write_json_atomic(run / "candidates.json", [job()])
+        state.record(run, now=LATER)
+        e = state.load_seen()["ashby:acme:1"]
+        self.assertEqual((e["status"], e["judgment"]["judged_at"], e["last_seen"]),
+                         ("judged", state.now_iso(NOW), state.now_iso(LATER)))
+
+    def test_shown_row_promotes_judged_to_seen_and_first_seen_is_when_shown(self):
+        state.record(self.make_run([job()], [row("ashby:acme:1", False)]), now=NOW)
+        state.record(self.make_run([job()], [row("ashby:acme:1", True, total=7)]), now=LATER)
+        e = state.load_seen()["ashby:acme:1"]
+        self.assertEqual((e["status"], e["first_seen"]), ("seen", state.now_iso(LATER)))
+        self.assertEqual((e["judgment"]["show"], e["judgment"]["total"]), (True, 7))
+
+    def test_unshown_row_never_weakens_a_stronger_entry_or_moves_its_sig(self):
+        for status in ("seen", "saved", "applied", "dismissed"):
+            state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status=status)})
+            moved = job(title="Staff Frontend Engineer")
+            state.record(self.make_run([moved], [row("ashby:acme:1", False)]), now=LATER)
+            e = state.load_seen()["ashby:acme:1"]
+            self.assertEqual((e["status"], e["sig"]), (status, state.job_sig(job())), status)
+            self.assertEqual(e["judgment"]["sig"], state.job_sig(moved), status)  # what was judged: the new posting
+
+    def test_job_state_judged_then_new_when_the_posting_changes(self):
+        seen = {"ashby:acme:1": entry(status="judged")}
+        self.assertEqual(state.job_state(job(), seen), "judged")
+        self.assertEqual(state.job_state(job(comp=dict(USD, max=300000)), seen), "new")
+
+    def test_judged_is_the_weakest_status(self):
+        j = job("ashby:acme:1", more=["ashby:acme:2"])
+        for other in ("seen", "saved", "applied", "dismissed"):
+            seen = {"ashby:acme:1": entry(j, status="judged"), "ashby:acme:2": entry(j, status=other)}
+            self.assertEqual(state.job_state(j, seen), other)
+
+    def test_judged_role_is_never_reported_closed(self):
+        self.assertEqual(state.diff([], {"ashby:acme"}, {"ashby:acme:1": entry(status="judged")})["closed"], [])
+
+    def test_mark_refuses_judged(self):
+        with self.assertRaises(ValueError):
+            state.mark("ashby:acme:1", "judged")
+        self.assertFalse(state.seen_path().exists())
+
+    def test_mark_saves_a_judged_role(self):
+        state.record(self.make_run([job()], [row("ashby:acme:1", False)]), now=NOW)
+        state.mark("ashby:acme:1", "saved")
+        self.assertEqual(state.load_seen()["ashby:acme:1"]["status"], "saved")
+
+    def test_cached_judgment_needs_the_same_posting_and_the_same_brief(self):
+        state.record(self.run_with_jd([job()], [row("ashby:acme:1", False)]), now=NOW)
+        seen = state.load_seen()
+        self.assertEqual(state.cached_judgment(job(), seen, BRIEF, live())["total"], 6)
+        self.assertIsNone(state.cached_judgment(job(title="Staff Frontend Engineer"), seen, BRIEF, live()))
+        for edit in ({"work_modes": ["remote", "hybrid"]}, {"base_pay_floor": {"amount": 150000}},
+                     {"dealbreakers": ["crypto"]}, {"seniority": ["Staff"]}, {"needs_sponsorship": "yes"},
+                     {"must_haves": ["Go"]}):
+            self.assertIsNone(state.cached_judgment(job(), seen, dict(BRIEF, **edit), live()), edit)
+        # work style is display only, so changing it keeps the cached gates and scores
+        self.assertIsNotNone(state.cached_judgment(job(), seen, dict(BRIEF, work_style={"travel": "none"}), live()))
+
+    def test_cached_judgment_needs_the_same_description(self):
+        # An employer can edit a posting in place (add "no sponsorship") without touching title, pay or places.
+        state.record(self.run_with_jd([job()], [row("ashby:acme:1", False)]), now=NOW)
+        seen = state.load_seen()
+        self.assertIsNotNone(state.cached_judgment(job(), seen, BRIEF, live("  " + JD.replace(" ", "\n ") + "\n")))
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, live(JD + " We do not sponsor visas.")))
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, live("")))
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, {"status": "closed"}))
+        # before the live check there is no text yet: posting and brief only, and the caller checks again
+        self.assertIsNotNone(state.cached_judgment(job(), seen, BRIEF, None))
+
+    def test_cached_judgment_needs_the_same_live_pay_and_places(self):
+        # Greenhouse lists no pay on the board: the live check's pay is what the pay gate judged.
+        state.record(self.run_with_jd([job(comp=None)], [row("ashby:acme:1", False)]), now=NOW)
+        seen = state.load_seen()
+        self.assertIsNotNone(state.cached_judgment(job(comp=None), seen, BRIEF, live()))
+        for changed in (live(comp=USD), live(locations=["Remote - Canada"]), live(workplace="hybrid"),
+                        live(remote_scope=["CA"]), live(title="Staff Frontend Engineer")):
+            self.assertIsNone(state.cached_judgment(job(comp=None), seen, BRIEF, changed), changed)
+
+    def test_changed_work_style_drops_only_the_cached_style(self):
+        styled = dict(BRIEF, work_style={"travel": "none"})
+        state.write_json_atomic(state.profile_path(), styled)
+        r = dict(row("ashby:acme:1", True), style=[{"topic": "travel", "verdict": "conflict",
+                                                    "text": "Some travel", "quote": "travel up to 25% of the time"}])
+        state.record(self.run_with_jd([job()], [r]), now=NOW)
+        seen = state.load_seen()
+        self.assertEqual(state.cached_judgment(job(), seen, styled, live())["style"], r["style"])
+        moved = state.cached_judgment(job(), seen, dict(BRIEF, work_style={"travel": "some"}), live())
+        self.assertIsNone(moved["style"])  # a conflict under "none" may be a match under "some": write it again
+        self.assertEqual((moved["total"], moved["gates"]), (6, r["gates"]))  # work style never moves fit
+
+    def test_forget_drops_every_cached_judgment_and_keeps_statuses(self):
+        # A new resume can change the skills score, and the profile does not store the resume.
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:2": entry(status="saved")})
+        state.record(self.run_with_jd([job(), job("ashby:acme:2")],
+                                      [row("ashby:acme:1", False), row("ashby:acme:2", True)]), now=NOW)
+        self.assertEqual(state.forget_judgments(), 2)
+        seen = state.load_seen()
+        self.assertEqual({k: e["status"] for k, e in seen.items()}, {"ashby:acme:1": "judged", "ashby:acme:2": "saved"})
+        self.assertFalse([k for k, e in seen.items() if "judgment" in e])
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, live()))
+
+    def test_no_cached_judgment_when_the_judged_text_was_not_kept(self):
+        state.record(self.make_run([job()], [row("ashby:acme:1", False)]), now=NOW)  # no jds.json
+        self.assertIsNone(state.cached_judgment(job(), state.load_seen(), BRIEF, live()))
+
+    def test_no_cached_judgment_for_an_unread_or_unknown_role(self):
+        run = self.make_run([job()], [])
+        state.write_json_atomic(run / "candidates.json", [job()])
+        state.record(run, now=NOW)
+        self.assertIsNone(state.cached_judgment(job(), state.load_seen(), BRIEF, None))
+        self.assertIsNone(state.cached_judgment(job("ashby:acme:9"), state.load_seen(), BRIEF, None))
+
+    def test_judged_entries_are_pruned_60_days_after_last_seen_and_no_other_status_is(self):
+        day = 86400
+        state.write_json_atomic(state.seen_path(), {
+            "ashby:acme:1": dict(entry(status="judged"), last_seen=state.now_iso(NOW - 61 * day)),
+            "ashby:acme:2": dict(entry(status="judged"), last_seen=state.now_iso(NOW - 59 * day)),
+            "ashby:acme:3": dict(entry(status="seen"), last_seen=state.now_iso(NOW - 400 * day)),
+            "ashby:acme:4": dict(entry(status="saved"), last_seen=state.now_iso(NOW - 400 * day))})
+        counts = state.record(self.make_run([], [], live=()), now=NOW)
+        self.assertEqual(sorted(state.load_seen()), ["ashby:acme:2", "ashby:acme:3", "ashby:acme:4"])
+        self.assertEqual(counts["pruned"], 1)
+
+    def test_a_judged_role_still_listed_is_never_pruned(self):
+        old = dict(entry(status="judged"), last_seen=state.now_iso(NOW - 90 * 86400))
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:1": old})
+        state.record(self.make_run([job()], []), now=NOW)  # on the board today: last_seen refreshed first
+        self.assertIn("ashby:acme:1", state.load_seen())
 
 
 class MarkTest(HomeCase):
@@ -405,8 +598,8 @@ class SeenCliTest(HomeCase):
         run = self.make_run([job()], [{"key": "ashby:acme:1", "show": True}])
         code, out = self.cli(["seen", "diff", "--run", run.name])
         self.assertEqual(code, 0)  # acme:9 was only seen, so its closing is not reported
-        self.assertEqual(out["counts"], {"new": 1, "changed": 0, "saved_open": 0, "applied_open": 0, "closed": 0})
-        self.assertEqual(out["new"], ["ashby:acme:1"])
+        self.assertEqual(out["counts"], {"changed": 0, "saved_open": 0, "applied_open": 0, "closed": 0})
+        self.assertNotIn("new", out)
         code, out = self.cli(["seen", "record"])
         self.assertEqual(code, 0)
         self.assertEqual(out["inserted"], 1)
@@ -480,11 +673,20 @@ class SeenCliTest(HomeCase):
         self.assertIn("error", out)
         self.assertNotIn("ashby:acme:2", state.load_seen())
 
-    def test_mark_bad_status_exits_1(self):
-        code, out = self.cli(["seen", "mark", "ashby:acme:1", "loved"])
+    def test_judged_forget(self):
+        code, out = self.cli(["judged", "forget"])
+        self.assertEqual((code, out), (0, {"forgot": 0}))
+        state.seen_path().write_bytes(b"[]")
+        code, out = self.cli(["judged", "forget"])
         self.assertEqual(code, 1)
-        self.assertIn("error", out)
-        self.assertFalse(state.seen_path().exists())
+        self.assertEqual(state.seen_path().read_bytes(), b"[]")
+
+    def test_mark_bad_status_exits_1(self):
+        for status in ("loved", "judged"):  # judged is set only by `seen record`
+            code, out = self.cli(["seen", "mark", "ashby:acme:1", status])
+            self.assertEqual(code, 1, status)
+            self.assertIn("error", out)
+            self.assertFalse(state.seen_path().exists())
 
     def test_show_empty(self):
         code, out = self.cli(["seen", "show"])
