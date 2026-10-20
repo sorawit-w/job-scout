@@ -662,6 +662,16 @@ class CarryRankTest(HomeCase):
         self.assertEqual([(r["key"], r["show"]) for r in ranked], [("ashby:acme:2", True), ("ashby:acme:1", False)])
         self.assertEqual(out, {"shown": 1, "matches": 1})
 
+    def test_rank_never_shows_a_row_with_a_missing_gate_or_a_score_out_of_range(self):
+        no_gate = dict(row("ashby:acme:1", True, 8), gates={"location": "pass", "pay": "pass", "exclusions": "pass"})
+        too_big = dict(row("ashby:acme:2", True, 8), scores={"role": 2, "skills": 2, "level": 2, "domain": 3}, total=9)
+        out, ranked = self.rank([no_gate, too_big, row("ashby:acme:3", True, 5)],
+                                [job("ashby:acme:%d" % i) for i in (1, 2, 3)], result_count=5)
+        self.assertEqual({r["key"]: r["show"] for r in ranked},
+                         {"ashby:acme:1": False, "ashby:acme:2": False, "ashby:acme:3": True})
+        self.assertEqual(out, {"shown": 1, "matches": 1})
+        self.assertIsNone(state.fit(too_big))
+
     def test_judged_cli(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):

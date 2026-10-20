@@ -16,8 +16,9 @@ Usage (paths relative to the skill folder):
     A style item's topic is a work_style topic and its verdict match / conflict / not_stated;
     match and conflict need a quote, not_stated has quote null (rubric §4). Each shown row needs
     exactly one style item per topic in the run's work_style (state.run_profile), and none for others.
-    Each row's key must have an open job description in jds.json, and a row with show: true
-    needs at least one why item; each failing row is reported once, with quote null.
+    Each row's key must have an open job description in jds.json, all four gates (pass, fail or
+    unknown) and all four scores (0–2), and a row with show: true needs at least one why item; each
+    failing row is reported once per problem, with quote null.
     Stdout: {"ok": bool, "checked": n, "failed": [{"key", "quote", "why"[, "carried": true]}]}
     "carried" marks a row `state.py judged carry` reused from an earlier run: judge it again from
     scratch rather than patch it (rubric §3).
@@ -148,6 +149,12 @@ def main(argv=None):
         if bad:  # valid JSON of the wrong shape: report it, never crash
             failed.append({"key": key, "quote": None, "why": "; ".join(
                 "show must be true or false" if f == "show" else "%s must be a list" % f for f in bad)})
+        if not state.gates_complete(row):  # judged rank and the report read every gate
+            failed.append({"key": key, "quote": None, "why": "gates must give %s, each %s" % (
+                ", ".join(state.GATES), "/".join(state.GATE_VALUES))})
+        scores = row.get("scores") if isinstance(row.get("scores"), dict) else {}
+        if not all(state._in_range(scores.get(k), 2) is not None for k in state.SCORES):
+            failed.append({"key": key, "quote": None, "why": "scores must give %s, each 0, 1 or 2" % ", ".join(state.SCORES)})
         items, style = lists["why"] + lists["risk"], lists["style"]
         checked += len(items) + len(style)
         if not live(jd):  # one failure per row, even with no items to check

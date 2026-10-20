@@ -634,17 +634,32 @@ def forget_judgments():
 
 _CARRY_FIELDS = ("total", "scores", "gates", "show", "why", "risk", "style")
 SCORES = ("role", "skills", "level", "domain")
+GATES = ("location", "sponsorship", "pay", "exclusions")
+GATE_VALUES = ("pass", "fail", "unknown")
+
+
+def _in_range(v, hi):
+    return v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= hi else None
 
 
 def fit(row):
-    """Fit out of 8: the sum of the four 0–2 scores when all are there (one source of truth, also for
-    report.py), else the row's total, else None."""
+    """Fit out of 8: the sum of the four 0–2 scores when all are there and in range (one source of truth,
+    also for report.py), else the row's total if it is 0–8, else None."""
     scores = row.get("scores") if isinstance(row.get("scores"), dict) else {}
-    parts = [scores.get(k) for k in SCORES]
-    if all(isinstance(v, int) and not isinstance(v, bool) for v in parts):
-        return sum(parts)
-    total = row.get("total")
-    return total if isinstance(total, int) and not isinstance(total, bool) else None
+    parts = [_in_range(scores.get(k), 2) for k in SCORES]
+    return sum(parts) if None not in parts else _in_range(row.get("total"), 8)
+
+
+def gates_complete(row):
+    """All four gates present, each pass, fail or unknown (cite_check fails a row that is not)."""
+    gates = row.get("gates")
+    return isinstance(gates, dict) and all(gates.get(g) in GATE_VALUES for g in GATES)
+
+
+def eligible(row):
+    """Rubric §2: could be shown — all four gates answered, none failed, fit 5 or more. Fails closed."""
+    f = fit(row)
+    return f is not None and f >= 5 and gates_complete(row) and "fail" not in row["gates"].values()
 
 
 def _results(run_dir):
@@ -714,8 +729,7 @@ def rank(run_dir):
         src = {f: live[f] if f in live else cand.get(f) for f in ("flags", "first_published")}
         m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(src.get("first_published") or ""))
         total = fit(r) or 0  # the four scores, as the report shows them: a stale total never passes the cutoff
-        gates = r.get("gates") if isinstance(r.get("gates"), dict) else {"gates": "fail"}  # no gates: never shown
-        ok = total >= 5 and "fail" not in gates.values()
+        ok = eligible(r)
         return (not ok, -total, jfilter.location_flagged(src.get("flags") or []), m is None,
                 -int("".join(m.groups())) if m else 0), ok
 

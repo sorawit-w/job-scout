@@ -167,7 +167,8 @@ _fit = state.fit  # Fit N/8: the sum of the four scores, the same number judged 
 
 
 def _excluded_reason(row):
-    failed = [g for g in GATES if (row.get("gates") or {}).get(g) == "fail"]
+    gates = row.get("gates") if isinstance(row.get("gates"), dict) else {}
+    failed = [g for g in GATES if gates.get(g) == "fail"]
     if failed:
         return "%s gate failed" % failed[0]
     return "fit %s/8, below 5" % _fit(row) if _fit(row) is not None else "not a fit"
@@ -207,8 +208,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             continue
         base = {"key": key, "title": str(job.get("title") or "Untitled role"),
                 "company": str(job.get("company") or "")}
-        fit = _fit(row)
-        matches += isinstance(fit, int) and fit >= 5 and "fail" not in (row.get("gates") or {}).values()
+        matches += state.eligible(row)  # what judged rank counts
         if not row.get("show"):
             excluded.append(dict(base, reason=_excluded_reason(row)))
             continue

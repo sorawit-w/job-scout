@@ -62,9 +62,14 @@ TIMESTAMPS = ("first_seen", "last_seen")
 JUDGMENT_STAMPS = ("run", "judged_at")  # the run id is a timestamp too
 
 
+def _scores(total):
+    """Four 0–2 rubric scores that sum to total."""
+    return dict(zip(("role", "skills", "level", "domain"), (min(2, max(0, total - 2 * i)) for i in range(4))))
+
+
 def _row(key, total, why, risk=()):
     return {"key": key, "gates": {"location": "pass", "sponsorship": "unknown", "pay": "pass", "exclusions": "pass"},
-            "scores": {}, "total": total, "show": True,
+            "scores": _scores(total), "total": total, "show": True,
             "why": [{"text": t, "quote": q} for t, q in why], "risk": [{"text": t, "quote": q} for t, q in risk]}
 
 
@@ -289,7 +294,7 @@ def world_1019():
     totals = [8, 8, 8, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6] + [4] * 22
     rows = [{"key": j["key"], "show": i < 15, "total": t,
              "gates": {"location": "pass", "sponsorship": "pass", "pay": "unknown", "exclusions": "pass"},
-             "scores": {"role": 2, "skills": 2, "level": 1, "domain": t - 5}, "style": [],
+             "scores": _scores(t), "style": [],
              "why": [{"text": "Product engineering role", "quote": "build product features end to end"}],
              "risk": [{"text": "pay not listed", "quote": None}]}
             for i, (j, t) in enumerate(zip(jobs, totals))]

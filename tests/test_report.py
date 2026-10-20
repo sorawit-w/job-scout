@@ -390,6 +390,12 @@ class ReportTest(unittest.TestCase):
         self.assertIn("1 matching role", html)
         self.assertNotIn('data-quick="new"', html)  # no chip with nothing to show
 
+    def test_malformed_gates_never_crash_the_report(self):
+        make_run(self.home, [job("gh:a:1"), job("gh:b:2")],
+                 [dict(row("gh:a:1"), gates=["pass"]), dict(row("gh:b:2", show=False), gates="fail")])
+        code, out = run([], self.home)
+        self.assertEqual((code, out["shown"], out["excluded"]), (0, 1, 1))
+
     def test_new_tag_only_on_reruns(self):
         make_run(self.home, [job("gh:a:1", state_="new")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
