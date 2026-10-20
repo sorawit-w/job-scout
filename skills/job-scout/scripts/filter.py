@@ -324,7 +324,8 @@ def _rank_key(row, p):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
     on_detail = any(f in (MODE_ON_DETAIL_FLAG, LOCATION_ON_DETAIL_FLAG) for f in row["flags"])  # unconfirmed fit: last
-    return (row["cached"], row["state"] not in _READ_FIRST, on_detail, row["match"] != "strong",
+    # cached roles last, best cached fit first: fetch_jd --check-only checks at most 60
+    return (row["cached"], -(row.get("cached_fit") or 0), row["state"] not in _READ_FIRST, on_detail, row["match"] != "strong",
             location_flagged(row["flags"]),
             -_desc_hits(row, p), newest is None, newest or 0)
 
@@ -351,7 +352,9 @@ def _history(row, job, seen, index, profile, rerun):
                                        ("SAVED", status == "saved")) if on] if rerun else [])
     row["first_shown"] = (e.get("first_seen") or "")[:10] or None if e and status != "judged" else None
     row["changes"] = _changes(e.get("snap"), state.job_snap(job)) if row["state"] == "changed" else []
-    row["cached"] = state.cached_judgment(job, seen, profile, None, index) is not None  # carried, not read again
+    j = state.cached_judgment(job, seen, profile, None, index)
+    row["cached"] = j is not None  # carried, not read again
+    row["cached_fit"] = j.get("total") if j and isinstance(j.get("total"), int) else None
 
 
 def _where(row):

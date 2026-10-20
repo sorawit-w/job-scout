@@ -685,6 +685,7 @@ def rank(run_dir):
     """Order results.json by rubric §2 — total, then exact remote scope before flagged, then newest
     "open since" — and set show: no failed gate, total ≥ 5, within the brief's result_count. Badges
     and history never move a role. Flags and dates come from the live check when it has them.
+    A row not shown loses its work-style items (rubric §4: shown rows only).
     Returns {shown, matches} (matches = rows that could be shown)."""
     import filter as jfilter  # filter imports state; ranking by its location flags needs it back, so lazily
     run_dir = Path(run_dir)
@@ -710,6 +711,8 @@ def rank(run_dir):
     for (_, ok), r in keyed:
         r["show"] = ok and shown < limit
         shown += r["show"]
+        if not r["show"]:
+            r["style"] = []  # rubric §4: shown rows only, so a role cut by the count passes cite_check
     write_json_atomic(run_dir / "results.json", {"rows": [r for _, r in keyed]})
     return {"shown": shown, "matches": sum(1 for (_, ok), _ in keyed if ok)}
 

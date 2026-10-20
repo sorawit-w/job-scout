@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import cite_check
 import probe
 import state
 
@@ -627,6 +628,20 @@ class CarryRankTest(HomeCase):
         state.write_json_atomic(run / "jds.json", {"ashby:acme:2": {"status": "open", "job": {"title": "x"}}})
         state.rank(run)
         self.assertEqual([r["key"] for r in state.read_json(run / "results.json")["rows"]], ["ashby:acme:2", "ashby:acme:1"])
+
+    def test_rank_clears_style_on_rows_it_cuts_so_cite_check_passes(self):
+        state.write_json_atomic(state.profile_path(), dict(BRIEF, work_style={"travel": "none"}, result_count=1))
+        style = [{"topic": "travel", "verdict": "match", "text": "No travel", "quote": "own and evolve our design system"}]
+        rows = [dict(row("ashby:acme:1", True, 7), style=style, carried=True), dict(row("ashby:acme:2", True, 8), style=style)]
+        run = self.run_with_jd([job("ashby:acme:1"), job("ashby:acme:2")], rows)
+        state.write_json_atomic(run / "candidates.json", [job("ashby:acme:1"), job("ashby:acme:2")])
+        state.rank(run)
+        ranked = state.read_json(run / "results.json")["rows"]
+        self.assertEqual([(r["key"], r["show"], r["style"]) for r in ranked],
+                         [("ashby:acme:2", True, style), ("ashby:acme:1", False, [])])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), mock.patch("sys.stdin", io.StringIO(json.dumps({"rows": ranked}))):
+            self.assertEqual(cite_check.main(["--run", run.name]), 0, out.getvalue())
 
     def test_judged_cli(self):
         out = io.StringIO()

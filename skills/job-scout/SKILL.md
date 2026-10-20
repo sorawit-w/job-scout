@@ -234,9 +234,9 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
    substance (a title like "Software Engineer, Product" may be exactly a design-engineering job).
    Skip ones the title already rules out. **Never pick a `cached: true` candidate**: its
    judgment from an earlier run is reused in Phase 6 instead of read again.
-3. Run `python3 scripts/fetch_jd.py --keys <key1>,<key2>,...`. It re-checks each job on the
-   employer's board (the live check) and returns `jobs` (open, with a trimmed `jd`), `closed`,
-   and `unverified`. **Show only `open` jobs**; never present a closed or unverified job as open.
+3. Run `python3 scripts/fetch_jd.py --keys <key1>,<key2>,...` (skip it when you picked none).
+   It re-checks each job on the employer's board (the live check) and returns `jobs` (open, with
+   a trimmed `jd`), `closed`, and `unverified`. **Show only `open` jobs**; never present a closed or unverified job as open.
    Exit 4 → the request cap stopped the checks: show the open ones and say the rest couldn't be
    checked. When any candidate is `cached: true`, also run `python3 scripts/fetch_jd.py
    --check-only`: the same live check for the cached ones, with no description to read.

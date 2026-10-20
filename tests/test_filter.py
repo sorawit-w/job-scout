@@ -636,6 +636,15 @@ class SeenStateTest(unittest.TestCase):
         out, _ = jfilter.run_filter([a, b], p, today=TODAY, seen=seen)
         self.assertEqual([(c["key"], c["cached"]) for c in out["candidates"]], [("ashby:acme:b", False), ("ashby:acme:a", True)])
 
+    def test_cached_roles_are_ordered_by_their_cached_fit_so_the_best_get_the_live_check(self):
+        p = profile()
+        jobs = [job(key="ashby:acme:c%d" % i) for i in range(3)]
+        seen = {j["key"]: dict(seen_entry(j, "seen"), judgment={"sig": state.job_sig(j), "brief_sig": state.brief_sig(p),
+                                                                 "total": t})
+                for j, t in zip(jobs, (5, 8, 6))}
+        out, _ = jfilter.run_filter(jobs, p, today=TODAY, seen=seen)
+        self.assertEqual([c["key"] for c in out["candidates"]], ["ashby:acme:c1", "ashby:acme:c2", "ashby:acme:c0"])
+
     def test_all_flag_shows_everything_tagged(self):
         out, cands = self.filt(show_all=True)
         self.assertEqual(sorted(c["state"] for c in cands),
