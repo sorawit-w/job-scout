@@ -171,3 +171,12 @@ Files: skills/job-scout/scripts/report.py, tests/test_report.py, docs/report-des
 Commit: 8aed215 (heading fix), a3cc875 (README; release target)
 Status: DONE — release published.
 Notes: Codex clean on the heading fix (second run; the first failed on Codex's side). The README PR merged on CI alone, as the maintainer asked.
+
+[2026-10-20T10:30:00Z]
+Task: claude.ai memory — notice once, paste block keeps dismissed roles and restores them
+Action: SKILL.md "claude.ai: memory between chats" section (first-reply notice once, skipped when the first message is a pasted block; restore a pasted block with profile save --stdin + seen mark per role; end-of-run block lists saved/applied/dismissed with keys, never seen/judged; titles for restored roles copied from the pasted block). Phase 2 and Phase 9 point to it; output-format §6 updated. state.py seen show lists dismissed roles. README "Where job-scout remembers" table; PRIVACY line; CHANGELOG Unreleased. Eval E19 + fixture; one round-trip test.
+Files: skills/job-scout/{SKILL.md,references/output-format.md,scripts/state.py,evals/evals.json,evals/README.md,evals/files/e19-claude-ai-memory.md}, tests/test_seen.py, README.md, PRIVACY.md, CHANGELOG.md
+Commit: 58734fe
+Status: DONE (pending PR review)
+Notes: Restore uses the existing seen mark flow (it creates an entry for an unknown key), so no new file format. skill-evaluator: clean (17/17: E19 8/8, rejected-profile paste 5/5, Claude Code rerun 4/4) at 58734fe — 2026-10-20; fresh grader per test; executors on Sonnet after Opus runs stopped on API errors.
+Observations: A role restored by seen mark has no title, company or url in seen.json until a later record sees it shown; a dismissed role is never shown, so its title lives only in the pasted block. Gate: 707 tests on 3.14.7 and 3.9.6.
