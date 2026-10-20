@@ -411,6 +411,17 @@ class ReportTest(unittest.TestCase):
         code, out = run([], self.home)
         self.assertEqual((code, out["shown"], out["excluded"]), (0, 1, 1))
 
+    def test_the_detail_heading_stays_in_the_outline_when_shown_inline(self):
+        # Inline (below 1200px) the role title is visually hidden, not display:none, so a screen reader's
+        # outline goes h1 → h2 (role) → h3 ("Check first", "Why it fits"), never h1 → h3 (axe heading-order).
+        self.assertNotIn(".dhead{display:none}", report.CSS)
+        self.assertIn(".dhead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);"
+                      "white-space:nowrap}", report.CSS)
+        make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])
+        run([], self.home)
+        detail = page(self.home).split('id="d1"')[1]
+        self.assertLess(detail.index("<h2"), detail.index("<h3>"))
+
     def test_new_tag_only_on_reruns(self):
         make_run(self.home, [job("gh:a:1", state_="new")], [row("gh:a:1")])
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):

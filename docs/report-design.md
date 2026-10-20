@@ -150,6 +150,8 @@ own). The first role is selected on load. Clicking a row or pressing Enter/Space
 on a focused row button move selection and focus together. The selected detail moves into the
 pane (one copy in the DOM); a polite live region announces "Showing <title> at <company>". A
 filter that hides everything empties the pane with "No roles match the filter."
+The detail's title `<h2>` shows only in the pane. Inline it is visually hidden (the `.sr` method),
+not `display:none`, so the heading outline stays h1 → h2 → h3 and axe's heading-order passes.
 
 ### Secondary sections (below the table)
 Compact tables: "Saved or applied, still open", "Closed since last time", "Close but excluded"
