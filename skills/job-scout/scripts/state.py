@@ -326,6 +326,7 @@ JUDGED_DAYS = 60  # a judged entry not listed on any board for this long is prun
 _OPEN_STATUSES = ("saved", "applied")  # only roles the user cared about are reported closed
 _KEY_RE = re.compile(r"^[a-z_]+:[^:/\\\s]+:\S+$")  # ats:slug:job_id
 MAX_REASON = 200
+MAX_URL = 2048  # employer links (Workday paths) run long; a restore must never reject a real one
 
 
 def seen_path():
@@ -763,9 +764,9 @@ def mark(key, status, reason=None, now=None, aliases=(), title=None, company=Non
             raise ValueError("bad job key %r (want ats:slug:job_id)" % (k,))
     if reason is not None and (not isinstance(reason, str) or len(reason) > MAX_REASON):
         raise ValueError("reason must be a string of at most %d characters" % MAX_REASON)
-    for name, v in (("title", title), ("company", company), ("url", url)):
-        if v is not None and not (isinstance(v, str) and 0 < len(v) <= MAX_REASON):
-            raise ValueError("%s must be a non-empty string of at most %d characters" % (name, MAX_REASON))
+    for name, v, cap in (("title", title, MAX_REASON), ("company", company, MAX_REASON), ("url", url, MAX_URL)):
+        if v is not None and not (isinstance(v, str) and 0 < len(v) <= cap):
+            raise ValueError("%s must be a non-empty string of at most %d characters" % (name, cap))
     if url is not None and not re.match(r"https?://", url, re.I):
         raise ValueError("url must start with http:// or https://")
     seen = load_seen()

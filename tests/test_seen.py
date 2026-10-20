@@ -899,11 +899,16 @@ class SeenCliTest(HomeCase):
 
     def test_mark_rejects_bad_restore_fields_and_writes_nothing(self):
         for flags in (["--aliases", "not a key"], ["--url", "javascript:alert(1)"], ["--title", ""],
-                      ["--company", "x" * 201]):
+                      ["--company", "x" * 201], ["--url", "https://x.example/" + "a" * 2048]):
             code, out = self.cli(["seen", "mark", "ashby:acme:1", "saved"] + flags)
             self.assertEqual(code, 1, flags)
             self.assertIn("error", out)
             self.assertFalse(state.seen_path().exists())
+
+    def test_mark_takes_a_long_employer_link(self):
+        url = "https://acme.wd1.myworkdayjobs.com/External/job/" + "a" * 300
+        self.assertEqual(self.cli(["seen", "mark", "workday:acme.wd1.External:R1", "saved", "--url", url])[0], 0)
+        self.assertEqual(state.load_seen()["workday:acme.wd1.External:R1"]["url"], url)
 
     def test_mark_never_overwrites_what_record_saw(self):
         state.record(self.make_run([job()], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
