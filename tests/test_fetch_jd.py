@@ -383,6 +383,35 @@ class VariantFallbackTest(unittest.TestCase):
         self.assertEqual([u["key"] for u in out["unverified"]], ["ashby:acme:1"])
         self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
 
+    def brief_home(self, row):
+        home = make_home([row])
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"schema": 1, "target_roles": ["Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
+                       "needs_sponsorship": "no", "base_pay_floor": None}, f)
+        return home
+
+    def test_a_shown_posting_that_no_longer_fits_tries_the_other_variants(self):
+        home = self.brief_home(self.ROW)
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"1", "2"}, scope={"1": ["GB"]})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual([j["url"] for j in out["jobs"]], ["https://jobs.ashbyhq.com/acme/2"])
+
+    def test_an_unverified_shown_posting_tries_the_other_variants(self):
+        home = make_home([self.ROW])
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"2"}, unsure={"1"})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual(([j["url"] for j in out["jobs"]], out["unverified"]), (["https://jobs.ashbyhq.com/acme/2"], []))
+
+    def test_at_most_three_other_variants_are_tried(self):
+        row = dict(self.ROW, variants=[dict(self.ROW["variants"][0])] + [
+            {"key": "ashby:acme:%d" % i, "ats": "ashby", "slug": "acme", "job_id": str(i), "url": "u%d" % i}
+            for i in range(2, 8)])
+        calls = []
+        closed = self.fake_check(set())
+        with mock.patch.object(fetch_jd, "check", lambda r, b: calls.append(r["job_id"]) or closed(r, b)):
+            run(["--keys", "ashby:acme:1"], make_home([row]))
+        self.assertEqual(calls, ["1", "2", "3", "4"])
+
     def test_closed_only_when_every_variant_is_closed(self):
         home = make_home([self.ROW])
         with mock.patch.object(fetch_jd, "check", self.fake_check(set())):

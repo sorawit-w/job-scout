@@ -596,7 +596,8 @@ def record(run_dir, now=None):
             if shown and e["status"] == "judged":
                 e.update(status="seen", first_seen=stamp)
             if shown or e["status"] == "judged":
-                _set_posting(e, job, row.get("key"))
+                live = jds.get(row.get("key")) if isinstance(jds.get(row.get("key")), dict) else {}
+                _set_posting(e, job, live.get("variant") or row.get("key"))  # the posting fetch_jd found open
             if was_read:
                 e["judgment"] = _judgment(row, run_dir, stamp, job, profile, jds.get(row.get("key")))
     index = seen_index(seen)

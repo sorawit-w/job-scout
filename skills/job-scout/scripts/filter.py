@@ -354,7 +354,7 @@ def _history(row, job, seen, index, profile, rerun):
     row["changes"] = _changes(e.get("snap"), state.job_snap(job)) if row["state"] == "changed" else []
     j = state.cached_judgment(job, seen, profile, None, index)
     row["cached"] = j is not None  # carried, not read again
-    row["cached_fit"] = j.get("total") if j and isinstance(j.get("total"), int) else None
+    row["cached_fit"] = state.fit(j) if j else None
 
 
 def _where(row):

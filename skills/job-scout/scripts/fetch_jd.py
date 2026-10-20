@@ -17,8 +17,8 @@ Usage (paths relative to the skill folder):
 
     Writes <run>/jds.json (merged with any existing file):
       {key: {status: open|closed|unverified, full, trimmed, comp, checked_at, error[, variant]}}
-    A grouped role whose shown posting is closed is checked through its other variants; the first
-    open one is used ("variant" names it) and the role is closed only when every variant is.
+    A grouped role whose shown posting is closed, inconclusive or no longer in the brief is checked
+    through up to MAX_FALLBACK other variants; the first open one that fits is used ("variant" names it).
     Stdout is one JSON object: {jobs: [open jobs, with "jd" = trimmed text], closed: [...],
     unverified: [{key, error}], requests: n}.
     Exit codes: 0 ok · 2 usage (no run / no candidates.json / neither --keys nor --top) ·
@@ -50,6 +50,7 @@ import state  # noqa: E402
 DEFAULT_JOBS = 40
 MAX_JOBS = 60
 RETRY_ALLOWANCE = 10
+MAX_FALLBACK = 3  # other variants of a grouped role tried after its shown posting; each is a request
 JOIN = "\n…\n"
 
 _SECTION_RE = re.compile(
@@ -168,33 +169,32 @@ def _dropped(fresh, removed_by):
     return None
 
 
+def _others(row):
+    """The grouped role's other variants, at most MAX_FALLBACK of them."""
+    return [v for v in row.get("variants") or []
+            if isinstance(v, dict) and v.get("key") not in (None, row["key"])][:MAX_FALLBACK]
+
+
 def check_group(row, budget, profile):
-    """(entry, live job, row checked, fresh row, dropped reason) for one candidate. When its shown posting
-    is closed, its other variants are checked in turn (a grouped role is closed only when every variant
-    is, as in state.live_split): the first open one that still fits the brief wins ("variant" names it);
-    else the first open one, dropped; else unverified if any check was inconclusive; else closed.
-    Raises net.BudgetExceeded."""
-    entry, live = check(row, budget)
-    tried = [(entry, live, row)]
-    if entry["status"] == "closed":
-        for v in row.get("variants") or []:
-            if isinstance(v, dict) and v.get("key") not in (None, row["key"]):
-                vrow = dict(dict(row, **v), key=row["key"])
-                e, l = check(vrow, budget)
-                tried.append((dict(e, variant=v["key"]), l, vrow))
-    first_open = None
-    for e, l, r in tried:
+    """(entry, live job, row checked, fresh row, dropped reason) for one candidate. A grouped role is a
+    set of postings (state.live_split closes it only when every one is gone): check the shown posting,
+    then its other variants in turn, until one is open and still fits the brief. That one wins
+    ("variant" names it when it is not the shown one). Failing that: the first open one, dropped; else
+    the first inconclusive one (unverified); else closed. Raises net.BudgetExceeded."""
+    tried = []
+    for r, vkey in [(row, None)] + [(dict(dict(row, **v), key=row["key"]), v["key"]) for v in _others(row)]:
+        e, live = check(r, budget)
+        if vkey:
+            e = dict(e, variant=vkey)
+        fresh = dropped = None
         if e["status"] == "open":
-            fresh, removed_by = refilter(r, l, profile)
+            fresh, removed_by = refilter(r, live, profile)
             dropped = _dropped(fresh, removed_by)
             if not dropped:
-                return e, l, r, fresh, None
-            first_open = first_open or (e, l, r, fresh, dropped)
-    if first_open:
-        return first_open
-    unsure = next((t for t in tried if t[0]["status"] not in ("open", "closed")), None)
-    e, l, r = unsure or tried[0]
-    return e, l, r, None, None
+                return e, live, r, fresh, None
+        tried.append((e, live, r, fresh, dropped))
+    return (next((t for t in tried if t[0]["status"] == "open"), None)
+            or next((t for t in tried if t[0]["status"] != "closed"), tried[0]))
 
 
 def main(argv=None):
@@ -233,7 +233,7 @@ def main(argv=None):
                        for r in selected[MAX_JOBS:]]
     selected = selected[:MAX_JOBS]
 
-    budget = net.Budget(len(selected) + RETRY_ALLOWANCE)
+    budget = net.Budget(len(selected) + RETRY_ALLOWANCE + sum(len(_others(r)) for r in selected))
     jds_path = run / "jds.json"
     jds = state.read_json(jds_path, {})
     if not isinstance(jds, dict):

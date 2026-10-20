@@ -215,6 +215,16 @@ class RecordTest(HomeCase):
         state.record(self.make_run([job("ashby:acme:1", comp=dict(USD, max=300000))], []), now=LATER)
         self.assertEqual(state.load_seen()["ashby:acme:1"]["snap"], snap)  # unshown: like sig, untouched
 
+    def test_record_keeps_the_live_variants_link_after_a_fallback(self):
+        # fetch_jd found the shown posting closed and used variant 5: the user's link must be variant 5's
+        j = job("ashby:acme:1", more=["ashby:acme:5"])
+        j["url"] = "https://jobs.ashbyhq.com/acme/1"
+        j["variants"][1]["url"] = "https://jobs.ashbyhq.com/acme/5"
+        run = self.make_run([j], [{"key": "ashby:acme:1", "show": True}])
+        state.write_json_atomic(run / "jds.json", {"ashby:acme:1": {"status": "open", "full": "x", "variant": "ashby:acme:5"}})
+        state.record(run, now=NOW)
+        self.assertEqual(state.load_seen()["ashby:acme:1"]["url"], "https://jobs.ashbyhq.com/acme/5")
+
     def test_update_keeps_status_and_first_seen(self):
         state.write_json_atomic(state.seen_path(), {"ashby:acme:1": entry(status="saved")})
         j = job("ashby:acme:9", title="Staff Frontend Engineer", more=["ashby:acme:1"])

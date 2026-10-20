@@ -645,6 +645,17 @@ class SeenStateTest(unittest.TestCase):
         out, _ = jfilter.run_filter(jobs, p, today=TODAY, seen=seen)
         self.assertEqual([c["key"] for c in out["candidates"]], ["ashby:acme:c1", "ashby:acme:c2", "ashby:acme:c0"])
 
+    def test_cached_order_uses_the_score_sum_not_a_stale_total(self):
+        p = profile()
+        a, b = job(key="ashby:acme:a"), job(key="ashby:acme:b")
+        sums = {"ashby:acme:a": {"role": 1, "skills": 1, "level": 1, "domain": 1},
+                "ashby:acme:b": {"role": 2, "skills": 2, "level": 1, "domain": 1}}
+        seen = {k: dict(seen_entry(j, "seen"), judgment={"sig": state.job_sig(j), "brief_sig": state.brief_sig(p),
+                                                          "total": 8, "scores": sums[k]})
+                for k, j in (("ashby:acme:a", a), ("ashby:acme:b", b))}
+        out, _ = jfilter.run_filter([a, b], p, today=TODAY, seen=seen)
+        self.assertEqual([c["key"] for c in out["candidates"]], ["ashby:acme:b", "ashby:acme:a"])
+
     def test_all_flag_shows_everything_tagged(self):
         out, cands = self.filt(show_all=True)
         self.assertEqual(sorted(c["state"] for c in cands),
