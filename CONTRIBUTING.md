@@ -27,6 +27,9 @@ should check.
    ```
 
    Leave `status` as `unchecked` and the numbers empty: the weekly seed check fills them in.
+   (That check runs every Monday and opens a PR with the refreshed list. The PR merges itself
+   when the tests pass and `scripts/seed_guard.py` finds only routine change; anything unusual
+   waits for a maintainer.)
    Use `sector` `unknown` unless you are sure.
 
 3. Open a pull request. CI live-checks every new board, and the check fails if a board does not
