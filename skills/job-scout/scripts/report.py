@@ -365,7 +365,7 @@ tbody.role.is-open tr.sum{background:var(--accent-soft)}
 td.det-cell{padding:0}
 .detail{padding:4px 20px 20px 74px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:4px 40px}
 .detail h3{font-size:12px;font-weight:600;color:var(--muted);margin:14px 0 6px}
-.dhead{display:none}
+.dhead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .check{margin:10px 0 2px;padding:8px 12px 10px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:8px;color:var(--warn-ink)}
 .check h3{color:var(--warn-ink);margin:0 0 4px}
 .check ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
@@ -412,7 +412,7 @@ footer{margin-top:32px;font-size:13px;color:var(--muted)}footer p{margin:0 0 4px
 .split .pane{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--table);border:1px solid var(--line);border-radius:10px;max-width:560px}
 .split .pane .detail{grid-template-columns:minmax(0,1fr);padding:18px 20px 0;gap:0}
 .split .pane .facts{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
-.split .pane .dhead{display:block}.dhead h2{margin:0 0 4px;font-size:16px;font-weight:650;letter-spacing:-.01em}.dhead p{margin:0;color:var(--muted);font-size:13px}
+.split .pane .dhead{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}.dhead h2{margin:0 0 4px;font-size:16px;font-weight:650;letter-spacing:-.01em}.dhead p{margin:0;color:var(--muted);font-size:13px}
 .split .pane .actions{position:sticky;bottom:0;background:var(--table);margin:16px -20px 0;padding:12px 20px}}
 @media (min-width:1600px){.split .layout{grid-template-columns:minmax(0,60fr) minmax(380px,40fr)}.split .c-where{display:table-cell}.split .s-where{display:none}.split .pane{max-width:640px}}
 @media print{body{font-size:12px}main{padding:0;max-width:none}.toolbar,.copy,.pane,.toast,.copy-help{display:none!important}
