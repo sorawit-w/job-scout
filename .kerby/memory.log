@@ -164,3 +164,10 @@ Files: skills/job-scout/scripts/{fetch_jd,state,filter,report,cite_check}.py, te
 Commit: 6146566, 9132f3f, 61cd51d, 7e5d52e, e7fc0c5, e694f8c, 46d10d0, e35029c, 772f304
 Status: DONE — Codex clean at 772f304; CI green; 705 tests on 3.14 and 3.9; skill text unchanged since the evaluator pass.
 Notes: Waiting on the maintainer's merge decision. Publishing the release is the maintainer's call.
+
+Task: report heading-order fix, README Status, and the rerun-memory release
+Action: report.py .dhead visually hidden (.sr method) instead of display:none, so an inline detail keeps h1 → h2 → h3; axe 0 violations at 1440/1024/375 light and dark before and after opening a detail; test added; report-design.md note. Root README Status names 0.4.0 and matches the ROADMAP; CHANGELOG 0.4.0 notes the heading fix. Release: build_release.py from a clean main (30 files, 349 KB, no evals), tag v0.4.0 on the README merge commit, notes from CHANGELOG 0.4.0 plus Install (seen.json from 0.4.0 not readable by 0.3.0), marked Latest.
+Files: skills/job-scout/scripts/report.py, tests/test_report.py, docs/report-design.md, README.md, CHANGELOG.md, ROADMAP.md, .kerby/STATUS.md
+Commit: 8aed215 (heading fix), a3cc875 (README; release target)
+Status: DONE — release published.
+Notes: Codex clean on the heading fix (second run; the first failed on Codex's side). The README PR merged on CI alone, as the maintainer asked.

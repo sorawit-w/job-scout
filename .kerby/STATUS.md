@@ -13,7 +13,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | Rerun memory (M9) merged; its release and the launch smoke tests are open |
+| **Phase** | Rerun memory (M9) released; launch smoke tests still open |
 | **Milestone** | none in progress; deploy-launch (M6) open until the smoke tests pass |
 | **Milestone Goal** | pick the next milestone from the ROADMAP follow-ups |
 
@@ -23,9 +23,8 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | Maintainer: publish the rerun-memory release (the maintainer's call) | — |
-| 2 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
-| 3 | Choose the next milestone from the ROADMAP follow-ups | — |
+| 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
+| 2 | Choose the next milestone from the ROADMAP follow-ups | — |
 
 ---
 

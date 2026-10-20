@@ -13,7 +13,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 3: v0.4
 
-- [x] M9 — Rerun memory: a `judged` status so screened-but-unshown roles stop coming back as new; one ranked rerun list with NEW / CHANGED / SAVED badges; cached judgments reused when the posting and the brief are unchanged; version 0.4.0 merged, release pending (maintainer's call)
+- [x] M9 — Rerun memory: a `judged` status so screened-but-unshown roles stop coming back as new; one ranked rerun list with NEW / CHANGED / SAVED badges; cached judgments reused when the posting and the brief are unchanged; released as v0.4.0
 
 ## Follow-ups
 
