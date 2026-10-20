@@ -137,6 +137,13 @@ the job boards ("All domains" works). On Team or Enterprise plans an admin may n
 hosts listed in [PRIVACY.md](PRIVACY.md). Files don't persist between claude.ai conversations;
 see [Where job-scout remembers](#where-job-scout-remembers).
 
+**Updating:** the company list is refreshed every week. In Claude Code, run
+`/plugin marketplace update job-scout` to refresh the catalog, then update the installed copy
+from your shell with `claude plugin update job-scout@job-scout`; it loads in your next session,
+or after `/reload-plugins`. Or turn on auto-update for the job-scout marketplace under
+`/plugin` → Marketplaces. In Codex, run `codex plugin marketplace upgrade job-scout`. On
+claude.ai, upload the newest zip from the Releases page.
+
 **Optional, US federal jobs:** request a free key at
 <https://developer.usajobs.gov/apirequest/>, then set `JOB_SCOUT_USAJOBS_KEY` and
 `JOB_SCOUT_USAJOBS_EMAIL` in your environment. Never paste the key into a chat.

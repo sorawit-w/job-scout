@@ -19,11 +19,12 @@ Codex rules enforced here (a violation = skill not loaded in Codex):
 We target a 1000-character soft cap (LIMIT - MARGIN) so later edits keep a little
 headroom before the hard 1024-character wall.
 
-This script also asserts VERSION PARITY across the release manifests (the Codex
-addition turned the old "4-file" version ritual into a 5-file one, and
-skills/job-scout/VERSION made it six — the one copy the scripts inside an install
-can read without knowing the plugin layout. Drift in any one silently breaks a
-platform). See check_versions().
+This script also asserts VERSION PARITY across the places the release version lives:
+.codex-plugin/plugin.json, CHANGELOG.md, README.md and skills/job-scout/VERSION (the one copy
+the scripts inside an install can read without knowing the plugin layout). Drift in any one
+silently breaks a platform. The two Claude Code manifests must NOT carry a version: Claude Code
+updates an installed plugin only when that version changes, so without one it follows the git
+commit and the weekly companies.csv refresh reaches users. See check_versions().
 
 Exit code 0 = all good; 1 = at least one violation. Run from repo root:
     python3 scripts/check-skill-compat.py
@@ -107,23 +108,29 @@ def check_file(path):
     return errors, warnings
 
 
+def _jget(root, relpath, *keys):
+    try:
+        with open(os.path.join(root, relpath), encoding="utf-8") as f:
+            node = json.load(f)
+        for k in keys:
+            node = node[k]
+        return node
+    except (OSError, KeyError, IndexError, TypeError, json.JSONDecodeError):
+        return None
+
+
+def _commit_tracked(root):
+    """Claude Code manifests that must have no version, as {label: version or None}."""
+    entries = _jget(root, ".claude-plugin/marketplace.json", "plugins") or []
+    out = {".claude-plugin/plugin.json": _jget(root, ".claude-plugin/plugin.json", "version")}
+    for i, entry in enumerate(entries if isinstance(entries, list) else []):
+        out[".claude-plugin/marketplace.json plugins[%d]" % i] = entry.get("version") if isinstance(entry, dict) else None
+    return out
+
+
 def _version_sources(root):
     """Return {label: version|None} for every place the release version lives."""
-    out = {}
-
-    def jget(relpath, *keys):
-        try:
-            with open(os.path.join(root, relpath), encoding="utf-8") as f:
-                node = json.load(f)
-            for k in keys:
-                node = node[k]
-            return node
-        except (OSError, KeyError, IndexError, json.JSONDecodeError):
-            return None
-
-    out[".claude-plugin/plugin.json"] = jget(".claude-plugin/plugin.json", "version")
-    out[".claude-plugin/marketplace.json"] = jget(".claude-plugin/marketplace.json", "plugins", 0, "version")
-    out[".codex-plugin/plugin.json"] = jget(".codex-plugin/plugin.json", "version")
+    out = {".codex-plugin/plugin.json": _jget(root, ".codex-plugin/plugin.json", "version")}
 
     # CHANGELOG.md — first `## [X.Y.Z]` heading
     try:
@@ -214,6 +221,10 @@ def check_versions(root):
     errors = []
     for label in missing:
         errors.append(f"version not found in {label}")
+    for label, v in _commit_tracked(root).items():
+        if v is not None:
+            errors.append(f"{label} has version {v!r}: remove it — with a version, Claude Code updates "
+                          "installed plugins only when it changes, so data-only commits never reach users")
     distinct = set(present.values())
     if len(distinct) > 1:
         detail = ", ".join(f"{label}={v}" for label, v in present.items())

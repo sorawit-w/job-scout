@@ -17,6 +17,40 @@ def _write(root, rel, data):
         f.write(data if isinstance(data, str) else json.dumps(data))
 
 
+class VersionCheckTest(unittest.TestCase):
+    def release(self, version="1.2.3", claude=None, entry=None):
+        """A repo whose four release places say `version`; claude/entry put one in the Claude manifests."""
+        root = tempfile.mkdtemp()
+        _write(root, ".codex-plugin/plugin.json", {"name": "x", "version": version})
+        _write(root, "CHANGELOG.md", "# Changelog\n\n## [Unreleased]\n\n## [%s] — 2026-10-20\n" % version)
+        _write(root, "README.md", "- **Status:** Current release: `%s`.\n" % version)
+        _write(root, "skills/job-scout/VERSION", version + "\n")
+        _write(root, ".claude-plugin/plugin.json", dict({"name": "x"}, **({"version": claude} if claude else {})))
+        _write(root, ".claude-plugin/marketplace.json",
+               {"plugins": [dict({"name": "x"}, **({"version": entry} if entry else {}))]})
+        return root
+
+    def test_four_places_agree_and_claude_manifests_have_no_version(self):
+        self.assertEqual(compat.check_versions(self.release()), ([], "1.2.3"))
+
+    def test_a_version_in_either_claude_manifest_fails(self):
+        for kw, label in (({"claude": "1.2.3"}, ".claude-plugin/plugin.json"),
+                          ({"entry": "1.2.3"}, ".claude-plugin/marketplace.json plugins[0]")):
+            errors, _ = compat.check_versions(self.release(**kw))
+            self.assertEqual(len(errors), 1, kw)
+            self.assertTrue(errors[0].startswith(label + " has version '1.2.3': remove it"), errors)
+
+    def test_drift_in_the_four_release_places_still_fails(self):
+        root = self.release()
+        _write(root, "skills/job-scout/VERSION", "1.2.4\n")
+        errors, agreed = compat.check_versions(root)
+        self.assertIsNone(agreed)
+        self.assertTrue(any(e.startswith("version mismatch across manifests") for e in errors), errors)
+
+    def test_the_repo_itself_passes(self):
+        self.assertEqual(compat.check_versions(_ROOT)[0], [])
+
+
 class DeclaredSkillsTest(unittest.TestCase):
     def setUp(self):
         self.root = tempfile.mkdtemp()
