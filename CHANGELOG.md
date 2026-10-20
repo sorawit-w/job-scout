@@ -10,6 +10,9 @@ All notable changes to `job-scout` are documented here. Format follows
   updated list, fewer than 1% of boards change status, live boards drop by less than 1%, and no
   hiring tool loses more than 5% of its live boards (`scripts/seed_guard.py`). Anything else stays
   open with a comment saying why.
+- Claude Code installs now pick up every update, including the weekly company list: the two
+  Claude Code manifests no longer carry a `version`, so Claude Code follows the git commit instead
+  of waiting for a version bump. Codex already worked this way. The README says how to update.
 
 ## [0.4.0] — 2026-10-19
 
