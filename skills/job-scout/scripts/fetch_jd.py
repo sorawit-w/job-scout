@@ -11,9 +11,14 @@ Purpose:
 Usage (paths relative to the skill folder):
     python3 scripts/fetch_jd.py [--run latest] --top [N]        # first N rows (default 40, max 60)
     python3 scripts/fetch_jd.py [--run latest] --keys k1,k2,...  # rows by key (keys past 60 are unverified)
+    python3 scripts/fetch_jd.py [--run latest] --check-only [--keys ...]  # rows filter.py marked cached
+        --check-only: the live check for judgments `state.py judged carry` reuses. The full text is
+        still saved for cite_check, but no description is printed (no "jd"): nothing to read again.
 
     Writes <run>/jds.json (merged with any existing file):
-      {key: {status: open|closed|unverified, full, trimmed, comp, checked_at, error}}
+      {key: {status: open|closed|unverified, full, trimmed, comp, checked_at, error[, variant]}}
+    A grouped role whose shown posting is closed, inconclusive or no longer in the brief is checked
+    through up to MAX_FALLBACK other variants; the first open one that fits is used ("variant" names it).
     Stdout is one JSON object: {jobs: [open jobs, with "jd" = trimmed text], closed: [...],
     unverified: [{key, error}], requests: n}.
     Exit codes: 0 ok · 2 usage (no run / no candidates.json / neither --keys nor --top) ·
@@ -45,6 +50,7 @@ import state  # noqa: E402
 DEFAULT_JOBS = 40
 MAX_JOBS = 60
 RETRY_ALLOWANCE = 10
+MAX_FALLBACK = 3  # other variants of a grouped role tried after its shown posting; each is a request
 JOIN = "\n…\n"
 
 _SECTION_RE = re.compile(
@@ -154,16 +160,68 @@ def _fail(message):
     return 2
 
 
+def _dropped(fresh, removed_by):
+    """Why an open posting is not shown, or None when it still fits the brief."""
+    if removed_by:
+        return "changed since the search: now removed by %s" % removed_by
+    if set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
+        return "location or work mode still unknown after the live check"
+    return None
+
+
+def _all_others(row):
+    return [v for v in row.get("variants") or [] if isinstance(v, dict) and v.get("key") not in (None, row["key"])]
+
+
+def _others(row):
+    """The grouped role's other variants, at most MAX_FALLBACK of them."""
+    return _all_others(row)[:MAX_FALLBACK]
+
+
+def check_group(row, budget, profile):
+    """(entry, live job, row checked, fresh row, dropped reason) for one candidate. A grouped role is a
+    set of postings (state.live_split closes it only when every one is gone): check the shown posting,
+    then its other variants in turn, until one is open and still fits the brief. That one wins
+    ("variant" names it when it is not the shown one). Otherwise the role is dropped or closed only
+    when every posting answered conclusively: any inconclusive check, or variants the cap left
+    unchecked, make it unverified; else the first open one, dropped; else closed.
+    Raises net.BudgetExceeded."""
+    tried = []
+    # a variant is its own posting: never let check() fall back to the shown posting's text for it
+    variants = [(dict(dict(row, **v), key=row["key"], description_text=v.get("description_text")), v["key"])
+                for v in _others(row)]
+    for r, vkey in [(row, None)] + variants:
+        e, live = check(r, budget)
+        if vkey:
+            e = dict(e, variant=vkey)
+        fresh = dropped = None
+        if e["status"] == "open":
+            fresh, removed_by = refilter(r, live, profile)
+            dropped = _dropped(fresh, removed_by)
+            if not dropped:
+                return e, live, r, fresh, None
+        tried.append((e, live, r, fresh, dropped))
+    unsure = next((t for t in tried if t[0]["status"] not in ("open", "closed")), None)
+    if unsure:
+        return unsure
+    unchecked = len(_all_others(row)) - len(_others(row))
+    if unchecked:
+        e, live, r, _, _ = tried[0]
+        return dict(e, status="unverified", error="not checked: %d more variants of this role" % unchecked), live, r, None, None
+    return next((t for t in tried if t[0]["status"] == "open"), tried[0])
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Live-check shortlisted jobs and fetch their descriptions.")
     ap.add_argument("--run", default="latest")
     ap.add_argument("--keys")
     ap.add_argument("--top", type=int, nargs="?", const=DEFAULT_JOBS)
+    ap.add_argument("--check-only", action="store_true", help="no descriptions printed; alone: the cached rows")
     try:
         args = ap.parse_args(argv)
     except SystemExit:
         return 2
-    if not args.keys and args.top is None:
+    if not args.keys and args.top is None and not args.check_only:
         return _fail("give --keys k1,k2,... or --top N")
     try:
         run = state.resolve_run(args.run)
@@ -180,13 +238,16 @@ def main(argv=None):
         wanted = list(dict.fromkeys(k.strip() for k in args.keys.split(",") if k.strip()))
         unverified += [{"key": k, "error": "unknown key: not in candidates.json"} for k in wanted if k not in by_key]
         selected = [by_key[k] for k in wanted if k in by_key]
+    elif args.top is not None:
+        selected = rows[:max(args.top, 0)]
+    else:
+        selected = [r for r in rows if r.get("cached") is True]
+    if args.top is None:  # --top is clamped; listed or cached rows past the limit are reported
         unverified += [{"key": r["key"], "error": "not checked: over the %d-job limit" % MAX_JOBS}
                        for r in selected[MAX_JOBS:]]
-    else:
-        selected = rows[:max(args.top, 0)]
     selected = selected[:MAX_JOBS]
 
-    budget = net.Budget(len(selected) + RETRY_ALLOWANCE)
+    budget = net.Budget(len(selected) + RETRY_ALLOWANCE + sum(len(_others(r)) for r in selected))
     jds_path = run / "jds.json"
     jds = state.read_json(jds_path, {})
     if not isinstance(jds, dict):
@@ -196,7 +257,7 @@ def main(argv=None):
     # shortcut: sequential, so jobs on one Ashby board share its cached list; use a pool if 60 is too slow.
     for i, row in enumerate(selected):
         try:
-            entry, live = check(row, budget)
+            entry, live, row, fresh, dropped = check_group(row, budget, profile)
         except net.BudgetExceeded:
             capped = True
             unverified += [{"key": r["key"], "error": "not checked: request budget used up"} for r in selected[i:]]
@@ -204,13 +265,7 @@ def main(argv=None):
         jds[row["key"]] = entry
         if entry["status"] == "open":
             # The posting may have moved or changed since the board was probed: show live fields and
-            # re-apply the brief, so a role now outside it is not shown as a fit.
-            fresh, removed_by = refilter(row, live, profile)
-            dropped = None
-            if removed_by:
-                dropped = "changed since the search: now removed by %s" % removed_by
-            elif set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
-                dropped = "location or work mode still unknown after the live check"
+            # re-apply the brief (check_group did), so a role now outside it is not shown as a fit.
             if dropped:
                 entry["dropped"] = dropped  # status stays "open": the posting is open, it just no longer fits
                 unverified.append({"key": row["key"], "error": dropped})
@@ -219,7 +274,7 @@ def main(argv=None):
                                              "remote_scope", "first_published")}
             job.update(comp=entry["comp"], status="open", jd=entry["trimmed"], flags=fresh.get("flags") or [])
             entry["job"] = {k: v for k, v in job.items() if k != "jd"}  # live display fields, for report.py
-            jobs.append(job)
+            jobs.append(entry["job"] if args.check_only else job)
         elif entry["status"] == "closed":
             closed.append({"key": row["key"], "company": row.get("company"), "title": row.get("title")})
         else:

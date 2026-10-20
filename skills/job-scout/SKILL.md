@@ -81,7 +81,9 @@ used only as the sponsorship filter.
 
 If `python3 scripts/state.py profile show` returns a saved profile, start from it: this is a
 rerun (Phase 9). Show the brief with what changed since last time ("same as last time — change
-anything?") instead of re-deriving everything.
+anything?") instead of re-deriving everything. If the user gives a new or changed resume on a
+rerun, run `python3 scripts/state.py judged forget` before searching: the fit scores read the
+resume, which the profile does not store, so no earlier judgment may be reused.
 
 ## Phase 2 — Search brief and confirmation gate (required)
 
@@ -226,38 +228,48 @@ The run's files live in `~/.job-scout/runs/<run>/` (or `$JOB_SCOUT_HOME/runs/<ru
    `counts`, ranked `candidates` (each `strong` or `borderline`, with `flags`) and up to 5
    `near_misses`. With **zero candidates**, skip steps 2–3 and Phase 6, explain using
    `counts.removed` (see `references/output-format.md` §4) — never pad — then still write the
-   report as in Phase 7. On a rerun, zero candidates usually means nothing new: follow Phase 9
-   instead.
-2. Choose **up to 40** candidates whose descriptions are worth reading: all plausible `strong`
-   ones, then `borderline` titles that could be the target role in substance (a title like
-   "Software Engineer, Product" may be exactly a design-engineering job). Skip ones the title
-   already rules out.
-3. Run `python3 scripts/fetch_jd.py --keys <key1>,<key2>,...`. It re-checks each job on the
-   employer's board (the live check) and returns `jobs` (open, with a trimmed `jd`), `closed`,
-   and `unverified`. **Show only `open` jobs**; never present a closed or unverified job as open.
+   report as in Phase 7. On a rerun the list also holds roles from earlier runs (Phase 9).
+2. Choose **up to 40** candidates whose descriptions are worth reading, in the order given:
+   all plausible `strong` ones, then `borderline` titles that could be the target role in
+   substance (a title like "Software Engineer, Product" may be exactly a design-engineering job).
+   Skip ones the title already rules out. **Never pick a `cached: true` candidate**: its
+   judgment from an earlier run is reused in Phase 6 instead of read again.
+3. Run `python3 scripts/fetch_jd.py --keys <key1>,<key2>,...` (skip it when you picked none).
+   It re-checks each job on the employer's board (the live check) and returns `jobs` (open, with
+   a trimmed `jd`), `closed`, and `unverified`. **Show only `open` jobs**; never present a closed or unverified job as open.
    Exit 4 → the request cap stopped the checks: show the open ones and say the rest couldn't be
-   checked.
+   checked. When any candidate is `cached: true`, also run `python3 scripts/fetch_jd.py
+   --check-only`: the same live check for the cached ones, with no description to read.
 
 ## Phase 6 — Judge fit, with quotes
 
 Read `references/rubric.md` and follow it: four pass/fail gates (location, sponsorship, pay,
 exclusions), four 0–2 scores, a quote from the job description for every claim, and — with a
-saved `work_style` — display-only work-style signals (rubric §4). Write the result to
-`<run dir>/results.json`, then run:
+saved `work_style` — display-only work-style signals (rubric §4).
+
+1. When Phase 5 ran `--check-only`, first run `python3 scripts/state.py judged carry`. It
+   writes `<run dir>/results.json` with one `"carried": true` row per cached role that is still
+   open and unchanged. Read and judge every key it lists under `read_again` (fetch them with
+   `fetch_jd.py --keys`), like your own picks. Never edit a carried row.
+2. Add a row to `results.json` for each job you read (keep the carried rows), then run:
 
 ```
+python3 scripts/state.py judged rank
 python3 scripts/cite_check.py < <run dir>/results.json
 ```
 
-If it reports `failed` claims, re-read the description and fix or delete each one, then run it
-again until `"ok": true`. Why: a confident claim the description doesn't support is exactly the
-failure job-scout exists to prevent.
+`judged rank` puts the rows in rubric order and sets `show`; it prints `shown` and `matches`.
+If cite_check reports `failed` claims, re-read the description and fix or delete each one. A
+failure marked `"carried": true` means the posting moved under an old judgment: delete that row
+and judge the role again from scratch. Then run both commands again until `"ok": true`. Why: a
+confident claim the description doesn't support is exactly the failure job-scout exists to
+prevent.
 
 ## Phase 7 — Show the results
 
-Follow `references/output-format.md`: one coverage line, the seven-column table (employer links
-only), one notes line per row with the quoted why/risk and "open since", 3–5 "close but
-excluded" lines, then the feedback prompt.
+Follow `references/output-format.md`: one coverage line, the seven-column table with the shown
+rows in `results.json` order (employer links only), one notes line per row with the quoted
+why/risk and "open since", 3–5 "close but excluded" lines, then the feedback prompt.
 
 Then write the HTML report, **before** Phase 8's `seen record`: `python3 scripts/report.py --open`
 (leave out `--open` on claude.ai, in Codex, or with no local browser). Give the user the `report`
@@ -291,23 +303,39 @@ boards with the user, and takes a Workday careers URL with `--board`.
 A saved profile means a rerun (Phase 1). The saved brief was confirmed on an earlier run, so
 show it as "same as last time" and search in the same reply. If the user's message changes
 anything in it ("I'm open to hybrid now"), show the changed brief and confirm it first, as in
-Phase 2. After Phases 3–4 run `python3 scripts/state.py seen diff` and
-`python3 scripts/filter.py` (on a rerun it keeps new, changed and saved roles, and `judged` ones:
-screened by an earlier run but never shown; `--all` shows everything). Count new and changed
-roles from each candidate's `state`, never from `seen diff`. Lead with what moved:
+Phase 2. A new or changed resume: `state.py judged forget` first (Phase 1).
 
-- **New** roles first (mark them `NEW`), then **changed** ones — say what changed, from
-  `changed_details` (`before` → `after`: title, pay or locations).
+After Phases 3–4 run `python3 scripts/state.py seen diff` (saved and applied roles still open,
+closed ones, `changed_details`), then Phases 5–6 as usual. On a rerun filter.py keeps every role
+except applied and dismissed ones (`--all` keeps those too), with new and changed roles first
+to read; a role an earlier run judged comes back `cached: true` and is carried, not read again.
+
+Show **one ranked list**: the shown rows in `results.json` order, which is the rubric's. Badges
+come from each candidate's `badges` and never move a role:
+
+- `NEW` — never shown before (a new posting, or one an earlier run screened but did not show).
+- `CHANGED` — shown before and the posting changed: say what changed, from `changes` (`before`
+  → `after`: title, pay or places). A saved role that changed shows both.
+- `SAVED` — the user saved it.
+- No badge — shown before and unchanged: its notes line says `First shown <first_shown>`.
+
+Open with the rerun coverage line (`references/output-format.md` §1). With no `new` or
+`changed` candidate, still show the full list, under one line: "No new or changed postings since
+last time." A `NEW` badge in that list still means new to the user: a role an earlier run screened
+but never showed.
+
+After the table:
+
 - **Saved or applied, still open** (`saved_open`, `applied_open`) — a short list, so nothing
-  they cared about is lost.
+  they cared about is lost. Applied roles never appear in the table.
 - **Closed since last time** — the saved or applied roles in `closed_details` that are gone (from
   the board, or found gone by the live check).
   A role closes only when a board checked successfully this run no longer lists it, or its
   live check found the posting gone; never call a role closed because a board failed.
 
-With no `new` or `changed` candidate, say so in one line and show the saved-or-applied list. End every rerun with
-`python3 scripts/report.py --open` (as in Phase 7), then `python3 scripts/state.py seen record` —
-also when nothing was new — so closures are remembered and not reported again next time.
+End every rerun with `python3 scripts/report.py --open` (as in Phase 7), then
+`python3 scripts/state.py seen record` — also when nothing was new — so closures and this run's
+judgments are remembered.
 
 **claude.ai:** files do not persist there. At the end, offer the profile and the saved/applied
 roles (title, company, link) as one block the user can paste next time.

@@ -1,11 +1,11 @@
 {
  "ashby:turquoise-health:806f5f93-6eb6-4aea-9483-f8f7458e6730": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "applied",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "c1460c5d1d55",
   "snap": {
    "title": "Senior Design Engineer",
@@ -24,7 +24,12 @@
   "url": "https://jobs.ashbyhq.com/turquoise-health/806f5f93-6eb6-4aea-9483-f8f7458e6730",
   "judgment": {
    "total": 7,
-   "scores": {},
+   "scores": {
+    "role": 2,
+    "skills": 2,
+    "level": 2,
+    "domain": 1
+   },
    "gates": {
     "location": "pass",
     "sponsorship": "unknown",
@@ -45,8 +50,8 @@
     }
    ],
    "style": null,
-   "run": "20261020T033051Z",
-   "judged_at": "2026-10-20T03:30:51Z",
+   "run": "20261020T042441Z",
+   "judged_at": "2026-10-20T04:24:41Z",
    "sig": "c1460c5d1d55",
    "jd_sig": "bdcad4e6fce5",
    "brief_sig": "e06955388b61",
@@ -54,12 +59,12 @@
   }
  },
  "greenhouse:arizeai:5778086004": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "saved",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "053647632c5a",
   "snap": {
    "title": "Senior Open Source Design Engineer",
@@ -74,7 +79,12 @@
   "url": "https://job-boards.greenhouse.io/arizeai/jobs/5778086004",
   "judgment": {
    "total": 7,
-   "scores": {},
+   "scores": {
+    "role": 2,
+    "skills": 2,
+    "level": 2,
+    "domain": 1
+   },
    "gates": {
     "location": "pass",
     "sponsorship": "unknown",
@@ -99,8 +109,8 @@
     }
    ],
    "style": null,
-   "run": "20261020T033051Z",
-   "judged_at": "2026-10-20T03:30:51Z",
+   "run": "20261020T042441Z",
+   "judged_at": "2026-10-20T04:24:41Z",
    "sig": "053647632c5a",
    "jd_sig": "414e9d186873",
    "brief_sig": "e06955388b61",
@@ -108,12 +118,12 @@
   }
  },
  "greenhouse:arizeai:5396420004": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "c359b4e87e26",
   "snap": {
    "title": "Senior AI Product Engineer, Fullstack",
@@ -128,7 +138,12 @@
   "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396420004",
   "judgment": {
    "total": 6,
-   "scores": {},
+   "scores": {
+    "role": 2,
+    "skills": 2,
+    "level": 2,
+    "domain": 0
+   },
    "gates": {
     "location": "pass",
     "sponsorship": "unknown",
@@ -144,8 +159,8 @@
    ],
    "risk": [],
    "style": null,
-   "run": "20261020T033051Z",
-   "judged_at": "2026-10-20T03:30:51Z",
+   "run": "20261020T042441Z",
+   "judged_at": "2026-10-20T04:24:41Z",
    "sig": "c359b4e87e26",
    "jd_sig": "ae120b52547c",
    "brief_sig": "e06955388b61",
@@ -153,12 +168,12 @@
   }
  },
  "greenhouse:koboldmetals:4286209005": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "f838b49ed732",
   "snap": {
    "title": "Frontend Software Engineer",
@@ -173,7 +188,12 @@
   "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4286209005",
   "judgment": {
    "total": 6,
-   "scores": {},
+   "scores": {
+    "role": 2,
+    "skills": 2,
+    "level": 2,
+    "domain": 0
+   },
    "gates": {
     "location": "pass",
     "sponsorship": "unknown",
@@ -194,8 +214,8 @@
     }
    ],
    "style": null,
-   "run": "20261020T033051Z",
-   "judged_at": "2026-10-20T03:30:51Z",
+   "run": "20261020T042441Z",
+   "judged_at": "2026-10-20T04:24:41Z",
    "sig": "f838b49ed732",
    "jd_sig": "5e65326370f2",
    "brief_sig": "e06955388b61",
@@ -203,12 +223,12 @@
   }
  },
  "ashby:turquoise-health:87306d91-a18e-490c-b4e6-4758d63b12a1": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "dismissed",
   "reason": "too senior",
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "5388b24ef769",
   "snap": {
    "title": "Senior Software Engineer, Transactions",
@@ -227,7 +247,12 @@
   "url": "https://jobs.ashbyhq.com/turquoise-health/87306d91-a18e-490c-b4e6-4758d63b12a1",
   "judgment": {
    "total": 4,
-   "scores": {},
+   "scores": {
+    "role": 2,
+    "skills": 2,
+    "level": 0,
+    "domain": 0
+   },
    "gates": {
     "location": "pass",
     "sponsorship": "unknown",
@@ -243,8 +268,8 @@
    ],
    "risk": [],
    "style": null,
-   "run": "20261020T033051Z",
-   "judged_at": "2026-10-20T03:30:51Z",
+   "run": "20261020T042441Z",
+   "judged_at": "2026-10-20T04:24:41Z",
    "sig": "5388b24ef769",
    "jd_sig": "63b4c56f4ef9",
    "brief_sig": "e06955388b61",
@@ -252,12 +277,12 @@
   }
  },
  "greenhouse:arizeai:5396396004": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "852458509123",
   "snap": {
    "title": "Senior AI Product Engineer, Backend",
@@ -272,7 +297,12 @@
   "url": "https://job-boards.greenhouse.io/arizeai/jobs/5396396004",
   "judgment": {
    "total": 3,
-   "scores": {},
+   "scores": {
+    "role": 2,
+    "skills": 1,
+    "level": 0,
+    "domain": 0
+   },
    "gates": {
     "location": "pass",
     "sponsorship": "unknown",
@@ -293,8 +323,8 @@
     }
    ],
    "style": null,
-   "run": "20261020T033051Z",
-   "judged_at": "2026-10-20T03:30:51Z",
+   "run": "20261020T042441Z",
+   "judged_at": "2026-10-20T04:24:41Z",
    "sig": "852458509123",
    "jd_sig": "e444c0b71e0e",
    "brief_sig": "e06955388b61",
@@ -302,12 +332,12 @@
   }
  },
  "greenhouse:koboldmetals:4725284005": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "d860c322fed8",
   "snap": {
    "title": "Senior Software Engineer, Scientific Computing (Hardware/Sensors)",
@@ -322,12 +352,12 @@
   "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4725284005"
  },
  "greenhouse:koboldmetals:4624637005": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "77e97fe754d7",
   "snap": {
    "title": "Senior Software Engineer, Decision Science",
@@ -342,12 +372,12 @@
   "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4624637005"
  },
  "greenhouse:koboldmetals:4624038005": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "318175e17a0b",
   "snap": {
    "title": "Senior Software Engineer, Scientific Computing",
@@ -362,14 +392,14 @@
   "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4624038005"
  },
  "greenhouse:koboldmetals:4510145005": {
-  "first_seen": "2026-10-20T03:30:51Z",
+  "first_seen": "2026-10-20T04:24:41Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [
    "greenhouse:koboldmetals:4678367005"
   ],
-  "last_seen": "2026-10-20T03:30:51Z",
+  "last_seen": "2026-10-20T04:24:41Z",
   "sig": "a22e9e295491",
   "snap": {
    "title": "Software Engineer (All Levels)",

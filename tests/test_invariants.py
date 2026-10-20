@@ -249,7 +249,7 @@ class StatusTableTest(unittest.TestCase):
         states.add(state.job_state(j, {}))
         self.assertEqual(states, {"new", "changed", "seen", "saved", "applied", "dismissed", "judged"})
         self.assertTrue(set(jfilter._RERUN_DROP) <= states)
-        self.assertEqual(states - set(jfilter._RERUN_DROP), {"new", "changed", "saved", "judged"})  # kept on a rerun
+        self.assertEqual(states - set(jfilter._RERUN_DROP), {"new", "changed", "saved", "judged", "seen"})  # kept
 
 
 if __name__ == "__main__":

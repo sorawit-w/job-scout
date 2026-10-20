@@ -8,6 +8,9 @@ from unittest import mock
 
 import cite_check
 
+GATES = ("location", "sponsorship", "pay", "exclusions")
+SCORES = ("role", "skills", "level", "domain")
+
 RUN_ID = "20261018T000000Z"
 FULL = ("Requirements\n- 5+ years building   React applications\n- You’ll mentor “junior” engineers\n\n"
         "Our culture\nWe like long lunches.\n\nPay\nThe range is $150,000 – $180,000 per year.")
@@ -30,7 +33,7 @@ def make_home():
 
 
 def results(why=(), risk=(), key="gh:a:1"):
-    return {"rows": [{"key": key, "gates": {}, "scores": {}, "total": 5,
+    return {"rows": [{"key": key, "gates": dict.fromkeys(GATES, "pass"), "scores": dict.fromkeys(SCORES, 1), "total": 4,
                       "why": [{"text": t, "quote": q} for t, q in why],
                       "risk": [{"text": t, "quote": q} for t, q in risk]}]}
 
@@ -42,6 +45,47 @@ def run(payload, home=None):
             mock.patch("sys.stdin", stdin), contextlib.redirect_stdout(out):
         code = cite_check.main([])
     return code, json.loads(out.getvalue())
+
+
+class RowShapeTest(unittest.TestCase):
+    """Rank and the report read gates and scores; a row must have all four of each, in range."""
+
+    def test_missing_gate_or_bad_value_fails(self):
+        for gates in ({"location": "pass", "pay": "pass", "exclusions": "pass"}, dict.fromkeys(GATES, "maybe"), ["pass"]):
+            payload = results(why=[("knows React", "years building   React applications")])
+            payload["rows"][0]["gates"] = gates
+            code, out = run(payload)
+            self.assertEqual(code, 1, gates)
+            self.assertIn("gates must", out["failed"][0]["why"])
+
+    def test_score_out_of_range_fails(self):
+        for scores in ({"role": 2, "skills": 2, "level": 2, "domain": 3}, {"role": 2}, dict.fromkeys(SCORES, True)):
+            payload = results(why=[("knows React", "years building   React applications")])
+            payload["rows"][0]["scores"] = scores
+            code, out = run(payload)
+            self.assertEqual(code, 1, scores)
+            self.assertIn("scores must", out["failed"][0]["why"])
+
+
+class CarriedRowTest(unittest.TestCase):
+    """Rows `state.py judged carry` reused from an earlier run are checked against this run's description."""
+
+    def test_a_carried_quote_still_in_the_description_passes(self):
+        payload = results(why=[("knows React", "years building   React applications")])
+        payload["rows"][0]["carried"] = True
+        self.assertEqual(run(payload), (0, {"ok": True, "checked": 1, "failed": []}))
+
+    def test_a_carried_quote_gone_from_the_description_fails_and_says_carried(self):
+        payload = results(why=[("knows Vue", "years building Vue applications")])
+        payload["rows"][0]["carried"] = True
+        code, out = run(payload)
+        self.assertEqual(code, 1)
+        self.assertEqual(out["failed"], [{"key": "gh:a:1", "quote": "years building Vue applications",
+                                          "why": "quote not found in the job description", "carried": True}])
+
+    def test_a_row_the_model_wrote_has_no_carried_mark(self):
+        code, out = run(results(why=[("knows Vue", "years building Vue applications")]))
+        self.assertNotIn("carried", out["failed"][0])
 
 
 class CiteCheckTest(unittest.TestCase):

@@ -183,8 +183,8 @@ class ReportTest(unittest.TestCase):
                            "url": "https://jobs.example.com/gone", "sig": ""}})
         run([], self.home)
         html = page(self.home)
-        self.assertIn("Nothing new since last time.", html)
-        self.assertIn("Checked 1 of 1 company job boards — 0 new or changed since last time.", html)
+        self.assertIn("No new or changed postings since last time.", html)
+        self.assertIn("Checked 1 of 1 company job boards: 0 new or changed since last time.", html)
         self.assertNotIn("open today", html)
         self.assertIn("Saved or applied, still open", html)
         self.assertIn("Closed since last time", html)
@@ -239,6 +239,21 @@ class ReportTest(unittest.TestCase):
         self.assertIn('href="https://jobs.example.com/still-live"', still)
         self.assertNotIn("gh:a:1", still)
 
+    def test_still_open_links_to_the_variant_the_live_check_used(self):
+        # fetch_jd found the shown posting closed and fell back to variant gh:a:2, which is open
+        grouped = job("gh:a:1", state_="saved", variants=[
+            {"key": "gh:a:1", "url": "https://jobs.example.com/closed"},
+            {"key": "gh:a:2", "url": "https://jobs.example.com/live"}])
+        make_run(self.home, [grouped], rows=None, jds={"gh:a:1": {
+            "status": "open", "variant": "gh:a:2", "job": {"url": "https://jobs.example.com/live"}}})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {
+                "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
+        run([], self.home)
+        still = page(self.home).split("<h2>Saved or applied, still open</h2>")[1]
+        self.assertIn('href="https://jobs.example.com/live"', still)
+        self.assertNotIn("closed", still.split("</table>")[0])
+
     def test_live_closed_alias_keeps_its_saved_status(self):
         grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
         make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]},
@@ -269,7 +284,7 @@ class ReportTest(unittest.TestCase):
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {"gh:a:1": {"status": "seen", "title": "Old", "sig": ""}})
         run([], self.home)
-        self.assertIn("Nothing new since last time.", page(self.home))
+        self.assertIn("No new or changed postings since last time.", page(self.home))
 
     def test_other_currencies_sort_after_the_main_one(self):
         usd = [job("gh:a:%d" % i, comp={"min": 150000 + i, "max": None, "currency": "USD", "interval": "year"})
@@ -353,6 +368,48 @@ class ReportTest(unittest.TestCase):
         make_run(empty, [job("gh:a:1")], rows=None)
         run([], empty)
         self.assertNotIn("copy-help", page(empty).split("<style>")[0] + page(empty).split("</style>")[1])
+
+    def rerun_view(self, cands, rows, boards=None):
+        make_run(self.home, cands, rows, boards=boards or {"probed": 4, "available": 4, "live_boards": []})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {"gh:old:1": {"status": "seen", "title": "Old", "sig": ""}})
+        run([], self.home)
+        return page(self.home)
+
+    def test_badges_new_only_filter_first_shown_and_what_changed(self):
+        html = self.rerun_view(
+            [job("gh:a:1", state_="new", badges=["NEW"]),
+             job("gh:b:2", "Staff Frontend", state_="seen", badges=[], first_shown="2026-10-01"),
+             job("gh:c:3", "UI Engineer", state_="changed", badges=["CHANGED", "SAVED"],
+                 changes=['title: "UI Dev" → "UI Engineer"'], first_shown="2026-09-20"),
+             job("gh:d:4", "Web Engineer", state_="judged", badges=["NEW"])],
+            [row("gh:a:1", 8), row("gh:b:2", 7), row("gh:c:3", 6), row("gh:d:4", 6, show=False)])
+        tb = lambda n: html[html.index('<tbody class="role" data-rank="%d"' % n):html.index("</tbody>", html.index(
+            '<tbody class="role" data-rank="%d"' % n))]
+        self.assertIn('<span class="tag">NEW</span>', tb(1))
+        self.assertNotIn('class="tag"', tb(2))
+        self.assertIn('<span class="tag">CHANGED</span><span class="tag">SAVED</span>', tb(3))
+        self.assertEqual([('data-new="1"' in tb(n)) for n in (1, 2, 3)], [True, False, False])
+        self.assertIn('data-quick="new" aria-pressed="false" title="Roles you have not been shown before">', html)
+        self.assertIn("New only <span class=\"n\">1</span>", html)
+        self.assertIn("first shown Oct 1", tb(2))
+        self.assertIn("<span>Changed since last time: title: &quot;UI Dev&quot; → &quot;UI Engineer&quot;</span>", tb(3))
+        self.assertIn("quick.new", html)  # the script applies the New only chip
+        self.assertIn("Checked 4 of 4 company job boards: 2 new or changed since last time · showing top 3 of 4 matches.",
+                      html)
+
+    def test_nothing_new_still_shows_the_full_list_under_one_line(self):
+        html = self.rerun_view([job("gh:a:1", state_="seen", badges=[], first_shown="2026-10-01")], [row("gh:a:1")])
+        self.assertIn('<p class="nothing-new">No new or changed postings since last time.</p>', html)
+        self.assertLess(html.index("No new or changed postings since last time."), html.index('<table class="roles">'))
+        self.assertIn("1 matching role", html)
+        self.assertNotIn('data-quick="new"', html)  # no chip with nothing to show
+
+    def test_malformed_gates_never_crash_the_report(self):
+        make_run(self.home, [job("gh:a:1"), job("gh:b:2")],
+                 [dict(row("gh:a:1"), gates=["pass"]), dict(row("gh:b:2", show=False), gates="fail")])
+        code, out = run([], self.home)
+        self.assertEqual((code, out["shown"], out["excluded"]), (0, 1, 1))
 
     def test_new_tag_only_on_reruns(self):
         make_run(self.home, [job("gh:a:1", state_="new")], [row("gh:a:1")])

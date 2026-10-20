@@ -8,10 +8,14 @@ Reads <run>/jobs.json (written by probe.py), the saved profile (~/.job-scout/pro
 seen.json (via state.py). Writes <run>/candidates.json (full job dicts plus match, flags and
 state, ranked, at most --limit) and prints one compact JSON object:
   {"counts": {"input", "removed": {reason: n}, "candidates"},
-   "candidates": [{key, company, title, where, mode, since, pay, match, flags, state}],
+   "candidates": [{key, company, title, where, mode, since, pay, match, flags, state, badges,
+                   first_shown, changes, cached}],
    "near_misses": [{key, company, title, reason}]}
 state is new | changed | saved | applied | seen | dismissed | judged (no seen.json: all new);
-judged = an earlier run screened it but never showed it.
+judged = an earlier run screened it but never showed it. On a rerun (seen.json exists), badges is
+NEW (never shown: new or judged), CHANGED (shown before, posting changed; changes says what, before
+→ after) and SAVED; first_shown is the date a role was first shown; cached means seen.json holds a
+judgment for this posting and brief that `state.py judged carry` can reuse after the live check.
 Exit codes: 0 ok · 2 no profile, no run, no jobs.json, unreadable seen.json (left unchanged,
 nothing written), or bad arguments.
 
@@ -21,11 +25,11 @@ or unknown-mode job elsewhere in the home or remote-scope countries, flagged) ->
 -> title exclusions -> title prefilter (strong / borderline) -> pay floor (structured pay only;
 Greenhouse lists no pay, so its pay is checked after fetch_jd).
 Old postings are flagged ("open over N days"), never removed.
-Rerun (seen.json has entries), after every rule above: unchanged seen roles are removed as
-"already_seen", applied and dismissed ones as "dismissed_or_applied"; new, changed, saved and judged stay.
---all keeps them all (still tagged). Ranking puts new and changed before saved, then the rest
-(judged among them), keeping the usual order within each group. removed + candidates always
-equals input.
+Rerun (seen.json has entries), after every rule above: applied and dismissed roles are removed as
+"dismissed_or_applied"; every other role stays (--all keeps those too, still tagged). The order is
+the read order for the up-to-40 descriptions: roles still to read before cached ones, and among them
+new and changed first, keeping the usual order within each group. It is not the shown rank: that is
+the rubric's, set by `state.py judged rank`. removed + candidates always equals input.
 
 What it does NOT do:
 - No judgment of fit. "strong" and "borderline" are word matches on the title only; the LLM
@@ -50,10 +54,9 @@ DEFAULT_LIMIT = 150
 MAX_LIMIT = 300
 MAX_NEAR_MISSES = 5
 REASONS = ("work_mode", "location", "remote_scope", "seniority", "track", "company", "title",
-           "title_exclusion", "pay_floor",
-           "already_seen", "dismissed_or_applied")
-_STATE_TIER = {"new": 0, "changed": 0, "saved": 1}  # everything else (only shown with --all) after
-_RERUN_DROP = {"seen": "already_seen", "applied": "dismissed_or_applied", "dismissed": "dismissed_or_applied"}
+           "title_exclusion", "pay_floor", "dismissed_or_applied")
+_READ_FIRST = ("new", "changed")  # the read budget goes to these first; rank in the table is the rubric's
+_RERUN_DROP = {"applied": "dismissed_or_applied", "dismissed": "dismissed_or_applied"}
 SCOPE_NOT_STATED = "remote scope not stated"
 AMER_FLAG = "Americas — check US eligibility"
 MODE_NOT_STATED = "work mode not stated"
@@ -312,13 +315,46 @@ def _judge(job, p, ctx):
     return None, row, None
 
 
+def location_flagged(flags):
+    """True when a flag says the place or remote scope is not an exact fit (rubric §2: ranks after exact)."""
+    return any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in flags)
+
+
 def _rank_key(row, p):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
     on_detail = any(f in (MODE_ON_DETAIL_FLAG, LOCATION_ON_DETAIL_FLAG) for f in row["flags"])  # unconfirmed fit: last
-    return (_STATE_TIER.get(row["state"], 2), on_detail, row["match"] != "strong",
-            any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]),
+    # cached roles last, best cached fit first: fetch_jd --check-only checks at most 60
+    return (row["cached"], -(row.get("cached_fit") or 0), row["state"] not in _READ_FIRST, on_detail, row["match"] != "strong",
+            location_flagged(row["flags"]),
             -_desc_hits(row, p), newest is None, newest or 0)
+
+
+def _changes(before, after):
+    """What a shown posting changed, before → after, from seen.json's snapshot (none for old entries)."""
+    if not isinstance(before, dict):
+        return []
+    places = lambda s: "; ".join(s.get("locations") or []) or "not stated"
+    out = ['title: "%s" → "%s"' % (before.get("title"), after.get("title"))] if before.get("title") != after.get("title") else []
+    if before.get("comp") != after.get("comp"):
+        out.append("pay: %s → %s" % (pay_text(before.get("comp")), pay_text(after.get("comp"))))
+    if sorted(before.get("locations") or []) != after.get("locations"):
+        out.append("places: %s → %s" % (places(before), places(after)))
+    return out
+
+
+def _history(row, job, seen, index, profile, rerun):
+    """Tag a kept row with its rerun history: state, badges (never rank), first_shown, changes, cached."""
+    e = state.deciding_entry(job, seen, index)
+    row["state"] = state.job_state(job, seen, index)  # the collapsed job: same sig as record()
+    status = e.get("status") if e else None
+    row["badges"] = ([b for b, on in (("NEW", row["state"] in ("new", "judged")), ("CHANGED", row["state"] == "changed"),
+                                       ("SAVED", status == "saved")) if on] if rerun else [])
+    row["first_shown"] = (e.get("first_seen") or "")[:10] or None if e and status != "judged" else None
+    row["changes"] = _changes(e.get("snap"), state.job_snap(job)) if row["state"] == "changed" else []
+    j = state.cached_judgment(job, seen, profile, None, index)
+    row["cached"] = j is not None  # carried, not read again
+    row["cached_fit"] = state.fit(j) if j else None
 
 
 def _where(row):
@@ -328,9 +364,11 @@ def _where(row):
     return "; ".join(locs[:2]) + (" +%d more" % (len(locs) - 2) if len(locs) > 2 else "")
 
 
-def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_all=False):
+def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_all=False, rerun=None):
     """Apply every rule. Returns (stdout summary dict, ranked full candidate dicts capped at limit).
-    seen is seen.json's content; empty or None is a first run (nothing dropped, all "new")."""
+    seen is seen.json's content; empty or None is a first run (nothing dropped, all "new"). rerun:
+    a history file exists (it can be empty after a zero-result first search); default bool(seen).
+    Badges only on a rerun."""
     p = state.with_profile_defaults(profile)
     limit = max(1, min(int(limit), MAX_LIMIT))
     home_states = normalize.us_states(p.get("home_base") or "")
@@ -346,13 +384,14 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_a
                        if not any(has_phrase(words(r), x) for r in p["target_roles"] + p["title_synonyms"])],
            "today": today or datetime.date.today()}
     seen = seen or {}
+    rerun = bool(seen) if rerun is None else rerun
     index = state.seen_index(seen)
     removed = dict.fromkeys(REASONS, 0)
     kept, near = [], []
     for job in jobs:
         reason, row, miss = _judge(job, p, ctx)
         if not reason:
-            row["state"] = state.job_state(job, seen, index)  # the collapsed job: same sig as record()
+            _history(row, job, seen, index, profile, rerun)
             reason = None if show_all else _RERUN_DROP.get(row["state"])
         if reason:
             removed[reason] += 1
@@ -368,7 +407,8 @@ def run_filter(jobs, profile, limit=DEFAULT_LIMIT, today=None, seen=None, show_a
         "candidates": [{"key": r.get("key"), "company": r.get("company"), "title": r.get("title"),
                         "where": _where(r), "mode": r.get("workplace") or "unknown",
                         "since": r.get("first_published"), "pay": pay_text(r.get("comp")),
-                        "match": r["match"], "flags": r["flags"], "state": r["state"]} for r in shown],
+                        "match": r["match"], "flags": r["flags"], "state": r["state"], "badges": r["badges"],
+                        "first_shown": r["first_shown"], "changes": r["changes"], "cached": r["cached"]} for r in shown],
         "near_misses": [{"key": r.get("key"), "company": r.get("company"), "title": r.get("title"), "reason": why}
                         for _, _, r, why in near[:MAX_NEAR_MISSES]],
     }
@@ -402,7 +442,8 @@ def main(argv=None):
     except ValueError as e:  # never fall back to a first run: that would show every seen role as new
         print(json.dumps({"error": str(e)}, ensure_ascii=False))
         return 2
-    summary, candidates = run_filter(jobs, profile, args.limit, seen=seen, show_all=args.all)
+    summary, candidates = run_filter(jobs, profile, args.limit, seen=seen, show_all=args.all,
+                                     rerun=state.seen_path().exists())
     state.write_json_atomic(run / "candidates.json", candidates)
     state.write_json_atomic(run / "filter.json", summary)  # counts and near misses, for report.py
     state.write_json_atomic(run / "profile.json", profile)  # the brief this run used (state.run_profile)

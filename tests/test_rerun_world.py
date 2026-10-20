@@ -20,6 +20,7 @@ Usage:
 What it does NOT do: judge fit or check the LLM steps. If day1 or day2 changes, update the
 job ids here and in worlds/day2/README.md.
 """
+import collections
 import contextlib
 import csv
 import io
@@ -61,9 +62,14 @@ TIMESTAMPS = ("first_seen", "last_seen")
 JUDGMENT_STAMPS = ("run", "judged_at")  # the run id is a timestamp too
 
 
+def _scores(total):
+    """Four 0–2 rubric scores that sum to total."""
+    return dict(zip(("role", "skills", "level", "domain"), (min(2, max(0, total - 2 * i)) for i in range(4))))
+
+
 def _row(key, total, why, risk=()):
     return {"key": key, "gates": {"location": "pass", "sponsorship": "unknown", "pay": "pass", "exclusions": "pass"},
-            "scores": {}, "total": total, "show": True,
+            "scores": _scores(total), "total": total, "show": True,
             "why": [{"text": t, "quote": q} for t, q in why], "risk": [{"text": t, "quote": q} for t, q in risk]}
 
 
@@ -227,10 +233,13 @@ class RerunDay2Test(unittest.TestCase):
     def test_rerun_filter_leads_with_new_then_changed(self):
         code, out = self.filter
         self.assertEqual(code, 0)
-        # day1's unread (judged) candidates are all on the KoBold board, which errors on day2
-        self.assertEqual([(c["key"], c["state"]) for c in out["candidates"]], [(NEW, "new"), (CHANGED, "changed")])
+        # one list: the role seen last week stays (after the roles to read); day1's unread (judged)
+        # candidates are all on the KoBold board, which errors on day2
+        self.assertEqual([(c["key"], c["state"], c["badges"]) for c in out["candidates"]],
+                         [(NEW, "new", ["NEW"]), (CHANGED, "changed", ["CHANGED"]), (SEEN_SAME, "seen", [])])
+        self.assertEqual(out["candidates"][1]["changes"], ['title: "%s" → "%s"' % CHANGED_TITLES])
+        self.assertIsNotNone(out["candidates"][2]["first_shown"])
         removed = out["counts"]["removed"]
-        self.assertEqual(removed["already_seen"], 1)  # SEEN_SAME
         self.assertEqual(removed["dismissed_or_applied"], 2)  # APPLIED, DISMISSED
         self.assertEqual(sum(removed.values()) + out["counts"]["candidates"], out["counts"]["input"])
 
@@ -242,7 +251,6 @@ class RerunDay2Test(unittest.TestCase):
         self.assertEqual(states.get(DISMISSED), "dismissed")
         self.assertEqual(states.get(SEEN_SAME), "seen")
         self.assertEqual(states.get(NEW), "new")
-        self.assertEqual(out["counts"]["removed"]["already_seen"], 0)
         self.assertEqual(out["counts"]["removed"]["dismissed_or_applied"], 0)
 
     def test_new_and_changed_jobs_are_open_with_live_fields(self):
@@ -267,7 +275,7 @@ LIVE_1019 = {"status": "open", "full": "We build product features end to end, fr
 def _live_job(jobs, key):
     """The live display fields fetch_jd keeps in a jds.json entry."""
     j = next(j for j in jobs if j["key"] == key)
-    return {f: j[f] for f in ("title", "locations", "workplace", "remote_scope")}
+    return dict({f: j[f] for f in ("title", "locations", "workplace", "remote_scope", "first_published")}, flags=[])
 
 
 def _posting(key, company, title, published):
@@ -286,7 +294,7 @@ def world_1019():
     totals = [8, 8, 8, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6] + [4] * 22
     rows = [{"key": j["key"], "show": i < 15, "total": t,
              "gates": {"location": "pass", "sponsorship": "pass", "pay": "unknown", "exclusions": "pass"},
-             "scores": {"role": 2, "skills": 2, "level": 1, "domain": t - 5}, "style": [],
+             "scores": _scores(t), "style": [],
              "why": [{"text": "Product engineering role", "quote": "build product features end to end"}],
              "risk": [{"text": "pay not listed", "quote": None}]}
             for i, (j, t) in enumerate(zip(jobs, totals))]
@@ -336,9 +344,8 @@ class Rerun20261019Test(unittest.TestCase):
         self.assertEqual(code, 0)
         states = {c["key"]: c["state"] for c in out["candidates"]}
         self.assertEqual([k for k, v in states.items() if v == "new"], [PASSPORT])
-        self.assertEqual(len(states), 88)  # 87 screened before + Passport; the 15 shown are already seen
-        self.assertEqual(set(states.values()), {"new", "judged"})
-        self.assertEqual(out["counts"]["removed"]["already_seen"], 15)
+        self.assertEqual(len(states), 103)  # one list: 15 shown before + 87 screened before + Passport
+        self.assertEqual(collections.Counter(states.values()), {"judged": 87, "seen": 15, "new": 1})
 
     def test_editing_the_brief_invalidates_every_cached_judgment(self):
         jobs = {j["key"]: j for j in world_1019()[2]}
@@ -346,6 +353,76 @@ class Rerun20261019Test(unittest.TestCase):
         self.assertEqual(len(cached), 38)  # every read role, shown or cut
         edited = dict(BRIEF_1019, work_modes=["remote", "hybrid"])
         self.assertEqual([k for k in self.seen1 if state.cached_judgment(jobs[k], self.seen1, edited, self.live1.get(k))], [])
+
+
+class RerunView20261019Test(unittest.TestCase):
+    """Run 2 the same day, through filter -> live check -> carry -> judge what is new -> rank."""
+
+    def world(self, closed=None, with_passport=True):
+        home = tempfile.mkdtemp()
+        jobs1, rows, jobs2 = world_1019()
+        jobs2 = jobs2 if with_passport else jobs1
+        passport = {"key": PASSPORT, "show": True, "total": 8, "gates": rows[0]["gates"],
+                    "scores": {"role": 2, "skills": 2, "level": 2, "domain": 2}, "style": [],
+                    "why": [{"text": "Product engineering role", "quote": "build product features end to end"}],
+                    "risk": [{"text": "pay not listed", "quote": None}]}
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": home}):
+            state.write_json_atomic(state.profile_path(), BRIEF_1019)
+            run1 = state.new_run()
+            state.write_json_atomic(run1 / "jobs.json", jobs1)
+            call(jfilter.main, ["--run", run1.name])
+            state.write_json_atomic(run1 / "results.json", {"rows": rows})
+            state.write_json_atomic(run1 / "jds.json", {r["key"]: dict(LIVE_1019, job=_live_job(jobs1, r["key"]))
+                                                        for r in rows})
+            call(state.main, ["seen", "record", "--run", run1.name])
+            run2 = state.new_run()
+            state.write_json_atomic(run2 / "jobs.json", jobs2)
+            filt = call(jfilter.main, ["--run", run2.name])[1]
+            cached = [c["key"] for c in filt["candidates"] if c["cached"]]
+            live = {k: {"status": "closed"} if k == closed else dict(LIVE_1019, job=_live_job(jobs2, k)) for k in cached}
+            if with_passport:  # the model reads what is new
+                live[PASSPORT] = dict(LIVE_1019, job=_live_job(jobs2, PASSPORT))
+            state.write_json_atomic(run2 / "jds.json", live)  # fetch_jd.py --check-only (and --keys PASSPORT)
+            carried = call(state.main, ["judged", "carry", "--run", run2.name])[1]
+            if with_passport:
+                results = state.read_json(run2 / "results.json")
+                state.write_json_atomic(run2 / "results.json", {"rows": results["rows"] + [passport]})
+            ranked = call(state.main, ["judged", "rank", "--run", run2.name])[1]
+            final = state.read_json(run2 / "results.json")["rows"]
+            check = call(cite_check.main, ["--run", run2.name], stdin=json.dumps({"rows": final}))[1]
+        return filt, carried, ranked, [r for r in final if r["show"]], rows, check
+
+    def test_run_2_shows_15_rows_14_seen_before_and_passport_new_at_its_rank(self):
+        filt, carried, ranked, shown, rows1, check = self.world()
+        self.assertEqual((len(carried["carried"]), carried["read_again"], carried["closed"]), (38, [], []))
+        self.assertTrue(check["ok"], check)  # carried quotes re-verified against this run's text
+        self.assertEqual(ranked["shown"], 15)
+        badges = {c["key"]: c["badges"] for c in filt["candidates"]}
+        self.assertEqual(shown[0]["key"], PASSPORT)  # 8/8 and the newest of the 8s
+        self.assertEqual(badges[PASSPORT], ["NEW"])
+        before = [r["key"] for r in rows1 if r["show"]]
+        self.assertEqual([r["key"] for r in shown[1:]], before[:14])  # rubric order kept; the 15th drops to 16
+        self.assertEqual({k: badges[k] for k in before[:14]}, {k: [] for k in before[:14]})
+        self.assertTrue(all(r.get("carried") for r in shown[1:]))
+
+    def test_run_2_reads_passport_first_and_never_a_cached_role(self):
+        filt = self.world()[0]
+        to_read = [c["key"] for c in filt["candidates"] if not c["cached"]]
+        self.assertEqual(to_read[0], PASSPORT)
+        self.assertEqual(len(to_read), 65)  # Passport, then the 64 never read; the 38 cached are not read
+        self.assertEqual(sum(c["cached"] for c in filt["candidates"]), 38)
+
+    def test_a_closed_role_lets_tapcart_in_badged_new(self):
+        filt, carried, ranked, shown, rows1, _ = self.world(closed=rows_1019_key(3), with_passport=False)
+        self.assertEqual(carried["closed"], [rows_1019_key(3)])
+        keys = [r["key"] for r in shown]
+        self.assertEqual((len(keys), keys[-1]), (15, TAPCART))
+        self.assertEqual({c["key"]: c["badges"] for c in filt["candidates"]}[TAPCART], ["NEW"])
+        self.assertNotIn(rows_1019_key(3), keys)
+
+
+def rows_1019_key(i):
+    return world_1019()[1][i]["key"]
 
 
 class AddCompanyTest(unittest.TestCase):

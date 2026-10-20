@@ -547,13 +547,13 @@ class CountsTest(unittest.TestCase):
         c = out["counts"]
         self.assertEqual(sorted(c["removed"]), sorted(["work_mode", "location", "remote_scope", "seniority", "track",
                                                        "company", "title", "title_exclusion", "pay_floor",
-                                                       "already_seen", "dismissed_or_applied"]))
+                                                       "dismissed_or_applied"]))
         self.assertEqual(sum(c["removed"].values()) + c["candidates"], c["input"])
         self.assertEqual(c["input"], len(jobs))
         self.assertEqual(c["candidates"], 2)
-        first_run = {k: v for k, v in c["removed"].items() if k not in ("already_seen", "dismissed_or_applied")}
+        first_run = {k: v for k, v in c["removed"].items() if k != "dismissed_or_applied"}
         self.assertTrue(all(v == 1 for v in first_run.values()), c["removed"])
-        self.assertEqual((c["removed"]["already_seen"], c["removed"]["dismissed_or_applied"]), (0, 0))
+        self.assertEqual(c["removed"]["dismissed_or_applied"], 0)
 
     def test_input_not_mutated(self):
         j = job()
@@ -568,41 +568,106 @@ def seen_entry(j, status="seen"):
 
 
 class SeenStateTest(unittest.TestCase):
+    STATES = ("new", "seen", "saved", "applied", "dismissed", "changed", "judged", "saved_changed")
+
     def setUp(self):
-        self.jobs = {s: job(key="ashby:acme:%s" % s) for s in ("new", "seen", "saved", "applied", "dismissed", "changed")}
-        self.seen = {j["key"]: seen_entry(j, s) for s, j in self.jobs.items() if s != "new"}
-        self.seen["ashby:acme:changed"] = seen_entry(dict(self.jobs["changed"], title="Old title"))
+        self.jobs = {s: job(key="ashby:acme:%s" % s) for s in self.STATES}
+        self.seen = {j["key"]: seen_entry(j, s) for s, j in self.jobs.items() if s not in ("new", "saved_changed")}
+        self.seen["ashby:acme:changed"] = dict(seen_entry(dict(self.jobs["changed"], title="Old title")),
+                                               snap=state.job_snap(dict(self.jobs["changed"], title="Old title")))
+        old = dict(self.jobs["saved_changed"], comp=dict(USD, max=200000), locations=["Remote - Canada"])
+        self.seen["ashby:acme:saved_changed"] = dict(seen_entry(old, "saved"), snap=state.job_snap(old))
 
-    def filt(self, show_all=False, seen=None):
+    def filt(self, show_all=False, seen=None, **kw):
         return jfilter.run_filter(list(self.jobs.values()), profile(), today=TODAY,
-                                  seen=self.seen if seen is None else seen, show_all=show_all)
+                                  seen=self.seen if seen is None else seen, show_all=show_all, **kw)
 
-    def test_first_run_everything_new(self):
+    def by_key(self, out):
+        return {c["key"].rsplit(":", 1)[1]: c for c in out["candidates"]}
+
+    def test_first_run_everything_new_and_no_badges(self):
         out, cands = self.filt(seen={})
-        self.assertEqual(len(cands), 6)
+        self.assertEqual(len(cands), 8)
         self.assertEqual({c["state"] for c in cands}, {"new"})
-        self.assertEqual({c["state"] for c in out["candidates"]}, {"new"})
+        self.assertEqual({tuple(c["badges"]) for c in out["candidates"]}, {()})
 
-    def test_rerun_keeps_new_changed_saved_and_ranks_saved_last(self):
+    def test_empty_history_file_is_a_rerun_so_new_roles_are_badged(self):
+        out, _ = self.filt(seen={}, rerun=True)  # seen.json exists after a zero-result first search
+        self.assertEqual({tuple(c["badges"]) for c in out["candidates"]}, {("NEW",)})
+
+    def test_rerun_keeps_every_role_but_applied_and_dismissed_and_reads_new_and_changed_first(self):
         out, cands = self.filt()
-        self.assertEqual([(c["key"], c["state"]) for c in out["candidates"]],
-                         [("ashby:acme:new", "new"), ("ashby:acme:changed", "changed"), ("ashby:acme:saved", "saved")])
-        self.assertEqual([c["state"] for c in cands], ["new", "changed", "saved"])
+        self.assertEqual([c["key"].rsplit(":", 1)[1] for c in out["candidates"]],
+                         ["new", "changed", "saved_changed", "seen", "saved", "judged"])
+        self.assertEqual([c["state"] for c in cands], ["new", "changed", "changed", "seen", "saved", "judged"])
         c = out["counts"]
-        self.assertEqual((c["removed"]["already_seen"], c["removed"]["dismissed_or_applied"]), (1, 2))
+        self.assertNotIn("already_seen", c["removed"])
+        self.assertEqual(c["removed"]["dismissed_or_applied"], 2)
         self.assertEqual(sum(c["removed"].values()) + c["candidates"], c["input"])
+
+    def test_badges_first_shown_and_what_changed(self):
+        rows = self.by_key(self.filt()[0])
+        self.assertEqual({k: r["badges"] for k, r in rows.items()},
+                         {"new": ["NEW"], "judged": ["NEW"], "changed": ["CHANGED"], "seen": [], "saved": ["SAVED"],
+                          "saved_changed": ["CHANGED", "SAVED"]})
+        self.assertEqual({k: r["first_shown"] for k, r in rows.items()},
+                         {"new": None, "judged": None, "changed": "2026-10-01", "seen": "2026-10-01",
+                          "saved": "2026-10-01", "saved_changed": "2026-10-01"})
+        self.assertEqual(rows["changed"]["changes"], ['title: "Old title" → "Senior Frontend Engineer"'])
+        self.assertEqual(rows["saved_changed"]["changes"],
+                         ["pay: $190,000–$200,000/yr → $190,000–$240,000/yr", "places: Remote - Canada → Remote - US"])
+        self.assertEqual({k for k, r in rows.items() if r["changes"]}, {"changed", "saved_changed"})
+
+    def test_cached_marks_roles_whose_judgment_can_be_carried(self):
+        p = profile()
+        good = {"sig": state.job_sig(self.jobs["seen"]), "brief_sig": state.brief_sig(p), "jd_sig": "x", "work_style": {}}
+        seen = dict(self.seen)
+        seen["ashby:acme:seen"] = dict(seen["ashby:acme:seen"], judgment=good)
+        seen["ashby:acme:judged"] = dict(seen["ashby:acme:judged"], judgment=dict(good, brief_sig="edited"))
+        rows = self.by_key(jfilter.run_filter(list(self.jobs.values()), p, today=TODAY, seen=seen)[0])
+        self.assertEqual({k for k, r in rows.items() if r["cached"]}, {"seen"})
+
+    def test_cached_roles_come_after_roles_to_read(self):
+        p = profile()
+        a, b = job(key="ashby:acme:a"), job(key="ashby:acme:b")
+        seen = {k: dict(seen_entry(j, "judged"), judgment={"sig": state.job_sig(j), "brief_sig": state.brief_sig(p)})
+                for k, j in (("ashby:acme:a", a), ("ashby:acme:b", b))}
+        del seen["ashby:acme:b"]["judgment"]  # b was never read
+        out, _ = jfilter.run_filter([a, b], p, today=TODAY, seen=seen)
+        self.assertEqual([(c["key"], c["cached"]) for c in out["candidates"]], [("ashby:acme:b", False), ("ashby:acme:a", True)])
+
+    def test_cached_roles_are_ordered_by_their_cached_fit_so_the_best_get_the_live_check(self):
+        p = profile()
+        jobs = [job(key="ashby:acme:c%d" % i) for i in range(3)]
+        seen = {j["key"]: dict(seen_entry(j, "seen"), judgment={"sig": state.job_sig(j), "brief_sig": state.brief_sig(p),
+                                                                 "total": t})
+                for j, t in zip(jobs, (5, 8, 6))}
+        out, _ = jfilter.run_filter(jobs, p, today=TODAY, seen=seen)
+        self.assertEqual([c["key"] for c in out["candidates"]], ["ashby:acme:c1", "ashby:acme:c2", "ashby:acme:c0"])
+
+    def test_cached_order_uses_the_score_sum_not_a_stale_total(self):
+        p = profile()
+        a, b = job(key="ashby:acme:a"), job(key="ashby:acme:b")
+        sums = {"ashby:acme:a": {"role": 1, "skills": 1, "level": 1, "domain": 1},
+                "ashby:acme:b": {"role": 2, "skills": 2, "level": 1, "domain": 1}}
+        seen = {k: dict(seen_entry(j, "seen"), judgment={"sig": state.job_sig(j), "brief_sig": state.brief_sig(p),
+                                                          "total": 8, "scores": sums[k]})
+                for k, j in (("ashby:acme:a", a), ("ashby:acme:b", b))}
+        out, _ = jfilter.run_filter([a, b], p, today=TODAY, seen=seen)
+        self.assertEqual([c["key"] for c in out["candidates"]], ["ashby:acme:b", "ashby:acme:a"])
 
     def test_all_flag_shows_everything_tagged(self):
         out, cands = self.filt(show_all=True)
-        self.assertEqual([c["state"] for c in cands], ["new", "changed", "saved", "seen", "applied", "dismissed"])
-        self.assertEqual(out["counts"]["candidates"], 6)
-        self.assertEqual(out["counts"]["removed"]["already_seen"], 0)
+        self.assertEqual(sorted(c["state"] for c in cands),
+                         sorted(["new", "changed", "changed", "saved", "seen", "applied", "dismissed", "judged"]))
+        self.assertEqual(out["counts"]["candidates"], 8)
+        self.assertEqual(out["counts"]["removed"]["dismissed_or_applied"], 0)
 
     def test_hard_filter_reason_wins_over_seen(self):
         bad = job("RTL Design Engineer", key="ashby:acme:rtl")
-        out, _ = jfilter.run_filter([bad], profile(), today=TODAY, seen={bad["key"]: seen_entry(bad)})
+        out, _ = jfilter.run_filter([bad], profile(), today=TODAY, seen={bad["key"]: seen_entry(bad, "dismissed")})
         self.assertEqual(out["counts"]["removed"]["title_exclusion"], 1)
-        self.assertEqual(out["counts"]["removed"]["already_seen"], 0)
+        self.assertEqual(out["counts"]["removed"]["dismissed_or_applied"], 0)
 
     def test_state_uses_collapsed_job_not_display_variant(self):
         # the display variant has a different title/key; the seen entry was signed on the collapsed row
@@ -682,7 +747,8 @@ class CliTest(unittest.TestCase):
         self.assertEqual(sorted(out["counts"]), ["candidates", "input", "removed"])
         self.assertEqual(out["counts"]["input"], 3)
         row = out["candidates"][0]
-        self.assertEqual(sorted(row), ["company", "flags", "key", "match", "mode", "pay", "since", "state", "title", "where"])
+        self.assertEqual(sorted(row), ["badges", "cached", "changes", "company", "first_shown", "flags", "key", "match",
+                                       "mode", "pay", "since", "state", "title", "where"])
         self.assertEqual(row["mode"], "remote")
         self.assertEqual(row["since"], "2026-10-01")
         self.assertEqual(out["candidates"][1]["pay"], "pay not listed")
@@ -724,14 +790,22 @@ class CliTest(unittest.TestCase):
     def test_rerun_uses_seen_json_and_all_flag(self):
         state.write_json_atomic(state.profile_path(), profile())
         a, b = job(key="ashby:acme:a"), job(key="ashby:acme:b")
-        self.make_run([a, b])
-        state.write_json_atomic(state.seen_path(), {"ashby:acme:a": seen_entry(a)})
+        run_dir = self.make_run([a, b])
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:a": seen_entry(a, "dismissed")})
         code, out = self.main([])
-        self.assertEqual((code, [c["key"] for c in out["candidates"]]), (0, ["ashby:acme:b"]))
-        self.assertEqual(out["counts"]["removed"]["already_seen"], 1)
+        self.assertEqual((code, [(c["key"], c["badges"]) for c in out["candidates"]]), (0, [("ashby:acme:b", ["NEW"])]))
+        self.assertEqual(out["counts"]["removed"]["dismissed_or_applied"], 1)
+        self.assertEqual(state.read_json(run_dir / "candidates.json")[0]["badges"], ["NEW"])  # report.py reads them
         code, out = self.main(["--all"])
         self.assertEqual(sorted((c["key"], c["state"]) for c in out["candidates"]),
-                         [("ashby:acme:a", "seen"), ("ashby:acme:b", "new")])
+                         [("ashby:acme:a", "dismissed"), ("ashby:acme:b", "new")])
+
+    def test_empty_seen_file_still_badges_new_roles(self):
+        state.write_json_atomic(state.profile_path(), profile())
+        self.make_run([job()])
+        state.write_json_atomic(state.seen_path(), {})
+        code, out = self.main([])
+        self.assertEqual(out["candidates"][0]["badges"], ["NEW"])
 
 
 if __name__ == "__main__":

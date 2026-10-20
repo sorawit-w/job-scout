@@ -304,6 +304,150 @@ class LiveCheckTest(unittest.TestCase):
         self.assertEqual(jds[VERCEL["key"]]["status"], "closed")
 
 
+class CheckOnlyTest(unittest.TestCase):
+    """--check-only: the live check for carried judgments, without printing a description to read."""
+
+    def test_keys_are_checked_and_saved_but_no_description_is_printed(self):
+        home = make_home([FIGMA, VERCEL])
+        code, out = run(["--check-only", "--keys", "%s,%s" % (FIGMA["key"], VERCEL["key"])], home)
+        self.assertEqual(code, 0)
+        self.assertEqual([j["key"] for j in out["jobs"]], [FIGMA["key"]])
+        self.assertNotIn("jd", out["jobs"][0])
+        self.assertEqual([c["key"] for c in out["closed"]], [VERCEL["key"]])
+        self.assertIn("Enterprise Account Executive", read_jds(home)[FIGMA["key"]]["full"])  # for cite_check
+
+    def test_alone_it_checks_the_cached_candidates(self):
+        home = make_home([dict(VERCEL, cached=False), dict(FIGMA, cached=True)])
+        code, out = run(["--check-only"], home)
+        self.assertEqual((code, [j["key"] for j in out["jobs"]], out["closed"]), (0, [FIGMA["key"]], []))
+        self.assertEqual(out["requests"], 1)
+        self.assertNotIn(VERCEL["key"], read_jds(home))
+
+    def test_cached_rows_past_the_limit_are_reported(self):
+        rows = [dict(FIGMA, key="greenhouse:figma:%d" % i, cached=True) for i in range(fetch_jd.MAX_JOBS + 2)]
+        with mock.patch.object(fetch_jd, "check", lambda row, budget: ({"status": "closed"}, None)):
+            code, out = run(["--check-only"], make_home(rows))
+        self.assertEqual((code, len(out["closed"])), (0, fetch_jd.MAX_JOBS))
+        self.assertEqual([u["key"] for u in out["unverified"]], [r["key"] for r in rows[fetch_jd.MAX_JOBS:]])
+
+
+class VariantFallbackTest(unittest.TestCase):
+    """A grouped role is closed only when every variant is: the shown posting closing is not enough."""
+
+    ROW = {"key": "ashby:acme:1", "ats": "ashby", "slug": "acme", "job_id": "1", "company": "Acme", "title": "Engineer",
+           "url": "https://jobs.ashbyhq.com/acme/1", "cached": True,
+           "variants": [{"key": "ashby:acme:1", "ats": "ashby", "slug": "acme", "job_id": "1"},
+                        {"key": "ashby:acme:2", "ats": "ashby", "slug": "acme", "job_id": "2",
+                         "url": "https://jobs.ashbyhq.com/acme/2"}]}
+
+    def fake_check(self, open_ids, unsure=(), scope=None):
+        def check(row, budget):
+            if row["job_id"] in unsure:
+                return {"status": "unverified", "full": None, "trimmed": None, "comp": None, "error": "timeout"}, None
+            if row["job_id"] not in open_ids:
+                return {"status": "closed", "full": None, "trimmed": None, "comp": None, "error": None}, None
+            job = {"job_id": row["job_id"], "title": "Engineer", "url": row["url"], "locations": ["Remote - US"],
+                   "remote": True, "remote_scope": (scope or {}).get(row["job_id"], ["US"]), "workplace": "remote",
+                   "comp": None, "description_text": "Build things."}
+            return {"status": "open", "full": "Build things.", "trimmed": "Build things.", "comp": None,
+                    "error": None}, job
+        return check
+
+    def test_a_closed_shown_posting_falls_back_to_an_open_variant(self):
+        for argv in (["--keys", "ashby:acme:1"], ["--check-only"]):
+            home = make_home([self.ROW])
+            with mock.patch.object(fetch_jd, "check", self.fake_check({"2"})):
+                code, out = run(argv, home)
+            self.assertEqual((code, out["closed"]), (0, []), argv)
+            self.assertEqual([(j["key"], j["url"]) for j in out["jobs"]], [("ashby:acme:1", "https://jobs.ashbyhq.com/acme/2")])
+            entry = read_jds(home)["ashby:acme:1"]
+            self.assertEqual((entry["status"], entry["variant"]), ("open", "ashby:acme:2"))
+
+    def test_an_open_variant_outside_the_brief_does_not_stop_the_search(self):
+        row = dict(self.ROW, variants=self.ROW["variants"] + [
+            {"key": "ashby:acme:3", "ats": "ashby", "slug": "acme", "job_id": "3", "url": "https://jobs.ashbyhq.com/acme/3"}])
+        home = make_home([row])
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"schema": 1, "target_roles": ["Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
+                       "needs_sponsorship": "no", "base_pay_floor": None}, f)
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"2", "3"}, scope={"2": ["GB"]})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual([(j["key"], j["url"]) for j in out["jobs"]], [("ashby:acme:1", "https://jobs.ashbyhq.com/acme/3")])
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["variant"], "ashby:acme:3")
+
+    def test_an_unverified_variant_keeps_the_role_unverified_not_closed(self):
+        home = make_home([self.ROW])
+        with mock.patch.object(fetch_jd, "check", self.fake_check(set(), unsure={"2"})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual((out["closed"], out["jobs"]), ([], []))
+        self.assertEqual([u["key"] for u in out["unverified"]], ["ashby:acme:1"])
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
+
+    def brief_home(self, row):
+        home = make_home([row])
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"schema": 1, "target_roles": ["Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
+                       "needs_sponsorship": "no", "base_pay_floor": None}, f)
+        return home
+
+    def test_a_shown_posting_that_no_longer_fits_tries_the_other_variants(self):
+        home = self.brief_home(self.ROW)
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"1", "2"}, scope={"1": ["GB"]})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual([j["url"] for j in out["jobs"]], ["https://jobs.ashbyhq.com/acme/2"])
+
+    def test_an_unverified_shown_posting_tries_the_other_variants(self):
+        home = make_home([self.ROW])
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"2"}, unsure={"1"})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual(([j["url"] for j in out["jobs"]], out["unverified"]), (["https://jobs.ashbyhq.com/acme/2"], []))
+
+    def test_at_most_three_other_variants_are_tried(self):
+        row = dict(self.ROW, variants=[dict(self.ROW["variants"][0])] + [
+            {"key": "ashby:acme:%d" % i, "ats": "ashby", "slug": "acme", "job_id": str(i), "url": "u%d" % i}
+            for i in range(2, 8)])
+        calls = []
+        closed = self.fake_check(set())
+        with mock.patch.object(fetch_jd, "check", lambda r, b: calls.append(r["job_id"]) or closed(r, b)):
+            run(["--keys", "ashby:acme:1"], make_home([row]))
+        self.assertEqual(calls, ["1", "2", "3", "4"])
+
+    def test_a_group_cut_short_by_the_cap_is_never_called_closed(self):
+        row = dict(self.ROW, variants=[dict(self.ROW["variants"][0])] + [
+            {"key": "ashby:acme:%d" % i, "ats": "ashby", "slug": "acme", "job_id": str(i), "url": "u%d" % i}
+            for i in range(2, 8)])
+        home = make_home([row])
+        with mock.patch.object(fetch_jd, "check", self.fake_check(set())):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual(out["closed"], [])
+        self.assertEqual(out["unverified"], [{"key": "ashby:acme:1", "error": "not checked: 3 more variants of this role"}])
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
+
+    def test_a_fallback_variant_never_borrows_the_shown_postings_description(self):
+        row = dict(self.ROW, description_text="The shown posting's own text.")
+        seen = []
+
+        def check(r, budget):  # like USAJOBS: the live record has no text, so check() falls back to the row's
+            seen.append(r.get("description_text"))
+            return {"status": "closed", "full": None, "trimmed": None, "comp": None, "error": None}, None
+        with mock.patch.object(fetch_jd, "check", check):
+            run(["--keys", "ashby:acme:1"], make_home([row]))
+        self.assertEqual(seen, ["The shown posting's own text.", None])
+
+    def test_an_inconclusive_variant_beats_an_open_one_that_no_longer_fits(self):
+        home = self.brief_home(self.ROW)  # the shown posting moved to GB; the other one timed out
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"1"}, unsure={"2"}, scope={"1": ["GB"]})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual((out["jobs"], [u["key"] for u in out["unverified"]]), ([], ["ashby:acme:1"]))
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
+
+    def test_closed_only_when_every_variant_is_closed(self):
+        home = make_home([self.ROW])
+        with mock.patch.object(fetch_jd, "check", self.fake_check(set())):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual(([c["key"] for c in out["closed"]], out["jobs"]), (["ashby:acme:1"], []))
+
+
 class SearchSourceLiveCheckTest(unittest.TestCase):
     def test_workday_open_with_description_and_closed(self):
         sharp = sharp_open()

@@ -3,9 +3,34 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
-## [Unreleased]
+## [0.4.0] — 2026-10-19
 
-**Rerun memory (M9, part 1).** A rerun no longer calls every role it screened last time "new".
+**Rerun memory (M9).** A rerun shows one ranked list with new and changed roles marked, and reuses
+what it already judged instead of reading the same postings again.
+
+### Changed
+- A rerun now shows **one ranked list**: roles shown before, roles screened before but never
+  shown, saved roles and new or changed ones, in the rubric's order. Badges mark what moved and
+  never change the order: **NEW** (never shown before), **CHANGED** (shown before, and the posting
+  changed: before → after), **SAVED**. A role shown before and unchanged has no badge and says
+  "First shown <date>". Applied and dismissed roles stay out of the table (`--all` brings them
+  back); applied roles keep their "still open" list.
+- The rerun coverage line reads "Checked N of M company job boards: K new or changed since last
+  time · showing top R of J matches." With nothing new, the full list still shows, under one line:
+  "No new or changed postings since last time."
+- The report has the same order and badges, a "New only" filter, and "first shown" and "what
+  changed" in each role's details.
+
+### Added
+- Cached judgments are reused. filter.py marks a role `cached` when seen.json holds a judgment for
+  this posting and brief; the read budget (up to 40 descriptions) skips those and goes to new and
+  changed roles first. `fetch_jd.py --check-only` live-checks the cached roles without printing
+  their descriptions, and `state.py judged carry` writes their judgments into the run's
+  results.json. Every carried quote is checked again against this run's description; a carried
+  role that fails is judged again from scratch.
+- `state.py judged rank` puts results.json in the rubric's order (total, then exact remote scope,
+  then newest) and decides which roles are shown (no failed gate, fit 5 or more, within the result
+  count).
 
 ### Fixed
 - `seen record` used to remember only the roles it showed, so every role an earlier run read and

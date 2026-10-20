@@ -61,9 +61,13 @@ One row per judged job, in your ranked order, including jobs you excluded (they 
 - 1–3 `why` items and 0–2 `risk` items per row. Keep `text` short and plain.
 - When the profile has `work_style`, shown rows also get `style` items (§4).
 
-Then run `python3 scripts/cite_check.py < results.json`. If it reports failures, fix or delete each
-failed claim (re-quote from the description, or drop the claim) and run it again. Never show a
+Then run `python3 scripts/state.py judged rank` (it applies §2's order and sets `show`) and
+`python3 scripts/cite_check.py < results.json`. If it reports failures, fix or delete each
+failed claim (re-quote from the description, or drop the claim) and run both again. Never show a
 claim that failed, and never edit a quote to match — re-read the description instead.
+A `"carried": true` row is an earlier run's judgment, reused only while the posting, its live text
+and the brief are unchanged; cite_check re-verifies its quotes against this run's description, and
+one that fails is judged again from scratch, never patched.
 
 ## 4. Work-style signals (display only)
 

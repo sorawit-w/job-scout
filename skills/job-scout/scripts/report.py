@@ -163,18 +163,26 @@ def _short_date(iso, run_year):
     return day if m.group(1) == run_year else "%s, %s" % (day, m.group(1))
 
 
-def _fit(row):
-    """Fit N/8: the sum of the four scores when all are there (one source of truth), else the row's total."""
-    scores = row.get("scores") if isinstance(row.get("scores"), dict) else {}
-    parts = [scores.get(k) for k in SCORES]
-    return sum(parts) if all(isinstance(v, int) for v in parts) else row.get("total")
+_fit = state.fit  # Fit N/8: the sum of the four scores, the same number judged rank sorts by
 
 
 def _excluded_reason(row):
-    failed = [g for g in GATES if (row.get("gates") or {}).get(g) == "fail"]
+    gates = row.get("gates") if isinstance(row.get("gates"), dict) else {}
+    failed = [g for g in GATES if gates.get(g) == "fail"]
     if failed:
         return "%s gate failed" % failed[0]
     return "fit %s/8, below 5" % _fit(row) if _fit(row) is not None else "not a fit"
+
+
+BADGES = ("NEW", "CHANGED", "SAVED")
+
+
+def _badges(cand, rerun):
+    """filter.py's badges (rerun only, never used for rank); a candidates.json from before badges falls back
+    to its state."""
+    if isinstance(cand.get("badges"), list):
+        return [b for b in cand["badges"] if b in BADGES]
+    return [{"new": "NEW", "changed": "CHANGED"}[cand["state"]]] if rerun and cand.get("state") in ("new", "changed") else []
 
 
 def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
@@ -187,6 +195,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     results = files.get("results") if isinstance(files.get("results"), dict) else None
     rows = [r for r in (results or {}).get("rows") or [] if isinstance(r, dict)]
     roles, excluded, skipped, used = [], [], [], set()
+    matches = 0  # rows that could be shown: no failed gate, fit 5+ (the rest are cut by result_count)
     for row in rows:
         key = row.get("key")
         if key in used:
@@ -199,6 +208,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             continue
         base = {"key": key, "title": str(job.get("title") or "Untitled role"),
                 "company": str(job.get("company") or "")}
+        matches += state.eligible(row)  # what judged rank counts
         if not row.get("show"):
             excluded.append(dict(base, reason=_excluded_reason(row)))
             continue
@@ -221,7 +231,8 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             since_short=since_short,
             scores={s: scores.get(s) for s in SCORES}, gates={g: gates.get(g) or "unknown" for g in GATES},
             why=_items(row.get("why")), risk=_items(row.get("risk")), style=_style(row.get("style"), wants),
-            state=cand.get("state") if rerun and cand.get("state") in ("new", "changed") else None,  # all new on a first run
+            badges=_badges(cand, rerun), first_shown=_short_date(str(cand.get("first_shown") or ""), (run_id or "")[:4]),
+            changes=[c for c in cand.get("changes") or [] if isinstance(c, str)],
             flags=[f for f in (job["flags"] if isinstance(job.get("flags"), list) else cand.get("flags") or [])
                    if isinstance(f, str)]))  # an empty live list means the live check cleared them
     curs = collections.Counter(r["pay_cur"] for r in roles if r["pay_sort"] is not None and r["pay_cur"])
@@ -255,8 +266,11 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             src = by_key.get(k) or seen.get(k)
             if isinstance(src, dict):
                 entry = seen.get(k) if isinstance(seen.get(k), dict) else {}
+                checked = jds.get(k) if isinstance(jds.get(k), dict) else {}
+                live = checked.get("job") if checked.get("status") == "open" and isinstance(checked.get("job"), dict) else {}
                 out.append({"title": str(src.get("title") or k), "company": str(src.get("company") or ""),
-                            "url": _safe_url(src.get("url")), "status": status or entry.get("status")})
+                            "url": _safe_url(live.get("url") or src.get("url")),  # the posting the live check found open
+                            "status": status or entry.get("status")})
         return out
 
     return {
@@ -264,6 +278,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
         "excluded": excluded[:MAX_EXCLUDED], "skipped": skipped, "rerun": rerun,
         "coverage": {"probed": boards.get("probed"), "available": boards.get("available"),
                      "moved": sum(1 for c in cands.values() if c.get("state") in ("new", "changed")),
+                     "matches": matches,
                      "open": sum(1 for e in jds.values()
                                  if isinstance(e, dict) and e.get("status") == "open" and not e.get("dropped"))},
         "top_removed": {"reason": REASON_TEXT.get(top, top), "n": removed[top], "of": counts.get("input")} if top else None,
@@ -382,6 +397,7 @@ td.det-cell{padding:0}
 .mini{width:100%;table-layout:fixed;border-collapse:collapse;background:var(--table);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .mini td{border-top:1px solid var(--line);color:var(--muted);overflow-wrap:anywhere}.mini tr:first-child td{border-top:0}.mini td:first-child{color:var(--ink);font-weight:600}
 .empty{background:var(--table);border:1px solid var(--line);border-radius:10px;padding:16px;margin:20px 0 0}
+.nothing-new{margin:16px 0 0;font-weight:600}
 .toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--canvas);border-radius:6px;padding:6px 12px;font-size:13px;max-width:calc(100vw - 32px)}
 .toast input{margin-left:8px;min-width:0;width:22em;max-width:100%;background:var(--canvas);color:var(--ink);border:0;border-radius:4px;padding:3px 6px}
 footer{margin-top:32px;font-size:13px;color:var(--muted)}footer p{margin:0 0 4px}
@@ -463,9 +479,9 @@ if(nx===null&&ny===null)c=0;else if(nx===null)return 1;else if(ny===null)return 
 return (asc?c:-c)||a.dataset.rank-b.dataset.rank;}).forEach(function(r){table.appendChild(r);});});});
 var f=d.getElementById('filter'),count=d.getElementById('count'),quick={};
 function apply(){var q=f.value.trim().toLowerCase(),n=0;
-rows.forEach(function(r){var hit=(!q||r.dataset.text.indexOf(q)>=0)&&(!quick.top||r.dataset.top==='1')&&(!quick.clean||r.dataset.flags==='0');
+rows.forEach(function(r){var hit=(!q||r.dataset.text.indexOf(q)>=0)&&(!quick.top||r.dataset.top==='1')&&(!quick.clean||r.dataset.flags==='0')&&(!quick.new||r.dataset.new==='1');
 r.hidden=!hit;if(hit)n++;});
-count.textContent=q||quick.top||quick.clean?n+' of '+rows.length+' shown':'';if(!split)return;var v=visible();
+count.textContent=q||quick.top||quick.clean||quick.new?n+' of '+rows.length+' shown':'';if(!split)return;var v=visible();
 if(!v.length){if(sel){var det=pane.querySelector('.detail');if(det)home[det.id].appendChild(det);setOpen(sel,false);sel=null;}pane.classList.add('is-empty');}
 else{pane.classList.remove('is-empty');if(!sel||sel.hidden)select(v[0],true);}}
 f.addEventListener('input',apply);
@@ -558,6 +574,7 @@ def _detail(r):
     checks = ['<li class="g-%s">%s<span>%s</span></li>' % (_e(v), _icon(GATE_ICON.get(v, "question")), _e(_gate_label(g, v)))
               for g, v in ((g, r["gates"][g]) for g in GATES) if v != "pass"]
     checks += ["<li>%s<span>%s</span></li>" % (_icon("alert"), _e(f)) for f in r["flags"]]
+    checks += ["<li>%s<span>Changed since last time: %s</span></li>" % (_icon("alert"), _e(c)) for c in r["changes"]]
     checks += ["<li>%s<span>Work style: %s doesn't match%s</span></li>" % (
         _icon("x"), _e(STYLE_TOPIC[i["topic"]].lower()), _e(" (you want %s)" % i["want"]) if i["want"] else "")
         for i in r["style"] if i["verdict"] == "conflict"]
@@ -568,7 +585,8 @@ def _detail(r):
         _e("%s %d (%s)%s" % (verb, r["rank"], name, ": " if verb == "dismiss" else "")), verb.capitalize())
         for verb in ("save", "applied", "dismiss"))
     meta = " · ".join(_e(p) for p in (r["company"], r["where"], r["pay"],
-                                       "open since %s" % r["since_short"] if r["since_short"] else "") if p)
+                                       "open since %s" % r["since_short"] if r["since_short"] else "",
+                                       "first shown %s" % r["first_shown"] if r["first_shown"] else "") if p)
     return (
         '<div class="detail" id="d%d" role="region" aria-labelledby="b%d">'
         '<div class="dhead"><h2 dir="auto">%s</h2><p dir="auto">%s</p></div>'
@@ -593,13 +611,13 @@ def _row(r):
     fit = ('<span class="fit t-%s"><span class="segs" aria-hidden="true">%s</span><b>%d/8</b></span>' % (
         _tier(total), "".join('<span%s></span>' % (' class="on"' if k < total else "") for k in range(8)), total)
         if total is not None else '<span class="fit">–</span>')
-    tag = {"new": "NEW", "changed": "CHANGED"}.get(r["state"], "")
+    tags = "".join('<span class="tag">%s</span>' % b for b in r["badges"])
     n = len(r["flags"])
     flagnote = '<span class="flagnote">%s%d flag%s</span>' % (_icon("alert"), n, "" if n == 1 else "s") if n else ""
     text = " ".join((r["title"], r["company"], r["where"], r["pay"])).lower()
     return (
         '<tbody class="role" data-rank="%d" data-fit="%s" data-top="%d" data-flags="%d" data-pay="%s" data-since="%s" '
-        'data-title="%s" data-where="%s" data-company="%s" data-text="%s">'
+        'data-title="%s" data-where="%s" data-company="%s" data-text="%s" data-new="%d">'
         '<tr class="sum"><td class="c-rank">%d</td>'
         '<td class="c-role"><button type="button" class="toggle" id="b%d" aria-expanded="true" aria-controls="d%d">'
         '%s<span dir="auto">%s</span></button>%s%s'
@@ -611,8 +629,7 @@ def _row(r):
     ) % (r["rank"], "" if total is None else total, 1 if total is not None and total >= 7 else 0, n,
          "" if r["pay_sort"] is None else r["pay_sort"],
          _e(r["since"].replace("-", "")), _e(r["title"].lower()), _e(r["where"].lower()), _e(r["company"]), _e(text),
-         r["rank"], r["rank"], r["rank"], _icon("chev", "i chev"), _e(r["title"]),
-         '<span class="tag">%s</span>' % tag if tag else "", flagnote,
+         "NEW" in r["badges"], r["rank"], r["rank"], r["rank"], _icon("chev", "i chev"), _e(r["title"]), tags, flagnote,
          _e(r["company"]) or "company not listed", _e(r["where"]), _e(r["pay_short"]),
          _e(r["where"]), _e(r["pay_short"]), fit, _e(r["since_short"]) or "–", _detail(r))
 
@@ -632,9 +649,10 @@ def render(view):
     cov = view["coverage"]
     if cov.get("probed") is None:
         coverage = ""
-    elif view["rerun"]:  # output-format §1: on a rerun, count what moved, not what is open
-        coverage = "Checked %s of %s company job boards — %d new or changed since last time." % (
-            _num(cov["probed"]), _num(cov["available"]), cov["moved"])
+    elif view["rerun"]:  # output-format §1: on a rerun, count what moved, then how much of the list is shown
+        coverage = "Checked %s of %s company job boards: %d new or changed since last time%s." % (
+            _num(cov["probed"]), _num(cov["available"]), cov["moved"],
+            " · showing top %d of %d matches" % (len(roles), max(cov["matches"], len(roles))) if roles else "")
     else:
         coverage = ("Checked %s of %s company job boards and read %d open role%s in full. "
                     "Best for tech and startup roles." % (_num(cov["probed"]), _num(cov["available"]), cov["open"],
@@ -645,6 +663,8 @@ def render(view):
     if meta:
         parts.append('<p class="meta">%s</p>' % "".join("<span>%s</span>" % _e(m) for m in meta))
     parts.append('<p class="coverage">%s</p></header>' % coverage)
+    if roles and view["rerun"] and not cov.get("moved"):  # nothing new: the full list still shows, under one line
+        parts.append('<p class="nothing-new">No new or changed postings since last time.</p>')
     if roles:
         def th(key, label, cls, sort=True, current=False):
             if not sort:
@@ -655,6 +675,7 @@ def render(view):
             '<button type="button" class="chip" data-quick="%s" aria-pressed="false" title="%s">%s%s '
             '<span class="n">%d</span></button>' % (k, hint, _icon("check"), label, c)
             for k, label, hint, c in (
+                ("new", "New only", "Roles you have not been shown before", sum(1 for r in roles if "NEW" in r["badges"])),
                 ("top", "Top fit", "Fit 7 or 8 of 8", sum(1 for r in roles if isinstance(r["total"], int) and r["total"] >= 7)),
                 ("clean", "No flags", "Roles with no flags", sum(1 for r in roles if not r["flags"]))) if c)
         parts.append(
@@ -674,7 +695,7 @@ def render(view):
     else:
         top = view["top_removed"]
         if view["rerun"] and not view["coverage"]["moved"]:  # no new or changed candidates, whatever else was removed
-            msg = "Nothing new since last time."
+            msg = "No new or changed postings since last time."
         elif top:
             msg = "No roles matched your brief. Most jobs were removed by %s (%s of %s)." % (
                 _e(top["reason"]), _e(top["n"]), _e(top["of"]))
