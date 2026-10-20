@@ -751,10 +751,11 @@ def rank(run_dir):
     return {"shown": shown, "matches": sum(1 for (_, ok), _ in keyed if ok)}
 
 
-def mark(key, status, reason=None, now=None, aliases=()):
+def mark(key, status, reason=None, now=None, aliases=(), title=None, company=None, url=None):
     """Set a role's status (creating the entry if record never saw it), adding any other posting keys
-    as aliases (the claude.ai paste block restores them). ValueError on bad input, including "judged",
-    which only `seen record` sets."""
+    as aliases. title/company/url fill only fields the entry lacks: the claude.ai paste block restores
+    them, and record's fresher values win. ValueError on bad input, including "judged", which only
+    `seen record` sets."""
     if status not in MARK_STATUSES:
         raise ValueError("status must be one of %s" % "/".join(MARK_STATUSES))
     for k in [key] + list(aliases):
@@ -762,12 +763,18 @@ def mark(key, status, reason=None, now=None, aliases=()):
             raise ValueError("bad job key %r (want ats:slug:job_id)" % (k,))
     if reason is not None and (not isinstance(reason, str) or len(reason) > MAX_REASON):
         raise ValueError("reason must be a string of at most %d characters" % MAX_REASON)
+    for name, v in (("title", title), ("company", company), ("url", url)):
+        if v is not None and not (isinstance(v, str) and 0 < len(v) <= MAX_REASON):
+            raise ValueError("%s must be a non-empty string of at most %d characters" % (name, MAX_REASON))
+    if url is not None and not re.match(r"https?://", url, re.I):
+        raise ValueError("url must start with http:// or https://")
     seen = load_seen()
     target = seen_index(seen).get(key, key)
     e = seen.setdefault(target, {"first_seen": now_iso(now), "last_seen": now_iso(now), "closed_at": None,
                                  "sig": None, "aliases": []})
     e.update(status=status, reason=reason)
     _merge_aliases(e, target, list(aliases))
+    e.update((f, v) for f, v in (("title", title), ("company", company), ("url", url)) if v and not e.get(f))
     write_json_atomic(seen_path(), seen)
     return dict(e, key=target)
 
@@ -788,7 +795,7 @@ def seen_summary():
 
 
 def _seen_cli(args):
-    """seen diff|record [--run] · seen mark KEY STATUS [--reason] [--aliases] · seen show. Exit 0 ok, 1 bad input
+    """seen diff|record [--run] · seen mark KEY STATUS [--reason] [--aliases] [--title] [--company] [--url] · seen show. Exit 0 ok, 1 bad input
     (including an unreadable seen.json, which is left unchanged), 2 no run."""
     try:
         if args.action in ("diff", "record"):
@@ -819,7 +826,8 @@ def _seen_cli(args):
                                             "status": seen[k].get("status"), "url": seen[k].get("url")}
                                            for k in out["closed"]])
         elif args.action == "mark":
-            e = mark(args.key, args.status, args.reason, aliases=[a for a in (args.aliases or "").split(",") if a])
+            e = mark(args.key, args.status, args.reason, aliases=[a for a in (args.aliases or "").split(",") if a],
+                     title=args.title, company=args.company, url=args.url)
             out = {"ok": True, "key": e["key"], "status": e["status"], "reason": e["reason"]}
         else:
             out = seen_summary()
@@ -832,7 +840,7 @@ def _seen_cli(args):
 
 def main(argv=None):
     """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout);
-    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] [--aliases K,K] · seen show;
+    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] [--aliases K,K] [--title T] [--company C] [--url U] · seen show;
     state.py judged carry|rank [--run latest] (reuse cached judgments; order results.json by the rubric) ·
     judged forget (drop every cached judgment, e.g. after a new resume). Exit 2 = no run."""
     import argparse
@@ -851,6 +859,8 @@ def main(argv=None):
     mark_p.add_argument("status")  # checked by mark(), so a bad status is exit 1, not argparse's 2
     mark_p.add_argument("--reason")
     mark_p.add_argument("--aliases", help="other posting keys of the same role, comma-separated")
+    for field in ("--title", "--company", "--url"):  # restored from a claude.ai paste block
+        mark_p.add_argument(field)
     seen_sub.add_parser("show")
     judged = sub.add_parser("judged")
     judged.add_argument("action", choices=("carry", "rank", "forget"))

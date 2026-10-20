@@ -146,7 +146,7 @@ see [Where job-scout remembers](#where-job-scout-remembers).
 | Where you run it | What it remembers between chats |
 |---|---|
 | Claude Code, Codex | Everything, in `~/.job-scout/`: your brief, the roles you have seen, saved, applied to or dismissed, and the newest 3 runs. |
-| claude.ai | Nothing persists between chats. At the end of a run the skill gives you a block with your brief and your saved, applied and dismissed roles. Paste it into your next chat to pick up where you left off. Roles you only saw are not in it, so they can show as new again. |
+| claude.ai | Nothing persists between chats. At the end of a run the skill gives you a block with your brief and your saved, applied and dismissed roles that are still open. Paste it into your next chat to pick up where you left off. Roles you only saw are not in it, so they can show as new again. |
 
 ## Coverage limits
 

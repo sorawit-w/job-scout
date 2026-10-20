@@ -29,8 +29,7 @@ The block you offered at the end of chat 1, pasted in full, followed by "anythin
 
 ### Command outputs (use exactly)
 `python3 scripts/state.py profile save --stdin` → {"ok": true, "saved": true}
-`python3 scripts/state.py seen mark greenhouse:linear:101 saved` → {"ok": true}
-`python3 scripts/state.py seen mark lever:acme:3c dismissed --aliases=lever:acme:3d` → {"ok": true}
+`python3 scripts/state.py seen mark <key> <status> ...` (any flags) → {"ok": true}
 The search then runs as a rerun with no new roles: filter.py keeps Linear (SAVED), Vercel and Ramp come back NEW, Acme is not in the list.
 `python3 scripts/state.py profile show` (at the end) → the same profile as in chat 1
-`python3 scripts/state.py seen show` (at the end) → {"counts": {"saved": 1, "dismissed": 1, "seen": 2}, "saved": [{"key": "greenhouse:linear:101", "aliases": [], "title": "Senior Frontend Engineer", "company": "Linear", "url": "https://jobs.linear.app/101", "closed": false}], "applied": [], "dismissed": [{"key": "lever:acme:3c", "aliases": ["lever:acme:3d"], "title": null, "company": null, "url": null, "closed": false}]}
+`python3 scripts/state.py seen show` (at the end) → {"counts": {"saved": 1, "dismissed": 1, "seen": 2}, "saved": [{"key": "greenhouse:linear:101", "aliases": [], "title": "Senior Frontend Engineer", "company": "Linear", "url": "https://jobs.linear.app/101", "closed": false}], "applied": [], "dismissed": [{"key": "lever:acme:3c", "aliases": ["lever:acme:3d"], "title": "Staff Frontend Engineer", "company": "Acme", "url": null, "closed": false}]}

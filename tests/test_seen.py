@@ -887,14 +887,30 @@ class SeenCliTest(HomeCase):
                          [("ashby:acme:1", ["ashby:acme:5"], "Senior Frontend Engineer", "Acme")])
         state.seen_path().unlink()  # a new claude.ai chat: nothing persisted
         # restoring the pasted block; the primary posting has since closed, so only variant 5 is listed
-        self.assertEqual(self.cli(["seen", "mark", "ashby:acme:1", "dismissed", "--aliases", "ashby:acme:5"])[0], 0)
-        self.assertEqual(state.job_state(job("ashby:acme:5"), state.load_seen()), "dismissed")
+        code, _ = self.cli(["seen", "mark", "ashby:acme:1", "applied", "--aliases", "ashby:acme:5",
+                            "--title", "Senior Frontend Engineer", "--company", "Acme",
+                            "--url", "https://jobs.ashbyhq.com/acme/1"])
+        self.assertEqual(code, 0)
+        self.assertEqual(state.job_state(job("ashby:acme:5"), state.load_seen()), "applied")
+        restored = self.cli(["seen", "show"])[1]["applied"]  # the next block is built from this
+        self.assertEqual([(d["key"], d["aliases"], d["title"], d["company"], d["url"]) for d in restored],
+                         [("ashby:acme:1", ["ashby:acme:5"], "Senior Frontend Engineer", "Acme",
+                           "https://jobs.ashbyhq.com/acme/1")])
 
-    def test_mark_rejects_a_bad_alias_and_writes_nothing(self):
-        code, out = self.cli(["seen", "mark", "ashby:acme:1", "saved", "--aliases", "not a key"])
-        self.assertEqual(code, 1)
-        self.assertIn("bad job key", out["error"])
-        self.assertFalse(state.seen_path().exists())
+    def test_mark_rejects_bad_restore_fields_and_writes_nothing(self):
+        for flags in (["--aliases", "not a key"], ["--url", "javascript:alert(1)"], ["--title", ""],
+                      ["--company", "x" * 201]):
+            code, out = self.cli(["seen", "mark", "ashby:acme:1", "saved"] + flags)
+            self.assertEqual(code, 1, flags)
+            self.assertIn("error", out)
+            self.assertFalse(state.seen_path().exists())
+
+    def test_mark_never_overwrites_what_record_saw(self):
+        state.record(self.make_run([job()], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
+        state.mark("ashby:acme:1", "saved", title="Old title", company="Old Co", url="https://old.example/1")
+        e = state.load_seen()["ashby:acme:1"]
+        self.assertEqual((e["title"], e["company"]), ("Senior Frontend Engineer", "Acme"))
+        self.assertEqual(e["url"], "https://old.example/1")  # record had no link for this job, so the pasted one fills it
 
 
 if __name__ == "__main__":

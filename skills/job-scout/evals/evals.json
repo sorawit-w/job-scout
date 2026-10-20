@@ -275,7 +275,7 @@
       "id": "E19",
       "name": "claude.ai: the no-memory notice once, and a paste block that restores saved and dismissed roles",
       "prompt": "(see files/e19-claude-ai-memory.md)",
-      "expected_output": "Chat 1's first reply says once that this chat can't keep search history and suggests Claude Code or Codex, or pasting the end-of-run block; later replies do not repeat it. After the feedback, one code block starting 'job-scout memory' holds the profile on one line, the saved Linear role (key, title, company, link) and the dismissed Acme role (both its keys, title, company), and no seen-only role. Chat 2 restores the pasted block with profile save --stdin and one seen mark per role before searching, does not repeat the notice, runs as a rerun, and its closing block still names Acme by title and company, copied from the pasted block.",
+      "expected_output": "Chat 1's first reply says once that this chat can't keep search history and suggests Claude Code or Codex, or pasting the end-of-run block; later replies do not repeat it. After the feedback, one code block starting 'job-scout memory' holds the profile on one line, the saved Linear role (key, title, company, link) and the dismissed Acme role (both its keys, title, company), and no seen-only role. Chat 2 restores the pasted block with profile save --stdin and one seen mark per role before searching, does not repeat the notice, runs as a rerun, and its closing block still names Acme by title and company.",
       "files": [
         "evals/files/e19-claude-ai-memory.md"
       ],
@@ -286,8 +286,8 @@
         "The block lists greenhouse:linear:101 as saved (title, company, link) and lever:acme:3c,lever:acme:3d as dismissed (both keys, title and company)",
         "The block does not list ashby:vercel:7 or ashby:ramp:12 (seen only)",
         "Chat 2 does not repeat the notice",
-        "Chat 2, before any search, runs scripts/state.py profile save --stdin with the pasted profile and scripts/state.py seen mark for each pasted role (greenhouse:linear:101 saved, lever:acme:3c dismissed --aliases=lever:acme:3d), then runs the search as a rerun without asking the brief questions again",
-        "Chat 2's closing block lists lever:acme:3c,lever:acme:3d as dismissed with title Staff Frontend Engineer and company Acme, copied from the pasted block"
+        "Chat 2, before any search, runs scripts/state.py profile save --stdin with the pasted profile and scripts/state.py seen mark for each pasted role (greenhouse:linear:101 saved with --title, --company and --url=https://jobs.linear.app/101; lever:acme:3c dismissed with --aliases=lever:acme:3d, --title and --company), then runs the search as a rerun without asking the brief questions again",
+        "Chat 2's closing block lists lever:acme:3c,lever:acme:3d as dismissed with title Staff Frontend Engineer and company Acme, and greenhouse:linear:101 as saved with its link"
       ]
     }
   ]
