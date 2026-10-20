@@ -3,6 +3,14 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [Unreleased]
+
+### Changed
+- The weekly seed check merges its own PR when the update is routine: the tests pass on the
+  updated list, fewer than 1% of boards change status, live boards drop by less than 1%, and no
+  hiring tool loses more than 5% of its live boards (`scripts/seed_guard.py`). Anything else stays
+  open with a comment saying why.
+
 ## [0.4.0] — 2026-10-19
 
 **Rerun memory (M9).** A rerun shows one ranked list with new and changed roles marked, and reuses
