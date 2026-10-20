@@ -3,7 +3,10 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
-## [Unreleased]
+## [0.5.1] — 2026-10-20
+
+**Clearer HTML report.** New roles stand out at a glance, and the "Close but excluded" list says
+why each role was left out.
 
 ### Changed
 - **HTML report badges.** NEW, CHANGED and SAVED are now real badges instead of grey text: NEW is a
