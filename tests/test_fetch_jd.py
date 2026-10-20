@@ -412,6 +412,17 @@ class VariantFallbackTest(unittest.TestCase):
             run(["--keys", "ashby:acme:1"], make_home([row]))
         self.assertEqual(calls, ["1", "2", "3", "4"])
 
+    def test_a_group_cut_short_by_the_cap_is_never_called_closed(self):
+        row = dict(self.ROW, variants=[dict(self.ROW["variants"][0])] + [
+            {"key": "ashby:acme:%d" % i, "ats": "ashby", "slug": "acme", "job_id": str(i), "url": "u%d" % i}
+            for i in range(2, 8)])
+        home = make_home([row])
+        with mock.patch.object(fetch_jd, "check", self.fake_check(set())):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual(out["closed"], [])
+        self.assertEqual(out["unverified"], [{"key": "ashby:acme:1", "error": "not checked: 3 more variants of this role"}])
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
+
     def test_closed_only_when_every_variant_is_closed(self):
         home = make_home([self.ROW])
         with mock.patch.object(fetch_jd, "check", self.fake_check(set())):

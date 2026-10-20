@@ -169,10 +169,13 @@ def _dropped(fresh, removed_by):
     return None
 
 
+def _all_others(row):
+    return [v for v in row.get("variants") or [] if isinstance(v, dict) and v.get("key") not in (None, row["key"])]
+
+
 def _others(row):
     """The grouped role's other variants, at most MAX_FALLBACK of them."""
-    return [v for v in row.get("variants") or []
-            if isinstance(v, dict) and v.get("key") not in (None, row["key"])][:MAX_FALLBACK]
+    return _all_others(row)[:MAX_FALLBACK]
 
 
 def check_group(row, budget, profile):
@@ -180,7 +183,8 @@ def check_group(row, budget, profile):
     set of postings (state.live_split closes it only when every one is gone): check the shown posting,
     then its other variants in turn, until one is open and still fits the brief. That one wins
     ("variant" names it when it is not the shown one). Failing that: the first open one, dropped; else
-    the first inconclusive one (unverified); else closed. Raises net.BudgetExceeded."""
+    the first inconclusive one (unverified); else closed — but unverified when the cap left variants
+    unchecked, since one of them may still be open. Raises net.BudgetExceeded."""
     tried = []
     for r, vkey in [(row, None)] + [(dict(dict(row, **v), key=row["key"]), v["key"]) for v in _others(row)]:
         e, live = check(r, budget)
@@ -193,8 +197,13 @@ def check_group(row, budget, profile):
             if not dropped:
                 return e, live, r, fresh, None
         tried.append((e, live, r, fresh, dropped))
-    return (next((t for t in tried if t[0]["status"] == "open"), None)
-            or next((t for t in tried if t[0]["status"] != "closed"), tried[0]))
+    found = (next((t for t in tried if t[0]["status"] == "open"), None)
+             or next((t for t in tried if t[0]["status"] != "closed"), None))
+    unchecked = len(_all_others(row)) - len(_others(row))
+    if found or not unchecked:
+        return found or tried[0]
+    e, live, r, _, _ = tried[0]
+    return dict(e, status="unverified", error="not checked: %d more variants of this role" % unchecked), live, r, None, None
 
 
 def main(argv=None):
