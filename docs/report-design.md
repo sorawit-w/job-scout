@@ -5,7 +5,9 @@ description: >-
   Design tokens and layout spec for the per-run HTML report written by
   skills/job-scout/scripts/report.py (CSS and JS are constants in that file). Operate-mode
   surface: a master–detail table. Shaped with impeccable (M7 redesign), refined after a
-  Codex + Antigravity design critique (design pass v2); audited with screenwright.
+  Codex + Antigravity design critique (design pass v2); audited with screenwright. Badge pass v3
+  (2026-10-20): NEW/CHANGED/SAVED became pills, merged from blind impeccable, screenwright and
+  taste-skill runs on the same report.
 colors:
   primary: "#0f766e"        # teal: top-fit segments, selected row title, focus ring, sorted mark, primary button
   secondary: "#52525b"      # muted text
@@ -25,6 +27,8 @@ colors:
   warn-bg: "#fef3c7"        # "Check first" box, unknown gate badge
   warn-ink: "#92400e"
   warn-line: "#f59e0b"
+  new-bg: "#1d4ed8"         # blue: the NEW pill fill, CHANGED outline and text, "N new to you", New only chip dot
+  new-ink: "#ffffff"        # text on the NEW pill (6.7:1)
   dark:
     primary: "#5eead4"
     secondary: "#a1a1aa"
@@ -44,6 +48,8 @@ colors:
     warn-bg: "#2e1f05"
     warn-ink: "#fbbf24"
     warn-line: "#a16207"
+    new-bg: "#60a5fa"
+    new-ink: "#0b1530"
 typography:
   family: "system-ui, -apple-system, Segoe UI, Roboto, sans-serif (one family; numbers use tabular-nums)"
   h1: { size: 20px, weight: 650, tracking: -0.015em }
@@ -86,7 +92,10 @@ Neutral gray carries the page. Teal is spent on: top-fit segments and pill, the 
 (accent-soft background, title in accent-ink), the focus ring, the sorted-column mark, pressed
 quick-filter chips, and the one primary button ("Open posting"). Green, amber and red appear only
 on gates, risk marks, flags and the "Check first" box, always with an icon and a word, so no
-meaning rests on color. Print resets every token to the light palette.
+meaning rests on color. Blue is the one "new to you" hue and nothing else: the NEW pill, the
+CHANGED outline, the header's "N new to you" pill and the dot on the "New only" chip. It is not
+teal on purpose: a teal NEW pill would blend into the teal fit pill on the same row. Print resets
+every token to the light palette.
 
 ## Typography
 One system sans. Numbers use `tabular-nums`. Hierarchy comes from weight and color, not size:
@@ -95,7 +104,9 @@ titles 600, secondary text muted, column headers 12px/500 faint.
 ## Layout
 
 ### Header (all widths)
-1. `h1`: "N matching roles" ("No matching roles" when empty). No kicker above it.
+1. `h1`: "N matching roles" ("No matching roles" when empty). No kicker above it. On a rerun with
+   NEW roles shown, a blue "N new to you" pill sits beside the h1 (outside it, so the heading
+   text stays the count); N counts the shown rows badged NEW.
 2. One muted meta line: date, then the brief fields, split by 1px vertical rules.
 3. Coverage: "Checked P of A company job boards and read K open roles in full." On a rerun:
    "Checked P of A company job boards: K new or changed since last time · showing top R of J matches."
@@ -115,7 +126,8 @@ Chips combine with the text filter; the count reads "n of N shown" only while a 
 | 1200–1599 | split pane | list 58%: # · Role (second line "company · where") · Pay · Fit · Since — pane 42% (min 380px, max 560px) |
 | ≥ 1600 | split pane | list 60%: # · Role · Where · Pay · Fit · Since — pane 40% (max 640px) |
 
-Pay is right-aligned in ink. Rows sort by any column header; rank stays with its row.
+Pay is right-aligned in ink; "pay not listed" is a missing value and is set muted. Rows sort by
+any column header; rank stays with its row.
 
 ### Fit encoding (tiered)
 Fit is the sum of the four 0–2 scores (one source of truth, not the agent's total). Eight 5×12px
@@ -127,8 +139,12 @@ segments (3px wide below 768) plus "N/8":
 ### Row anatomy
 `# | [chevron] Title  NEW  ! 1 flag | where | pay | fit | since`. The title is the row's button
 (it expands the detail inline, or selects the role in split view; the whole row is clickable).
-NEW / CHANGED / SAVED badges are neutral 11px/600 text, shown only on reruns and never used for rank
-(rank is the rubric's, set by `state.py judged rank`). The detail's meta line adds "first shown <date>"
+NEW / CHANGED / SAVED badges are pills (`.tag .tag-new|changed|saved`; 12px/700, 4px radius,
+1px border, no letter spacing, never wrapping inside): NEW is filled blue, CHANGED is a blue
+outline, SAVED a neutral outline. The word stays on every badge, so no meaning rests on color.
+They show only on reruns and are never used for rank (rank is the rubric's, set by
+`state.py judged rank`). The chevron hangs in the cell's left padding, so a wrapped title, its
+badges and the second line all start on one left edge. The detail's meta line adds "first shown <date>"
 for a role shown before, and "Check first" lists what changed (before → after) for a CHANGED one. Flags show as an amber "1 flag"
 note with an icon. In split view the chevron is hidden.
 
@@ -139,7 +155,8 @@ note with an icon. In split view the chevron is hidden.
 3. "Why it fits" and "Watch for": the reason, then the verbatim quote on its own line, not
    italic, behind a 1px line-strong rule.
 4. Scores (four 2-segment meters) and Gates (passed gates muted with no ": pass"; unknown in an
-   amber badge; failed in red). Stacked inline; two columns in the pane.
+   amber badge; failed in red). Stacked inline; two columns in the pane. Score rows keep the gate
+   rows' 29px height, so the two columns line up.
 5. Actions: "Open posting" (the primary teal button), then the group "Copy reply to chat":
    Save / Applied / Dismiss. Each copies `save 3 (Company, Title)` etc. In the pane the actions
    bar sticks to the pane's bottom edge.
@@ -167,7 +184,8 @@ Compact tables: "Saved or applied, still open", "Closed since last time", "Close
 Only the chevron rotates (90°, 120ms ease-out); none under `prefers-reduced-motion`.
 
 ## Print
-Light tokens, white page, no toolbar, pane or copy buttons. Every detail prints inline under its
+Light tokens, white page, no toolbar, pane or copy buttons. Badges print as ink outlines (browsers
+drop background fills by default, which would leave white text on white). Every detail prints inline under its
 row; a row and its detail never split across pages; "Open posting" prints as plain text with its
 URL.
 

@@ -348,7 +348,7 @@ class ReportTest(unittest.TestCase):
         run([], self.home)
         html = page(self.home)
         self.assertIn("new or changed since last time", html)
-        self.assertIn('<span class="tag">NEW</span>', html)
+        self.assertIn('<span class="tag tag-new">NEW</span>', html)
 
     def test_quotes_show_where_they_are_cut_but_stay_verbatim(self):
         self.assertEqual(report._clip("gap between design intent and the experience we"),
@@ -386,9 +386,11 @@ class ReportTest(unittest.TestCase):
             [row("gh:a:1", 8), row("gh:b:2", 7), row("gh:c:3", 6), row("gh:d:4", 6, show=False)])
         tb = lambda n: html[html.index('<tbody class="role" data-rank="%d"' % n):html.index("</tbody>", html.index(
             '<tbody class="role" data-rank="%d"' % n))]
-        self.assertIn('<span class="tag">NEW</span>', tb(1))
-        self.assertNotIn('class="tag"', tb(2))
-        self.assertIn('<span class="tag">CHANGED</span><span class="tag">SAVED</span>', tb(3))
+        self.assertIn('<span class="tag tag-new">NEW</span>', tb(1))
+        self.assertNotIn('class="tag ', tb(2))
+        self.assertIn('<span class="tag tag-changed">CHANGED</span><span class="tag tag-saved">SAVED</span>', tb(3))
+        # the header leads with what is new to the user: shown NEW roles only (row 4 is not shown)
+        self.assertIn('<h1>3 matching roles</h1><span class="tag tag-new">1 new to you</span></div>', html)
         self.assertEqual([('data-new="1"' in tb(n)) for n in (1, 2, 3)], [True, False, False])
         self.assertIn('data-quick="new" aria-pressed="false" title="Roles you have not been shown before">', html)
         self.assertIn("New only <span class=\"n\">1</span>", html)
@@ -427,7 +429,15 @@ class ReportTest(unittest.TestCase):
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {"gh:old:1": {"status": "seen", "title": "Old", "sig": ""}})
         run([], self.home)
-        self.assertIn('<span class="tag">NEW</span>', page(self.home))
+        self.assertIn('<span class="tag tag-new">NEW</span>', page(self.home))
+
+    def test_missing_pay_is_muted_and_a_first_run_has_no_new_count(self):
+        make_run(self.home, [job("gh:a:1", comp=None), job("gh:b:2")], [row("gh:a:1"), row("gh:b:2")])
+        run([], self.home)
+        html = page(self.home)
+        self.assertIn('<td class="c-pay"><span class="none">pay not listed</span></td>', html)
+        self.assertIn('<td class="c-pay">$190k–$230k</td>', html)  # a real figure stays in ink
+        self.assertNotIn("new to you", html)  # no history: no badges, so no header count
 
     def test_same_run_gives_the_same_bytes(self):
         make_run(self.home, [job("gh:a:1")], [row("gh:a:1")])

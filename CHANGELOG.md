@@ -3,6 +3,15 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [Unreleased]
+
+### Changed
+- **HTML report badges.** NEW, CHANGED and SAVED are now real badges instead of grey text: NEW is a
+  filled blue pill, CHANGED a blue outline, SAVED a neutral outline. On a rerun the header shows
+  "N new to you" next to the title, and the "New only" chip carries the same blue. Wrapped titles
+  keep their badges and second line on one left edge, "pay not listed" is set muted, and badges
+  print as outlines. `docs/report-design.md` is updated to match.
+
 ## [0.5.0] — 2026-10-20
 
 **claude.ai memory and fresher data.** claude.ai users can carry their history into the next chat,
