@@ -189,3 +189,12 @@ Commit: 4316ff4, 37fda05 (merge)
 Status: DONE (pending Codex round 2)
 Notes: skill-evaluator: clean (14/14: E19 8/8, rejected-profile paste with aliases 6/6) at 4316ff4 — 2026-10-20. The Claude Code rerun test (4/4 at 58734fe) was not re-run; the change touches only the claude.ai section.
 Observations: Gate after the merge: 714 tests on 3.14.7 and 3.9.6.
+
+[2026-10-20T12:10:00Z]
+Task: PR #23 review loop — Codex round 2 (link lost after a paste)
+Action: Same failure class as round 1 (restore drops posting data), so re-audited the whole restore path instead of patching one field. seen mark takes --title/--company/--url (fill only missing fields; url must be http(s); 200-char cap) and the restore passes them, so the next block comes from seen show alone (the "copy from the pasted block" rule is gone). Closed roles are left out of the block, since a restored role has no closed_at and would be reported closed again in every chat.
+Files: skills/job-scout/{scripts/state.py,SKILL.md,references/output-format.md,evals/evals.json,evals/files/e19-claude-ai-memory.md}, tests/test_seen.py, README.md, PRIVACY.md, CHANGELOG.md
+Commit: 7aa0c9d
+Status: DONE (pending Codex round 3)
+Notes: skill-evaluator: clean (19/19: E19 8/8, rejected-profile paste 6/6, closed role left out 5/5) at 7aa0c9d — 2026-10-20. Leaving closed roles out of the block is my call, flagged in the PR for the maintainer.
+Observations: Not carried across a paste: a dismissal's reason and a role's first-shown date. When a pasted brief is rejected, the block offered before the user confirms has no profile: line. Gate: 715 tests on 3.14.7 and 3.9.6.
