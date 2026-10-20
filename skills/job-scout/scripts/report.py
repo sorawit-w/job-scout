@@ -297,20 +297,20 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
 
 
 # ---------- render: view -> one HTML string ----------
-# Design spec: docs/report-design.md ("Signal refined", teal accent). One table, master–detail: details expand
+# Design spec: DESIGN.md at the repo root ("Signal refined", teal accent). One table, master–detail: details expand
 # inline under their row; at >= 1200px (JS on) a sticky side pane shows the selected role instead.
 
 CSS = """
 :root{--canvas:#f7f7f8;--table:#fff;--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#e4e4e7;
 --line-strong:#d4d4d8;--hover:#f4f4f5;--accent:#0f766e;--accent-soft:#e6f6f4;--accent-ink:#134e4a;--on-accent:#fff;
---ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;color-scheme:light}
+--ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;--new-bg:#1d4ed8;--new-ink:#fff;color-scheme:light}
 @media (prefers-color-scheme:dark){:root{--canvas:#0e0e10;--table:#161619;--ink:#f4f4f5;--muted:#a1a1aa;
 --faint:#8b8b94;--line:#26262b;--line-strong:#34343a;--hover:#1d1d21;--accent:#5eead4;--accent-soft:#12302e;
 --accent-ink:#ccfbf1;--on-accent:#042f2e;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--warn-bg:#2e1f05;
---warn-ink:#fbbf24;--warn-line:#a16207;color-scheme:dark}}
+--warn-ink:#fbbf24;--warn-line:#a16207;--new-bg:#60a5fa;--new-ink:#0b1530;color-scheme:dark}}
 @media print{:root{--canvas:#fff;--table:#fff;--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#e4e4e7;
 --line-strong:#a1a1aa;--hover:#fff;--accent:#0f766e;--accent-soft:#e6f6f4;--accent-ink:#134e4a;--on-accent:#fff;
---ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;color-scheme:light}}
+--ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;--new-bg:#1d4ed8;--new-ink:#fff;color-scheme:light}}
 *{box-sizing:border-box}
 html{accent-color:var(--accent);scrollbar-color:var(--line-strong) transparent}
 ::selection{background:var(--accent-soft);color:var(--ink)}
@@ -322,8 +322,10 @@ h1{font-size:20px;font-weight:650;margin:0 0 6px;letter-spacing:-.015em}
 h2{font-size:14px;font-weight:600;margin:32px 0 8px}
 .i{width:16px;height:16px;flex:none;vertical-align:-3px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.meta{display:flex;flex-wrap:wrap;gap:2px 0;margin:0 0 4px;color:var(--muted);font-size:13px}
-.meta span+span{border-left:1px solid var(--line-strong);margin-left:10px;padding-left:10px}
+.h1row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 6px}.h1row h1{margin:0}
+.h1row .tag{margin:0;font-size:12px;line-height:20px;padding:0 8px;letter-spacing:0}
+.meta{display:flex;flex-wrap:wrap;gap:2px 0;margin:0 0 4px -11px;overflow:hidden;color:var(--muted);font-size:13px}
+.meta span{border-left:1px solid var(--line-strong);margin:0 10px 0 -1px;padding-left:11px}
 .coverage{margin:0;color:var(--muted);font-size:13px}
 .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:20px 0 10px}
 .quick{display:flex;flex-wrap:wrap;gap:6px}
@@ -331,6 +333,7 @@ input,button{font:inherit;font-size:13px;color:var(--ink)}
 .chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line-strong);background:var(--table);border-radius:999px;padding:3px 12px;cursor:pointer;min-height:30px}
 .chip .n{color:var(--muted)}.chip .i{display:none;width:14px;height:14px}
 .chip:hover{border-color:var(--faint)}
+.chip[data-quick=new]::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--new-bg)}.chip[data-quick=new][aria-pressed=true]::before{display:none}
 .chip[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 .chip[aria-pressed=true] .n{color:var(--accent-ink)}.chip[aria-pressed=true] .i{display:inline}
 .toolbar label{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-left:auto}
@@ -352,17 +355,19 @@ tr.sum:hover{background:var(--hover)}
 tbody.role.is-open tr.sum{background:var(--accent-soft)}
 .c-rank{width:40px;color:var(--muted);text-align:right;padding-right:4px}
 .c-fit{width:132px}.c-since{width:96px;color:var(--muted);white-space:nowrap}
-.c-pay{width:14%;text-align:right;white-space:nowrap}.c-where{width:20%;color:var(--muted)}
+.c-pay{width:14%;text-align:right;white-space:nowrap}.c-where{width:20%;color:var(--muted)}.none{color:var(--muted)}
 .toggle{all:unset;cursor:pointer;display:inline-flex;align-items:flex-start;gap:6px;font-weight:600;border-radius:4px;overflow-wrap:anywhere}
+td.c-role{padding-left:34px}td.c-role .toggle{margin:0 8px 0 -22px}
 .toggle .chev{color:var(--faint);margin-top:2px}
 .toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .is-open .toggle{color:var(--accent-ink)}
 .is-open .chev{transform:rotate(90deg)}
 @media (prefers-reduced-motion:no-preference){.chev{transition:transform 120ms cubic-bezier(.23,1,.32,1)}}
-.tag{margin-left:8px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--muted);vertical-align:1px}
-.flagnote{display:inline-flex;align-items:center;gap:3px;margin-left:8px;font-size:12px;font-weight:500;color:var(--warn);vertical-align:-1px}
+.tag{display:inline-block;margin:0 6px 0 0;padding:0 6px;border:1px solid var(--line-strong);border-radius:4px;font-size:12px;line-height:16px;font-weight:700;color:var(--ink);vertical-align:1px;white-space:nowrap}
+.tag-new{background:var(--new-bg);border-color:var(--new-bg);color:var(--new-ink)}.tag-changed{border-color:var(--new-bg);color:var(--new-bg)}
+.flagnote{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--warn);vertical-align:-1px;white-space:nowrap}
 .flagnote .i{width:14px;height:14px}
-.sub{margin:2px 0 0 22px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.sub{margin:2px 0 0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .s-where::before,.s-pay::before{content:" · "}
 .fit{display:inline-flex;align-items:center;gap:8px}
 .segs{display:inline-flex;gap:2px;flex:none}
@@ -387,8 +392,8 @@ td.det-cell{padding:0}
 .style .want{color:var(--muted)}.style .s-not_stated{color:var(--muted)}
 .quotes q{display:block;margin-top:3px;padding-left:10px;border-left:1px solid var(--line-strong);color:var(--muted);font-style:normal}
 .facts{display:flex;flex-direction:column}
-.meters,.gates{list-style:none;margin:0;padding:0;display:grid;gap:5px}.gates{gap:0}
-.meters li{display:grid;grid-template-columns:4.5em auto auto;justify-content:start;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.meters,.gates{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.meters li{min-height:29px;display:grid;grid-template-columns:4.5em auto auto;justify-content:start;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
 .seg{display:inline-flex;gap:2px}.seg span{width:14px;height:6px;border-radius:2px;background:var(--line)}.seg span.on{background:var(--accent)}
 .meters b{font-weight:600;color:var(--ink)}
 .gates li{display:flex;align-items:center;gap:6px;width:fit-content;margin-left:-9px;padding:4px 8px;border:1px solid transparent;border-radius:4px;font-size:13px;color:var(--muted)}
@@ -411,13 +416,13 @@ td.det-cell{padding:0}
 .toast input{margin-left:8px;min-width:0;width:22em;max-width:100%;background:var(--canvas);color:var(--ink);border:0;border-radius:4px;padding:3px 6px}
 footer{margin-top:32px;font-size:13px;color:var(--muted)}footer p{margin:0 0 4px}
 @media (max-width:767px){main{padding:16px}.c-where,.c-pay,.c-since{display:none}td{padding:10px 8px}.c-rank{width:28px}
-.c-fit{width:96px}.segs span{width:3px}.detail{grid-template-columns:minmax(0,1fr);padding:4px 12px 16px}
+.c-fit{width:96px}td.c-role{padding-left:30px}.segs span{width:3px}.detail{grid-template-columns:minmax(0,1fr);padding:4px 12px 16px}
 .toolbar label{margin-left:0}.chip,.btn-primary,.copy button{min-height:44px}}
 @media (min-width:768px){.s-pay,.s-where{display:none}}
 @media (min-width:1200px){
 .split .layout{display:grid;grid-template-columns:minmax(0,58fr) minmax(380px,42fr);gap:20px;align-items:start}
 .split .c-where{display:none}.split .s-where{display:inline}.split tr.det{display:none}
-.split .chev{display:none}.split .sub{margin-left:0}
+.split .chev{display:none}.split td.c-role{padding-left:12px}.split td.c-role .toggle{margin-left:0}
 .split .pane{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--table);border:1px solid var(--line);border-radius:10px;max-width:560px}
 .split .pane .detail{grid-template-columns:minmax(0,1fr);padding:18px 20px 0;gap:0}
 .split .pane .facts{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
@@ -427,7 +432,8 @@ footer{margin-top:32px;font-size:13px;color:var(--muted)}footer p{margin:0 0 4px
 @media print{body{font-size:12px}main{padding:0;max-width:none}.toolbar,.copy,.pane,.toast,.copy-help{display:none!important}
 tr.det{display:table-row!important}tbody.role{break-inside:avoid}tr.sum:hover,tbody.role.is-open tr.sum{background:none}
 .c-where,.c-pay,.c-since{display:table-cell!important}.layout{display:block!important}.s-where,.s-pay{display:none!important}
-.chev{display:none}.actions{border:0;padding-top:4px}
+.chev{display:none}.actions{border:0;padding-top:4px}td.c-role{padding-left:12px}td.c-role .toggle{margin-left:0}
+.tag{background:none!important;border-color:var(--ink)!important;color:var(--ink)!important}
 .btn-primary{background:none;color:var(--ink);padding:0;min-height:0;font-weight:400}.btn-primary .i{display:none}
 .btn-primary::after{content:": " attr(href);word-break:break-all}}
 """
@@ -611,6 +617,9 @@ def _detail(r):
          meters, gates, link, r["rank"], r["rank"], copies)
 
 
+NO_PAY = jfilter.pay_text(None)  # "pay not listed": a missing value, so it is set muted, not like a figure
+
+
 def _tier(total):
     return "top" if total >= 7 else "mid" if total == 6 else "low"
 
@@ -620,7 +629,8 @@ def _row(r):
     fit = ('<span class="fit t-%s"><span class="segs" aria-hidden="true">%s</span><b>%d/8</b></span>' % (
         _tier(total), "".join('<span%s></span>' % (' class="on"' if k < total else "") for k in range(8)), total)
         if total is not None else '<span class="fit">–</span>')
-    tags = "".join('<span class="tag">%s</span>' % b for b in r["badges"])
+    tags = "".join('<span class="tag tag-%s">%s</span>' % (b.lower(), b) for b in r["badges"])
+    pay = '<span class="none">%s</span>' % _e(r["pay_short"]) if r["pay"] == NO_PAY else _e(r["pay_short"])
     n = len(r["flags"])
     flagnote = '<span class="flagnote">%s%d flag%s</span>' % (_icon("alert"), n, "" if n == 1 else "s") if n else ""
     text = " ".join((r["title"], r["company"], r["where"], r["pay"])).lower()
@@ -639,8 +649,8 @@ def _row(r):
          "" if r["pay_sort"] is None else r["pay_sort"],
          _e(r["since"].replace("-", "")), _e(r["title"].lower()), _e(r["where"].lower()), _e(r["company"]), _e(text),
          "NEW" in r["badges"], r["rank"], r["rank"], r["rank"], _icon("chev", "i chev"), _e(r["title"]), tags, flagnote,
-         _e(r["company"]) or "company not listed", _e(r["where"]), _e(r["pay_short"]),
-         _e(r["where"]), _e(r["pay_short"]), fit, _e(r["since_short"]) or "–", _detail(r))
+         _e(r["company"]) or "company not listed", _e(r["where"]), pay,
+         _e(r["where"]), pay, fit, _e(r["since_short"]) or "–", _detail(r))
 
 
 def _mini(items, cols):
@@ -667,7 +677,10 @@ def render(view):
                     "Best for tech and startup roles." % (_num(cov["probed"]), _num(cov["available"]), cov["open"],
                                                           "" if cov["open"] == 1 else "s"))
     n = len(roles)
-    parts = ["<header><h1>%s</h1>" % ("%d matching role%s" % (n, "" if n == 1 else "s") if n else "No matching roles")]
+    fresh = sum(1 for r in roles if "NEW" in r["badges"])  # the run's first fact on a rerun: what is new to the user
+    parts = ['<header><div class="h1row"><h1>%s</h1>%s</div>' % (
+        "%d matching role%s" % (n, "" if n == 1 else "s") if n else "No matching roles",
+        '<span class="tag tag-new">%d new to you</span>' % fresh if fresh else "")]
     meta = ([view["date"]] if view["date"] else []) + view["brief"]
     if meta:
         parts.append('<p class="meta">%s</p>' % "".join("<span>%s</span>" % _e(m) for m in meta))
