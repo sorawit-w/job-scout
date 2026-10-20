@@ -11,7 +11,11 @@ Usage (paths relative to the skill folder):
     python3 scripts/cite_check.py [--run latest] < results.json
 
     results.json: {"rows": [{"key", "show", "gates", "scores", "total",
-                             "why": [{"text", "quote"}], "risk": [{"text", "quote"}]}]}
+                             "why": [{"text", "quote"}], "risk": [{"text", "quote"}],
+                             "style": [{"topic", "verdict", "text", "quote"}]}]}
+    A style item's topic is a work_style topic and its verdict match / conflict / not_stated;
+    match and conflict need a quote, not_stated has quote null (rubric §4). Each shown row needs
+    exactly one style item per topic in the run's work_style (state.run_profile), and none for others.
     Each row's key must have an open job description in jds.json, and a row with show: true
     needs at least one why item; each failing row is reported once, with quote null.
     Stdout: {"ok": bool, "checked": n, "failed": [{"key", "quote", "why"}]}
@@ -36,6 +40,8 @@ import state  # noqa: E402
 UNKNOWN_LABELS = ("pay not listed", "sponsorship not stated", "location unclear")
 NO_JD = "no live job description for this key"
 MIN_QUOTE = 12
+VERDICTS = ("match", "conflict", "not_stated")
+PERMISSIVE = {("meetings", "meetings_ok"), ("on_call", "ok"), ("travel", "lots")}  # allow it: never a conflict
 _TRANS = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', " ": " ",
                         "‐": "-", "‑": "-", "‒": "-", "–": "-", "—": "-", "―": "-"})
 
@@ -71,6 +77,34 @@ def problem(item, jd):
     return None
 
 
+def style_problem(item, jd, choices=None):
+    """Why this work-style item fails, or None: match/conflict need a verified quote, not_stated none."""
+    if not live(jd):
+        return NO_JD
+    if not (isinstance(item, dict) and isinstance(item.get("topic"), str) and item["topic"] in state.WORK_STYLE
+            and item.get("verdict") in VERDICTS):
+        return "style item must be {topic: %s, verdict: %s, text, quote}" % ("/".join(state.WORK_STYLE), "/".join(VERDICTS))
+    if item["verdict"] == "not_stated":  # fixed text, no quote: nothing unverified can ride along
+        ok = item.get("quote") is None and str(item.get("text") or "").strip().lower() == "not stated"
+        return None if ok else 'a not_stated item has text "not stated" and no quote'
+    if item["verdict"] == "conflict" and (item["topic"], (choices or {}).get(item["topic"])) in PERMISSIVE:
+        return "%s: %s allows it, so it never conflicts (rubric §4)" % (
+            item["topic"], choices[item["topic"]])
+    if not item.get("quote"):
+        return "a %s item needs a quote from the job description" % item["verdict"]
+    return problem(item, jd)
+
+
+def style_coverage(style, wanted):
+    """Why a shown row's style items don't cover the saved work_style topics exactly once, or None."""
+    got = [i["topic"] for i in style if isinstance(i, dict) and isinstance(i.get("topic"), str)]
+    gaps = [("missing for", sorted(wanted - set(got))),
+            ("given for topics the user did not set", sorted(set(got) - wanted)),
+            ("given more than once for", sorted({t for t in got if t and got.count(t) > 1}))]
+    gaps = ["style %s: %s" % (what, ", ".join(map(str, topics))) for what, topics in gaps if topics]
+    return "; ".join(gaps) or None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Check results.json quotes against the live job descriptions.")
     ap.add_argument("--run", default="latest")
@@ -95,20 +129,36 @@ def main(argv=None):
     jds = state.read_json(run / "jds.json", {})
     if not isinstance(jds, dict):
         jds = {}
+    profile = state.run_profile(run)  # the work_style this run was judged against
+    saved = profile.get("work_style") if isinstance(profile, dict) else None
+    choices = {t: v for t, v in (saved.items() if isinstance(saved, dict) else ())
+               if t in state.WORK_STYLE and isinstance(v, str)}
+    wanted = set(choices)
 
     checked, failed = 0, []
     for row in rows:
         key = row.get("key")
         jd = jds.get(key) if isinstance(key, str) else None
-        items = list(row.get("why") or []) + list(row.get("risk") or [])
-        checked += len(items)
+        lists = {f: row.get(f) if isinstance(row.get(f), list) else [] for f in ("why", "risk", "style")}
+        bad = [f for f in lists if row.get(f) not in (None, []) and not isinstance(row.get(f), list)]
+        if "show" in row and not isinstance(row["show"], bool):
+            bad.append("show")  # report.py and this check must agree on which rows are shown
+        if bad:  # valid JSON of the wrong shape: report it, never crash
+            failed.append({"key": key, "quote": None, "why": "; ".join(
+                "show must be true or false" if f == "show" else "%s must be a list" % f for f in bad)})
+        items, style = lists["why"] + lists["risk"], lists["style"]
+        checked += len(items) + len(style)
         if not live(jd):  # one failure per row, even with no items to check
             failed.append({"key": key, "quote": None, "why": NO_JD})
             continue
         if row.get("show") is True and not row.get("why"):
             failed.append({"key": key, "quote": None, "why": "shown row has no quoted reason"})
-        for item in items:
-            why = problem(item, jd)
+        gap = style_coverage(style, wanted) if row.get("show") is True else (
+            "excluded row has style items (rubric §4: shown rows only)" if style else None)
+        if gap:
+            failed.append({"key": key, "quote": None, "why": gap})
+        for item, check in [(i, problem) for i in items] + [(i, style_problem) for i in style]:
+            why = check(item, jd, choices) if check is style_problem else check(item, jd)
             if why:
                 failed.append({"key": key, "quote": item.get("quote") if isinstance(item, dict) else None, "why": why})
     print(json.dumps({"ok": not failed, "checked": checked, "failed": failed}, ensure_ascii=False))

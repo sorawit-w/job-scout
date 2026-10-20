@@ -693,6 +693,7 @@ class CliTest(unittest.TestCase):
             self.assertIn("flags", c)
             self.assertIn("description_text", c)  # full job dict, not the summary row
         self.assertEqual(state.read_json(run_dir / "filter.json"), out)  # the summary, saved for report.py
+        self.assertEqual(state.read_json(run_dir / "profile.json"), state.read_json(state.profile_path()))  # this run's brief
 
     def test_limit_hard_ceiling(self):
         state.write_json_atomic(state.profile_path(), profile())

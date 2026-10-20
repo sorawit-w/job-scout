@@ -59,7 +59,41 @@ One row per judged job, in your ranked order, including jobs you excluded (they 
 - `quote: null` is allowed only with `text` exactly `pay not listed`, `sponsorship not stated`, or
   `location unclear`.
 - 1–3 `why` items and 0–2 `risk` items per row. Keep `text` short and plain.
+- When the profile has `work_style`, shown rows also get `style` items (§4).
 
 Then run `python3 scripts/cite_check.py < results.json`. If it reports failures, fix or delete each
 failed claim (re-quote from the description, or drop the claim) and run it again. Never show a
 claim that failed, and never edit a quote to match — re-read the description instead.
+
+## 4. Work-style signals (display only)
+
+Only when the profile has a non-empty `work_style`. Signals **never** change gates, scores, `total`,
+`show` or rank: they tell the user what the posting says, nothing more.
+
+For each **shown** row, add exactly one item per topic the user set (skip topics they didn't set,
+and give excluded rows none; cite_check fails a shown row that misses or repeats a topic):
+
+```json
+"style": [{"topic": "travel", "verdict": "conflict", "text": "Up to a quarter of the time on the road",
+           "quote": "Travel up to 25% of the time to customer sites"},
+          {"topic": "stage", "verdict": "not_stated", "text": "not stated", "quote": null}]
+```
+
+- `verdict` is `match`, `conflict` or `not_stated`. `match` and `conflict` need a verbatim quote
+  (same rules as above); `not_stated` has `text: "not stated"` and `quote: null`.
+- **The description is the only evidence.** Never use what you know about the company (its size,
+  funding, reputation) — a famous company whose posting doesn't say its stage is `not_stated`.
+- Quote a whole clause: a short phrase like "Series A" is under 12 characters and fails cite_check;
+  quote "we're a Series A startup" instead.
+- A choice that allows something (`meetings_ok`, `on_call: ok`, `travel: lots`) matches any mention
+  of it; it never conflicts.
+
+| Topic · choice | Match (examples) | Conflict (examples) |
+|---|---|---|
+| meetings · `async` | "async-first", "written communication over meetings" | "daily standups", "core overlap hours" |
+| on_call · `none` | "no on-call rotation" | "participate in the on-call rotation", "24/7 support" |
+| travel · `none` | "no travel required" | any travel ("occasional travel to the office") |
+| travel · `some` | "occasional travel", up to about 25% | "travel up to 50%", "extensive travel" |
+| autonomy · `high` | "own projects end to end", "self-directed" | "close supervision", "detailed direction" |
+| autonomy · `guided` | "mentorship program", "pair with senior engineers" | "little guidance", "figure it out on your own" |
+| stage · `startup` / `growth` / `established` | the stage it states ("early-stage team", "Series C, scaling fast", "a public company") | a different stage stated |

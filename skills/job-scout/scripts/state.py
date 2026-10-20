@@ -215,7 +215,14 @@ _CODE_RE = re.compile(r"^[A-Z]{2}$")
 _REQUIRED = ("schema", "target_roles", "work_modes", "needs_sponsorship", "base_pay_floor")
 PROFILE_DEFAULTS = {"track": "either", "home_base": None, "hide_no_pay": False, "open_to_relocation": False,
                     "recency_flag_days": 90, "result_count": 15, "sources": {}}
-PROFILE_KEYS = set(_STR_LISTS) | set(_ENUMS) | set(_REQUIRED) | set(PROFILE_DEFAULTS)
+# Work style: fixed job choices only (never free text, never the reason behind a choice). An absent
+# key means "never asked", {} means "asked, skipped all", so it is not in PROFILE_DEFAULTS.
+WORK_STYLE = {"meetings": {"async": "async-first", "meetings_ok": "meetings OK"},
+              "on_call": {"none": "no on-call", "ok": "on-call OK"},
+              "travel": {"none": "no travel", "some": "some travel", "lots": "travel OK"},
+              "autonomy": {"high": "high autonomy", "guided": "guided"},
+              "stage": {"startup": "startup", "growth": "growth stage", "established": "established"}}
+PROFILE_KEYS = set(_STR_LISTS) | set(_ENUMS) | set(_REQUIRED) | set(PROFILE_DEFAULTS) | {"work_style"}
 
 
 def validate_profile(p):
@@ -255,6 +262,10 @@ def validate_profile(p):
     for key, lo, hi in (("result_count", 1, 50), ("recency_flag_days", 1, 3650)):
         if key in p and not (isinstance(p[key], int) and not isinstance(p[key], bool) and lo <= p[key] <= hi):
             errors.append("%s must be an integer from %d to %d" % (key, lo, hi))
+    style = p.get("work_style", {})
+    if not (isinstance(style, dict) and all(k in WORK_STYLE and isinstance(v, str) and v in WORK_STYLE[k] for k, v in style.items())):
+        errors.append("work_style must map %s to one of their choices (%s)" % (
+            "/".join(WORK_STYLE), "; ".join("%s: %s" % (k, "/".join(v)) for k, v in WORK_STYLE.items())))
     sources = p.get("sources", {})
     if not isinstance(sources, dict) or any(k not in PROFILE_KEYS or v not in _SOURCES for k, v in sources.items()):
         errors.append("sources must map profile fields to one of %s" % "/".join(_SOURCES))
@@ -270,6 +281,13 @@ def with_profile_defaults(p):
 
 def profile_path():
     return home() / "profile.json"
+
+
+def run_profile(run_dir):
+    """The brief a run was searched with (filter.py saves a copy), else the saved profile: a later
+    "change my work style" must not relabel an older run's verdicts."""
+    p = read_json(Path(run_dir) / "profile.json")
+    return p if isinstance(p, dict) else read_json(profile_path(), {})
 
 
 # --- seen memory (seen.json) ---------------------------------------------------

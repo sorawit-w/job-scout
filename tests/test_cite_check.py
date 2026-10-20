@@ -117,6 +117,107 @@ class CiteCheckTest(unittest.TestCase):
         self.assertEqual(code, 2)
 
 
+class StyleCheckTest(unittest.TestCase):
+    WHY = [("knows React", "years building   React applications")]
+
+    def check(self, *style):
+        """A shown row whose saved work_style has exactly these topics, so only item checks can fail."""
+        home = make_home()
+        topics = {i["topic"]: "none" for i in style if isinstance(i, dict) and isinstance(i.get("topic"), str)}
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": topics}, f)
+        payload = results(why=self.WHY)
+        payload["rows"][0].update(show=True, style=list(style))
+        return run(payload, home)
+
+    def test_quoted_match_and_conflict_and_unquoted_not_stated_pass(self):
+        code, out = self.check(
+            {"topic": "autonomy", "verdict": "match", "text": "mentors others", "quote": "mentor “junior” engineers"},
+            {"topic": "meetings", "verdict": "conflict", "text": "long lunches", "quote": "We like long lunches."},
+            {"topic": "travel", "verdict": "not_stated", "text": "not stated", "quote": None})
+        self.assertEqual((code, out), (0, {"ok": True, "checked": 4, "failed": []}))
+
+    def test_bad_style_items_fail(self):
+        cases = [
+            ({"topic": "travel", "verdict": "conflict", "text": "x", "quote": "travel up to 50% of the time"},
+             "not found"),
+            ({"topic": "travel", "verdict": "match", "text": "x", "quote": None}, "needs a quote"),
+            ({"topic": "travel", "verdict": "not_stated", "text": "x", "quote": "We like long lunches."}, "no quote"),
+            ({"topic": "travel", "verdict": "not_stated", "text": "No travel required", "quote": None}, 'text "not stated"'),
+            ({"topic": "family", "verdict": "match", "text": "x", "quote": "We like long lunches."}, "style item must be"),
+            ({"topic": "travel", "verdict": "maybe", "text": "x", "quote": None}, "style item must be"),
+            ("travel", "style item must be")]
+        for item, reason in cases:
+            code, out = self.check(item)
+            self.assertEqual(code, 1, item)
+            self.assertIn(reason, " | ".join(f["why"] for f in out["failed"]), item)
+
+    def test_shown_rows_cover_every_saved_topic_exactly_once(self):
+        home = make_home()
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "async", "travel": "none"}}, f)
+        meet = {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}
+        travel = {"topic": "travel", "verdict": "not_stated", "text": "not stated", "quote": None}
+        stage = {"topic": "stage", "verdict": "not_stated", "text": "not stated", "quote": None}
+        for style, problem in (([meet, travel], None), ([meet], "style missing for: travel"), ([], "missing for: meetings, travel"),
+                               ([meet, travel, stage], "did not set: stage"), ([meet, meet, travel], "more than once for: meetings")):
+            payload = results(why=self.WHY)
+            payload["rows"][0].update(show=True, style=style)
+            code, out = run(payload, home)
+            if problem is None:
+                self.assertEqual((code, out["failed"]), (0, []))
+            else:
+                self.assertEqual(code, 1, style)
+                self.assertIn(problem, out["failed"][0]["why"])
+        payload = results(why=self.WHY)  # excluded rows need no style, and may not carry any
+        payload["rows"][0]["show"] = False
+        self.assertEqual(run(payload, home)[0], 0)
+        payload["rows"][0]["style"] = [meet, travel]
+        code, out = run(payload, home)
+        self.assertEqual((code, out["failed"][0]["why"]), (1, "excluded row has style items (rubric §4: shown rows only)"))
+
+    def test_the_run_copy_of_the_brief_wins_over_a_later_profile(self):
+        home = make_home()
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "async", "travel": "none"}}, f)  # changed after the run
+        with open(os.path.join(home, "runs", RUN_ID, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "async"}}, f)
+        payload = results(why=self.WHY)
+        payload["rows"][0].update(show=True, style=[
+            {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}])
+        self.assertEqual(run(payload, home)[0], 0)
+
+    def test_wrong_shapes_fail_without_crashing(self):
+        for field, value, reason in (("style", 1, "style must be a list"), ("why", "x", "why must be a list"),
+                                     ("show", 1, "show must be true or false"),
+                                     ("style", [{"topic": [], "verdict": "match", "quote": "x"}], "style item must be"),
+                                     ("style", [{"topic": "travel", "verdict": ["match"]}], "style item must be")):
+            payload = results(why=self.WHY)
+            payload["rows"][0].update({"show": True, field: value})
+            code, out = run(payload)
+            self.assertEqual(code, 1, value)
+            self.assertIn(reason, " | ".join(f["why"] for f in out["failed"]), value)
+
+    def test_a_permissive_choice_never_conflicts(self):
+        home = make_home()
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"work_style": {"meetings": "meetings_ok"}}, f)
+        payload = results(why=self.WHY)
+        item = {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}
+        payload["rows"][0].update(show=True, style=[item])
+        code, out = run(payload, home)
+        self.assertEqual((code, out["failed"][0]["why"]), (1, "meetings: meetings_ok allows it, so it never conflicts (rubric §4)"))
+        item["verdict"] = "match"
+        self.assertEqual(run(payload, home)[0], 0)
+
+    def test_style_never_counts_as_the_reason_a_role_is_shown(self):
+        payload = results()
+        payload["rows"][0].update(show=True, style=[
+            {"topic": "meetings", "verdict": "conflict", "text": "x", "quote": "We like long lunches."}])
+        code, out = run(payload)
+        self.assertEqual((code, out["failed"][0]["why"]), (1, "shown row has no quoted reason"))
+
+
 class NormalizeTest(unittest.TestCase):
     def test_norm(self):
         self.assertEqual(cite_check.norm("A  “B”\n‘c’ – d — e"), "a \"b\" 'c' - d - e")
