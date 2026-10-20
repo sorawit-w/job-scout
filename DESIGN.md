@@ -173,7 +173,9 @@ not `display:none`, so the heading outline stays h1 → h2 → h3 and axe's head
 
 ### Secondary sections (below the table)
 Compact tables: "Saved or applied, still open", "Closed since last time", "Close but excluded"
-(max 5; reason is the first failed gate or "fit N/8, below 5").
+(max 5). The reason says why the role was left out, in this order: "<gate> gate failed",
+"fit N/8, not in the top R" (eligible, but R roles were already shown), "fit N/8, below 5", or
+"fit N/8, not all gates checked".
 
 ## States
 - Hover row: hover background. Selected/open row: accent-soft on the summary row only; the

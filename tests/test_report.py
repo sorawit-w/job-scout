@@ -105,6 +105,18 @@ class ReportTest(unittest.TestCase):
         run([], self.home)
         self.assertIn('<td dir="auto">location gate failed</td>', page(self.home))
 
+    def test_excluded_reason_says_why_the_row_was_left_out(self):
+        # rank() hides an eligible row once result_count roles are shown: it is not "below 5"
+        make_run(self.home, [job("gh:a:1"), job("gh:b:2"), job("gh:c:3"), job("gh:d:4")],
+                 [row("gh:a:1", 8), row("gh:b:2", 7, show=False), row("gh:c:3", 4, show=False),
+                  dict(row("gh:d:4", 6, show=False), gates={"location": "pass", "sponsorship": "pass", "pay": "pass"})])
+        run([], self.home)
+        html = page(self.home)
+        self.assertIn('<td dir="auto">fit 7/8, not in the top 1</td>', html)
+        self.assertIn('<td dir="auto">fit 4/8, below 5</td>', html)
+        self.assertIn('<td dir="auto">fit 6/8, not all gates checked</td>', html)
+        self.assertEqual(html.count("below 5"), 1)
+
     def test_escaping_and_unsafe_links(self):
         evil = job("gh:x:1", '<script>alert(1)</script> Engineer', 'Acme "Labs"', url="javascript:alert(1)")
         make_run(self.home, [evil], [row("gh:x:1", why=[{"text": "<b>bold</b>", "quote": "</q><img src=x>"}])])
