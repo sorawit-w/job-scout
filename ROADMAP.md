@@ -31,7 +31,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 - [ ] Workday jobs carry no remote/onsite field: a "Remote … California Residents Only" role reads as onsite
 - [ ] Workday rows with no place or mode spend live-check reads (21 of 40 in the nurse run, none shown): read their detail records outside the 40-description budget, or cap them
 - [ ] claude.ai Team/Enterprise egress test
-- [ ] Report: axe `heading-order` on a role's "Check first" heading once its detail opens inline at ~1024px (found in the M9 audit; on main since M7)
+- [x] Report: axe `heading-order` on a role's "Check first" heading once its detail opens inline at ~1024px (found in the M9 audit; on main since M7)
 - [ ] Root README "Status" section still describes the first release
 
 ## Shipped
