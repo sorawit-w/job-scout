@@ -1,11 +1,11 @@
 {
  "ashby:turquoise-health:806f5f93-6eb6-4aea-9483-f8f7458e6730": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "applied",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "c1460c5d1d55",
   "snap": {
    "title": "Senior Design Engineer",
@@ -45,21 +45,21 @@
     }
    ],
    "style": null,
-   "run": "20261020T032539Z",
-   "judged_at": "2026-10-20T03:25:39Z",
+   "run": "20261020T033051Z",
+   "judged_at": "2026-10-20T03:30:51Z",
    "sig": "c1460c5d1d55",
-   "jd_sig": "a62a68352bf0",
+   "jd_sig": "bdcad4e6fce5",
    "brief_sig": "e06955388b61",
    "work_style": {}
   }
  },
  "greenhouse:arizeai:5778086004": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "saved",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "053647632c5a",
   "snap": {
    "title": "Senior Open Source Design Engineer",
@@ -99,21 +99,21 @@
     }
    ],
    "style": null,
-   "run": "20261020T032539Z",
-   "judged_at": "2026-10-20T03:25:39Z",
+   "run": "20261020T033051Z",
+   "judged_at": "2026-10-20T03:30:51Z",
    "sig": "053647632c5a",
-   "jd_sig": "97a4958e5fcc",
+   "jd_sig": "414e9d186873",
    "brief_sig": "e06955388b61",
    "work_style": {}
   }
  },
  "greenhouse:arizeai:5396420004": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "c359b4e87e26",
   "snap": {
    "title": "Senior AI Product Engineer, Fullstack",
@@ -144,21 +144,21 @@
    ],
    "risk": [],
    "style": null,
-   "run": "20261020T032539Z",
-   "judged_at": "2026-10-20T03:25:39Z",
+   "run": "20261020T033051Z",
+   "judged_at": "2026-10-20T03:30:51Z",
    "sig": "c359b4e87e26",
-   "jd_sig": "b72554010ad0",
+   "jd_sig": "ae120b52547c",
    "brief_sig": "e06955388b61",
    "work_style": {}
   }
  },
  "greenhouse:koboldmetals:4286209005": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "f838b49ed732",
   "snap": {
    "title": "Frontend Software Engineer",
@@ -194,21 +194,21 @@
     }
    ],
    "style": null,
-   "run": "20261020T032539Z",
-   "judged_at": "2026-10-20T03:25:39Z",
+   "run": "20261020T033051Z",
+   "judged_at": "2026-10-20T03:30:51Z",
    "sig": "f838b49ed732",
-   "jd_sig": "d6b50c44dd9d",
+   "jd_sig": "5e65326370f2",
    "brief_sig": "e06955388b61",
    "work_style": {}
   }
  },
  "ashby:turquoise-health:87306d91-a18e-490c-b4e6-4758d63b12a1": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "dismissed",
   "reason": "too senior",
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "5388b24ef769",
   "snap": {
    "title": "Senior Software Engineer, Transactions",
@@ -243,21 +243,21 @@
    ],
    "risk": [],
    "style": null,
-   "run": "20261020T032539Z",
-   "judged_at": "2026-10-20T03:25:39Z",
+   "run": "20261020T033051Z",
+   "judged_at": "2026-10-20T03:30:51Z",
    "sig": "5388b24ef769",
-   "jd_sig": "003370ccb171",
+   "jd_sig": "63b4c56f4ef9",
    "brief_sig": "e06955388b61",
    "work_style": {}
   }
  },
  "greenhouse:arizeai:5396396004": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "seen",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "852458509123",
   "snap": {
    "title": "Senior AI Product Engineer, Backend",
@@ -293,21 +293,21 @@
     }
    ],
    "style": null,
-   "run": "20261020T032539Z",
-   "judged_at": "2026-10-20T03:25:39Z",
+   "run": "20261020T033051Z",
+   "judged_at": "2026-10-20T03:30:51Z",
    "sig": "852458509123",
-   "jd_sig": "8fcd26fd2a86",
+   "jd_sig": "e444c0b71e0e",
    "brief_sig": "e06955388b61",
    "work_style": {}
   }
  },
  "greenhouse:koboldmetals:4725284005": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "d860c322fed8",
   "snap": {
    "title": "Senior Software Engineer, Scientific Computing (Hardware/Sensors)",
@@ -322,12 +322,12 @@
   "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4725284005"
  },
  "greenhouse:koboldmetals:4624637005": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "77e97fe754d7",
   "snap": {
    "title": "Senior Software Engineer, Decision Science",
@@ -342,12 +342,12 @@
   "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4624637005"
  },
  "greenhouse:koboldmetals:4624038005": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "318175e17a0b",
   "snap": {
    "title": "Senior Software Engineer, Scientific Computing",
@@ -362,14 +362,14 @@
   "url": "https://job-boards.greenhouse.io/koboldmetals/jobs/4624038005"
  },
  "greenhouse:koboldmetals:4510145005": {
-  "first_seen": "2026-10-20T03:25:39Z",
+  "first_seen": "2026-10-20T03:30:51Z",
   "status": "judged",
   "reason": null,
   "closed_at": null,
   "aliases": [
    "greenhouse:koboldmetals:4678367005"
   ],
-  "last_seen": "2026-10-20T03:25:39Z",
+  "last_seen": "2026-10-20T03:30:51Z",
   "sig": "a22e9e295491",
   "snap": {
    "title": "Software Engineer (All Levels)",

@@ -335,6 +335,13 @@ def row(key, show, total=6):
 
 
 JD = "Build product features end to end. Own and evolve our design system."
+
+
+def live(text=JD, comp=None, **job_fields):
+    """A jds.json entry as fetch_jd writes it: the description plus the live pay and display fields."""
+    return {"status": "open", "full": text, "comp": comp,
+            "job": dict({"title": "Senior Frontend Engineer", "locations": ["Remote - US"], "workplace": "remote",
+                         "remote_scope": ["US"]}, **job_fields)}
 BRIEF = {"schema": 1, "target_roles": ["Product Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
          "needs_sponsorship": "no", "base_pay_floor": None}
 
@@ -348,7 +355,7 @@ class JudgedTest(HomeCase):
 
     def run_with_jd(self, jobs, rows, text=JD):
         run = self.make_run(jobs, rows)
-        state.write_json_atomic(run / "jds.json", {r["key"]: {"status": "open", "full": text} for r in rows})
+        state.write_json_atomic(run / "jds.json", {r["key"]: live(text) for r in rows})
         return run
 
     def test_unshown_row_is_judged_with_its_judgment_and_posting(self):
@@ -363,7 +370,7 @@ class JudgedTest(HomeCase):
         self.assertEqual(e["judgment"], {"total": 6, "scores": r["scores"], "gates": r["gates"], "show": False,
                                          "why": r["why"], "risk": r["risk"], "style": [], "run": run.name,
                                          "judged_at": state.now_iso(NOW), "sig": state.job_sig(j),
-                                         "jd_sig": state.jd_sig(JD), "brief_sig": state.brief_sig(BRIEF),
+                                         "jd_sig": state.jd_sig(live()), "brief_sig": state.brief_sig(BRIEF),
                                          "work_style": {}})
 
     def test_unread_candidate_is_judged_without_a_judgment(self):
@@ -429,24 +436,34 @@ class JudgedTest(HomeCase):
     def test_cached_judgment_needs_the_same_posting_and_the_same_brief(self):
         state.record(self.run_with_jd([job()], [row("ashby:acme:1", False)]), now=NOW)
         seen = state.load_seen()
-        self.assertEqual(state.cached_judgment(job(), seen, BRIEF, JD)["total"], 6)
-        self.assertIsNone(state.cached_judgment(job(title="Staff Frontend Engineer"), seen, BRIEF, JD))
+        self.assertEqual(state.cached_judgment(job(), seen, BRIEF, live())["total"], 6)
+        self.assertIsNone(state.cached_judgment(job(title="Staff Frontend Engineer"), seen, BRIEF, live()))
         for edit in ({"work_modes": ["remote", "hybrid"]}, {"base_pay_floor": {"amount": 150000}},
                      {"dealbreakers": ["crypto"]}, {"seniority": ["Staff"]}, {"needs_sponsorship": "yes"},
                      {"must_haves": ["Go"]}):
-            self.assertIsNone(state.cached_judgment(job(), seen, dict(BRIEF, **edit), JD), edit)
+            self.assertIsNone(state.cached_judgment(job(), seen, dict(BRIEF, **edit), live()), edit)
         # work style is display only, so changing it keeps the cached gates and scores
-        self.assertIsNotNone(state.cached_judgment(job(), seen, dict(BRIEF, work_style={"travel": "none"}), JD))
+        self.assertIsNotNone(state.cached_judgment(job(), seen, dict(BRIEF, work_style={"travel": "none"}), live()))
 
     def test_cached_judgment_needs_the_same_description(self):
         # An employer can edit a posting in place (add "no sponsorship") without touching title, pay or places.
         state.record(self.run_with_jd([job()], [row("ashby:acme:1", False)]), now=NOW)
         seen = state.load_seen()
-        self.assertIsNotNone(state.cached_judgment(job(), seen, BRIEF, "  " + JD.replace(" ", "\n ") + "\n"))
-        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, JD + " We do not sponsor visas."))
-        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, ""))
+        self.assertIsNotNone(state.cached_judgment(job(), seen, BRIEF, live("  " + JD.replace(" ", "\n ") + "\n")))
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, live(JD + " We do not sponsor visas.")))
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, live("")))
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, {"status": "closed"}))
         # before the live check there is no text yet: posting and brief only, and the caller checks again
         self.assertIsNotNone(state.cached_judgment(job(), seen, BRIEF, None))
+
+    def test_cached_judgment_needs_the_same_live_pay_and_places(self):
+        # Greenhouse lists no pay on the board: the live check's pay is what the pay gate judged.
+        state.record(self.run_with_jd([job(comp=None)], [row("ashby:acme:1", False)]), now=NOW)
+        seen = state.load_seen()
+        self.assertIsNotNone(state.cached_judgment(job(comp=None), seen, BRIEF, live()))
+        for changed in (live(comp=USD), live(locations=["Remote - Canada"]), live(workplace="hybrid"),
+                        live(remote_scope=["CA"]), live(title="Staff Frontend Engineer")):
+            self.assertIsNone(state.cached_judgment(job(comp=None), seen, BRIEF, changed), changed)
 
     def test_changed_work_style_drops_only_the_cached_style(self):
         styled = dict(BRIEF, work_style={"travel": "none"})
@@ -455,8 +472,8 @@ class JudgedTest(HomeCase):
                                                     "text": "Some travel", "quote": "travel up to 25% of the time"}])
         state.record(self.run_with_jd([job()], [r]), now=NOW)
         seen = state.load_seen()
-        self.assertEqual(state.cached_judgment(job(), seen, styled, JD)["style"], r["style"])
-        moved = state.cached_judgment(job(), seen, dict(BRIEF, work_style={"travel": "some"}), JD)
+        self.assertEqual(state.cached_judgment(job(), seen, styled, live())["style"], r["style"])
+        moved = state.cached_judgment(job(), seen, dict(BRIEF, work_style={"travel": "some"}), live())
         self.assertIsNone(moved["style"])  # a conflict under "none" may be a match under "some": write it again
         self.assertEqual((moved["total"], moved["gates"]), (6, r["gates"]))  # work style never moves fit
 
@@ -469,11 +486,11 @@ class JudgedTest(HomeCase):
         seen = state.load_seen()
         self.assertEqual({k: e["status"] for k, e in seen.items()}, {"ashby:acme:1": "judged", "ashby:acme:2": "saved"})
         self.assertFalse([k for k, e in seen.items() if "judgment" in e])
-        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, JD))
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, live()))
 
     def test_no_cached_judgment_when_the_judged_text_was_not_kept(self):
         state.record(self.make_run([job()], [row("ashby:acme:1", False)]), now=NOW)  # no jds.json
-        self.assertIsNone(state.cached_judgment(job(), state.load_seen(), BRIEF, JD))
+        self.assertIsNone(state.cached_judgment(job(), state.load_seen(), BRIEF, live()))
 
     def test_no_cached_judgment_for_an_unread_or_unknown_role(self):
         run = self.make_run([job()], [])

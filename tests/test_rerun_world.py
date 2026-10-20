@@ -261,7 +261,13 @@ PASSPORT = "ashby:workos:passport"  # WorkOS, Product Engineer – Passport: pub
 TAPCART = "ashby:tapcart:sr-product-engineer"  # 6/8, ranked 16th in run 1: cut by the 15-row limit
 BRIEF_1019 = {"schema": 1, "target_roles": ["Product Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
               "needs_sponsorship": "no", "base_pay_floor": None, "result_count": 15}
-JD_1019 = "We build product features end to end, from the database to the UI."
+LIVE_1019 = {"status": "open", "full": "We build product features end to end, from the database to the UI.", "comp": None}
+
+
+def _live_job(jobs, key):
+    """The live display fields fetch_jd keeps in a jds.json entry."""
+    j = next(j for j in jobs if j["key"] == key)
+    return {f: j[f] for f in ("title", "locations", "workplace", "remote_scope")}
 
 
 def _posting(key, company, title, published):
@@ -300,9 +306,11 @@ class Rerun20261019Test(unittest.TestCase):
             state.write_json_atomic(run1 / "jobs.json", jobs1)
             cls.filter1 = call(jfilter.main, ["--run", run1.name])
             state.write_json_atomic(run1 / "results.json", {"rows": cls.rows})
-            state.write_json_atomic(run1 / "jds.json", {r["key"]: {"status": "open", "full": JD_1019} for r in cls.rows})
+            state.write_json_atomic(run1 / "jds.json", {r["key"]: dict(LIVE_1019, job=_live_job(jobs1, r["key"]))
+                                                        for r in cls.rows})
             cls.record1 = call(state.main, ["seen", "record", "--run", run1.name])
             cls.seen1 = state.load_seen()
+            cls.live1 = state.read_json(run1 / "jds.json")
             run2 = state.new_run()
             state.write_json_atomic(run2 / "jobs.json", jobs2)
             cls.filter2 = call(jfilter.main, ["--run", run2.name])
@@ -334,10 +342,10 @@ class Rerun20261019Test(unittest.TestCase):
 
     def test_editing_the_brief_invalidates_every_cached_judgment(self):
         jobs = {j["key"]: j for j in world_1019()[2]}
-        cached = [k for k in self.seen1 if state.cached_judgment(jobs[k], self.seen1, BRIEF_1019, JD_1019)]
+        cached = [k for k in self.seen1 if state.cached_judgment(jobs[k], self.seen1, BRIEF_1019, self.live1.get(k))]
         self.assertEqual(len(cached), 38)  # every read role, shown or cut
         edited = dict(BRIEF_1019, work_modes=["remote", "hybrid"])
-        self.assertEqual([k for k in self.seen1 if state.cached_judgment(jobs[k], self.seen1, edited, JD_1019)], [])
+        self.assertEqual([k for k in self.seen1 if state.cached_judgment(jobs[k], self.seen1, edited, self.live1.get(k))], [])
 
 
 class AddCompanyTest(unittest.TestCase):

@@ -313,7 +313,7 @@ def run_profile(run_dir):
 # status judged = an earlier run screened the role but never showed it (read and cut, or never read).
 # Only `seen record` sets it; first_seen is when it was first shown once a shown row promotes it to seen.
 # judgment = the last results.json row for the role plus run, judged_at, sig and jd_sig (the posting and
-# description it judged), brief_sig and work_style (the choices its style items answer); it is reused
+# the live check it judged: description, live pay and places), brief_sig and work_style (the choices its style items answer); it is reused
 # only while sig, jd_sig and brief_sig still match, its style only while work_style does (cached_judgment).
 # `judged forget` drops every judgment (a new resume changes the skills score; the profile has no resume).
 # A collapsed job's variants can close or reorder, so an entry matches a job when its key or
@@ -418,24 +418,32 @@ def job_state(job, seen, index=None):
     return e.get("status") or "seen"
 
 
-def jd_sig(text):
-    """sha1[:12] of a job description with whitespace collapsed, or None for no text."""
-    text = re.sub(r"\s+", " ", text or "").strip()
-    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12] if text else None
+def jd_sig(live):
+    """sha1[:12] of what a live check saw (a jds.json entry): the description, whitespace collapsed, and
+    the live pay, title and places, which can differ from the board list (Greenhouse lists no pay).
+    None when there is no description."""
+    live = live if isinstance(live, dict) else {}
+    text = re.sub(r"\s+", " ", live.get("full") or "").strip()
+    if not text:
+        return None
+    job = live.get("job") if isinstance(live.get("job"), dict) else {}
+    comp = live["comp"] if "comp" in live else job.get("comp")  # the live check wins, even "none"
+    parts = [text, job_snap(dict(job, comp=comp)), job.get("workplace"), sorted(job.get("remote_scope") or [])]
+    return hashlib.sha1(json.dumps(parts, ensure_ascii=False).encode("utf-8")).hexdigest()[:12]
 
 
-def cached_judgment(job, seen, profile, description, index=None):
-    """The deciding entry's judgment when it was made on this posting (same sig), this description (same
-    jd_sig: an employer can add "no sponsorship" without touching title, pay or places) and this brief
-    (same brief_sig), else None, and the role is read again. description is this run's full text, or
-    None before the live check: then only posting and brief are compared, and the caller must check
-    again once the text is fetched. With other work_style choices the judgment comes back with style
+def cached_judgment(job, seen, profile, live, index=None):
+    """The deciding entry's judgment when it was made on this posting (same sig), this live check (same
+    jd_sig: an employer can add "no sponsorship" without touching title, pay or places, and Greenhouse
+    pay is only on the live check) and this brief (same brief_sig), else None, and the role is read
+    again. live is this run's jds.json entry for the job, or None before the live check: then only
+    posting and brief are compared, and the caller must check again once the live check has run. With other work_style choices the judgment comes back with style
     None: a conflict under "no travel" can be a match under "some travel", so the style is written again."""
     e = _deciding_entry(job, seen, index)
     j = e.get("judgment") if e else None
     if not (isinstance(j, dict) and j.get("sig") == job_sig(job) and j.get("brief_sig") == brief_sig(profile)):
         return None
-    if description is not None and not (j.get("jd_sig") and j["jd_sig"] == jd_sig(description)):
+    if live is not None and not (j.get("jd_sig") and j["jd_sig"] == jd_sig(live)):
         return None
     return j if (j.get("work_style") or {}) == _work_style(profile) else dict(j, style=None)
 
@@ -518,7 +526,7 @@ def _shown_url(job, row_key):
 def _judgment(row, run_dir, stamp, job, profile, jd):
     j = {f: row.get(f) for f in ("total", "scores", "gates", "show", "why", "risk", "style")}
     return dict(j, run=Path(run_dir).name, judged_at=stamp, sig=job_sig(job),
-                jd_sig=jd_sig(jd.get("full") if isinstance(jd, dict) else None), brief_sig=brief_sig(profile),
+                jd_sig=jd_sig(jd), brief_sig=brief_sig(profile),
                 work_style=_work_style(profile))
 
 
