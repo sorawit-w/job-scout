@@ -631,6 +631,89 @@ def forget_judgments():
     return n
 
 
+_CARRY_FIELDS = ("total", "scores", "gates", "show", "why", "risk", "style")
+
+
+def _results(run_dir):
+    r = read_json(Path(run_dir) / "results.json") if (Path(run_dir) / "results.json").exists() else {"rows": []}
+    if not isinstance(r, dict) or not isinstance(r.get("rows"), list):
+        raise ValueError("results.json in run %s is unreadable" % Path(run_dir).name)
+    return [x for x in r["rows"] if isinstance(x, dict)]
+
+
+def carry(run_dir):
+    """Seed results.json with the cached judgment of every candidate filter.py marked cached whose live
+    check this run (fetch_jd.py --check-only) still matches it, as rows with "carried": true. The
+    model's own rows stay first and are never replaced; earlier carried rows are rebuilt. Returns
+    {carried, read_again (open, but the posting, its text or the brief changed: read it), closed,
+    skipped [{key, why}]}. A carried style is [] when the work style changed: cite_check asks for it."""
+    run_dir = Path(run_dir)
+    jobs = read_json(run_dir / "jobs.json", [])
+    by_key = {k: j for j in jobs if isinstance(j, dict) for k in job_keys(j)}
+    seen, profile = load_seen(), run_profile(run_dir)
+    index = seen_index(seen)
+    jds = read_json(run_dir / "jds.json", {})
+    jds = jds if isinstance(jds, dict) else {}
+    rows = [r for r in _results(run_dir) if not r.get("carried")]
+    have = {r.get("key") for r in rows}
+    out = {"carried": [], "read_again": [], "closed": [], "skipped": []}
+    for c in read_json(run_dir / "candidates.json", []):
+        key = c.get("key") if isinstance(c, dict) else None
+        if not (key and c.get("cached") is True) or key in have:
+            continue
+        live = jds.get(key) if isinstance(jds.get(key), dict) else {}
+        status = live.get("status")
+        if status == "closed":
+            out["closed"].append(key)
+        elif status != "open" or live.get("dropped"):  # unverified, not checked, or no longer in the brief
+            why = live.get("dropped") or ("live check: %s" % status if status else "no live check this run")
+            out["skipped"].append({"key": key, "why": why})
+        else:
+            j = cached_judgment(by_key.get(key) or c, seen, profile, live, index)
+            if j is None:
+                out["read_again"].append(key)
+            else:
+                row = dict({"key": key, "carried": True}, **{f: j.get(f) for f in _CARRY_FIELDS})
+                row["style"] = row["style"] or []
+                rows.append(row)
+                out["carried"].append(key)
+    write_json_atomic(run_dir / "results.json", {"rows": rows})
+    return out
+
+
+def rank(run_dir):
+    """Order results.json by rubric §2 — total, then exact remote scope before flagged, then newest
+    "open since" — and set show: no failed gate, total ≥ 5, within the brief's result_count. Badges
+    and history never move a role. Flags and dates come from the live check when it has them.
+    Returns {shown, matches} (matches = rows that could be shown)."""
+    import filter as jfilter  # filter imports state; ranking by its location flags needs it back, so lazily
+    run_dir = Path(run_dir)
+    rows = _results(run_dir)
+    cands = {c.get("key"): c for c in read_json(run_dir / "candidates.json", []) if isinstance(c, dict)}
+    jds = read_json(run_dir / "jds.json", {})
+    jds = jds if isinstance(jds, dict) else {}
+    limit = with_profile_defaults(run_profile(run_dir))["result_count"]
+
+    def fields(r):
+        live = (jds.get(r.get("key")) or {}).get("job") if isinstance(jds.get(r.get("key")), dict) else None
+        live, cand = live if isinstance(live, dict) else {}, cands.get(r.get("key")) or {}
+        src = {f: live[f] if f in live else cand.get(f) for f in ("flags", "first_published")}
+        m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(src.get("first_published") or ""))
+        total = r.get("total") if isinstance(r.get("total"), int) and not isinstance(r.get("total"), bool) else 0
+        gates = r.get("gates") if isinstance(r.get("gates"), dict) else {"gates": "fail"}  # no gates: never shown
+        ok = total >= 5 and "fail" not in gates.values()
+        return (not ok, -total, jfilter.location_flagged(src.get("flags") or []), m is None,
+                -int("".join(m.groups())) if m else 0), ok
+
+    keyed = sorted(((fields(r), r) for r in rows), key=lambda x: x[0][0])
+    shown = 0
+    for (_, ok), r in keyed:
+        r["show"] = ok and shown < limit
+        shown += r["show"]
+    write_json_atomic(run_dir / "results.json", {"rows": [r for _, r in keyed]})
+    return {"shown": shown, "matches": sum(1 for (_, ok), _ in keyed if ok)}
+
+
 def mark(key, status, reason=None, now=None):
     """Set a role's status (creating the entry if record never saw it). ValueError on bad input,
     including "judged", which only `seen record` sets."""
@@ -708,7 +791,8 @@ def _seen_cli(args):
 def main(argv=None):
     """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout);
     state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] · seen show;
-    state.py judged forget (drop every cached judgment, e.g. after a new resume)."""
+    state.py judged carry|rank [--run latest] (reuse cached judgments; order results.json by the rubric) ·
+    judged forget (drop every cached judgment, e.g. after a new resume). Exit 2 = no run."""
     import argparse
     import sys
     ap = argparse.ArgumentParser(prog="state.py")
@@ -725,7 +809,9 @@ def main(argv=None):
     mark_p.add_argument("status")  # checked by mark(), so a bad status is exit 1, not argparse's 2
     mark_p.add_argument("--reason")
     seen_sub.add_parser("show")
-    sub.add_parser("judged").add_argument("action", choices=("forget",))
+    judged = sub.add_parser("judged")
+    judged.add_argument("action", choices=("carry", "rank", "forget"))
+    judged.add_argument("--run", default="latest")
     try:
         args = ap.parse_args(argv)
     except SystemExit as e:
@@ -740,10 +826,19 @@ def main(argv=None):
         return _seen_cli(args)
     if args.area == "judged":
         try:
-            print(json.dumps({"forgot": forget_judgments()}))
-        except ValueError as e:  # unreadable seen.json, left unchanged
+            if args.action == "forget":
+                out = {"forgot": forget_judgments()}
+            else:
+                try:
+                    run = resolve_run(args.run)
+                except FileNotFoundError as e:
+                    print(json.dumps({"error": str(e)}))
+                    return 2
+                out = carry(run) if args.action == "carry" else rank(run)
+        except ValueError as e:  # bad run id, unreadable seen.json or results.json, left unchanged
             print(json.dumps({"error": str(e)}, ensure_ascii=False))
             return 1
+        print(json.dumps(out, ensure_ascii=False))
         return 0
     if args.action == "show":
         p = read_json(profile_path())

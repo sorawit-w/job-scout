@@ -44,6 +44,27 @@ def run(payload, home=None):
     return code, json.loads(out.getvalue())
 
 
+class CarriedRowTest(unittest.TestCase):
+    """Rows `state.py judged carry` reused from an earlier run are checked against this run's description."""
+
+    def test_a_carried_quote_still_in_the_description_passes(self):
+        payload = results(why=[("knows React", "years building   React applications")])
+        payload["rows"][0]["carried"] = True
+        self.assertEqual(run(payload), (0, {"ok": True, "checked": 1, "failed": []}))
+
+    def test_a_carried_quote_gone_from_the_description_fails_and_says_carried(self):
+        payload = results(why=[("knows Vue", "years building Vue applications")])
+        payload["rows"][0]["carried"] = True
+        code, out = run(payload)
+        self.assertEqual(code, 1)
+        self.assertEqual(out["failed"], [{"key": "gh:a:1", "quote": "years building Vue applications",
+                                          "why": "quote not found in the job description", "carried": True}])
+
+    def test_a_row_the_model_wrote_has_no_carried_mark(self):
+        code, out = run(results(why=[("knows Vue", "years building Vue applications")]))
+        self.assertNotIn("carried", out["failed"][0])
+
+
 class CiteCheckTest(unittest.TestCase):
     def assertFails(self, payload, reason):
         code, out = run(payload)

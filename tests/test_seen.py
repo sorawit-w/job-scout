@@ -517,6 +517,132 @@ class JudgedTest(HomeCase):
         self.assertIn("ashby:acme:1", state.load_seen())
 
 
+class CarryRankTest(HomeCase):
+    """judged carry seeds results.json with still-valid judgments; judged rank orders it by rubric §2."""
+
+    def setUp(self):
+        super().setUp()
+        state.write_json_atomic(state.profile_path(), BRIEF)
+
+    def judged_run(self, jobs, rows):
+        """Run 1: judge rows and record them. Returns the jobs for run 2."""
+        state.record(self.run_with_jd(jobs, rows), now=NOW)
+
+    def run2(self, jobs, live_by_key, cached=None):
+        run = self.make_run(jobs, [])
+        (run / "results.json").unlink()
+        state.write_json_atomic(run / "candidates.json",
+                                [dict(j, cached=j["key"] in (cached if cached is not None else live_by_key)) for j in jobs])
+        state.write_json_atomic(run / "jds.json", live_by_key)
+        return run
+
+    run_with_jd = JudgedTest.run_with_jd
+
+    def test_carry_seeds_valid_judgments_and_lists_what_to_read_again(self):
+        jobs = [job("ashby:acme:%d" % i) for i in range(1, 5)]
+        self.judged_run(jobs, [row(j["key"], i < 2, total=7 - i) for i, j in enumerate(jobs)])
+        run = self.run2(jobs, {"ashby:acme:1": live(), "ashby:acme:2": live(JD + " Must be in Berlin."),
+                               "ashby:acme:3": {"status": "closed"}}, cached=[j["key"] for j in jobs])
+        out = state.carry(run)
+        self.assertEqual(out, {"carried": ["ashby:acme:1"], "read_again": ["ashby:acme:2"], "closed": ["ashby:acme:3"],
+                               "skipped": [{"key": "ashby:acme:4", "why": "no live check this run"}]})
+        rows = state.read_json(run / "results.json")["rows"]
+        r = row("ashby:acme:1", True, total=7)
+        self.assertEqual(rows, [{"key": "ashby:acme:1", "carried": True, "total": 7, "scores": r["scores"],
+                                 "gates": r["gates"], "show": True, "why": r["why"], "risk": r["risk"], "style": []}])
+
+    def test_carry_skips_unverified_and_no_longer_fitting_roles(self):
+        jobs = [job("ashby:acme:1"), job("ashby:acme:2")]
+        self.judged_run(jobs, [row("ashby:acme:1", True), row("ashby:acme:2", True)])
+        run = self.run2(jobs, {"ashby:acme:1": {"status": "unverified"},
+                               "ashby:acme:2": dict(live(), dropped="changed since the search: now removed by location")})
+        self.assertEqual(state.carry(run)["skipped"], [
+            {"key": "ashby:acme:1", "why": "live check: unverified"},
+            {"key": "ashby:acme:2", "why": "changed since the search: now removed by location"}])
+        self.assertEqual(state.read_json(run / "results.json")["rows"], [])
+
+    def test_carry_keeps_the_models_rows_and_does_not_repeat_itself(self):
+        jobs = [job("ashby:acme:1"), job("ashby:acme:2")]
+        self.judged_run(jobs[:1], [row("ashby:acme:1", True)])
+        run = self.run2(jobs, {"ashby:acme:1": live()}, cached=["ashby:acme:1"])
+        state.write_json_atomic(run / "results.json", {"rows": [row("ashby:acme:2", True, total=8)]})
+        state.carry(run)
+        state.carry(run)
+        self.assertEqual([r["key"] for r in state.read_json(run / "results.json")["rows"]], ["ashby:acme:2", "ashby:acme:1"])
+
+    def test_carry_never_overrides_a_row_the_model_wrote_for_the_same_role(self):
+        self.judged_run([job()], [row("ashby:acme:1", True)])
+        run = self.run2([job()], {"ashby:acme:1": live()})
+        state.write_json_atomic(run / "results.json", {"rows": [row("ashby:acme:1", False, total=3)]})  # judged again
+        self.assertEqual(state.carry(run)["carried"], [])
+        self.assertEqual(state.read_json(run / "results.json")["rows"], [row("ashby:acme:1", False, total=3)])
+
+    def test_carried_style_is_empty_when_the_work_style_changed(self):
+        styled = dict(BRIEF, work_style={"travel": "none"})
+        state.write_json_atomic(state.profile_path(), styled)
+        r = dict(row("ashby:acme:1", True), style=[{"topic": "travel", "verdict": "conflict", "text": "x",
+                                                    "quote": "travel up to 25% of the time"}])
+        self.judged_run([job()], [r])
+        state.write_json_atomic(state.profile_path(), dict(BRIEF, work_style={"travel": "some"}))
+        run = self.run2([job()], {"ashby:acme:1": live()})
+        state.carry(run)
+        self.assertEqual(state.read_json(run / "results.json")["rows"][0]["style"], [])  # cite_check then asks for it
+
+    def rank(self, rows, cands, result_count=2):
+        state.write_json_atomic(state.profile_path(), dict(BRIEF, result_count=result_count))
+        run = self.make_run([], rows)
+        state.write_json_atomic(run / "candidates.json", cands)
+        out = state.rank(run)
+        return out, state.read_json(run / "results.json")["rows"]
+
+    def test_rank_orders_by_total_then_exact_scope_then_newest_and_sets_show(self):
+        cands = [dict(job("ashby:acme:%d" % i), flags=f, first_published=d) for i, f, d in (
+            (1, [], "2026-10-01"), (2, ["remote scope not stated"], "2026-10-09"), (3, [], "2026-10-05"),
+            (4, [], "2026-10-09"), (5, [], "2026-10-09"), (6, [], None))]
+        rows = [row("ashby:acme:1", False, 6), row("ashby:acme:2", True, 7), row("ashby:acme:3", True, 7),
+                dict(row("ashby:acme:4", True, 8), gates=dict(row("x", True)["gates"], location="fail")),
+                row("ashby:acme:5", True, 4), row("ashby:acme:6", True, 7)]
+        out, ranked = self.rank(rows, cands)
+        self.assertEqual([(r["key"][-1], r["show"]) for r in ranked],
+                         [("3", True), ("6", True), ("2", False), ("1", False), ("4", False), ("5", False)])
+        self.assertEqual(out, {"shown": 2, "matches": 4})
+
+    def test_rank_prefers_the_live_flags_and_date(self):
+        cands = [dict(job("ashby:acme:1"), flags=[], first_published="2026-10-01"),
+                 dict(job("ashby:acme:2"), flags=[], first_published="2026-10-02")]
+        state.write_json_atomic(state.profile_path(), dict(BRIEF, result_count=5))
+        run = self.make_run([], [row("ashby:acme:1", True, 7), row("ashby:acme:2", True, 7)])
+        state.write_json_atomic(run / "candidates.json", cands)
+        state.write_json_atomic(run / "jds.json", {"ashby:acme:2": {"status": "open", "job": {
+            "flags": ["remote scope not stated"], "first_published": "2026-10-09"}}})
+        state.rank(run)
+        self.assertEqual([r["key"] for r in state.read_json(run / "results.json")["rows"]], ["ashby:acme:1", "ashby:acme:2"])
+
+    def test_rank_falls_back_to_the_candidate_for_a_field_the_live_check_lacks(self):
+        cands = [dict(job("ashby:acme:1"), flags=[], first_published="2026-10-01"),
+                 dict(job("ashby:acme:2"), flags=[], first_published="2026-10-09")]
+        state.write_json_atomic(state.profile_path(), dict(BRIEF, result_count=5))
+        run = self.make_run([], [row("ashby:acme:1", True, 7), row("ashby:acme:2", True, 7)])
+        state.write_json_atomic(run / "candidates.json", cands)
+        state.write_json_atomic(run / "jds.json", {"ashby:acme:2": {"status": "open", "job": {"title": "x"}}})
+        state.rank(run)
+        self.assertEqual([r["key"] for r in state.read_json(run / "results.json")["rows"]], ["ashby:acme:2", "ashby:acme:1"])
+
+    def test_judged_cli(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(state.main(["judged", "carry"]), 2)  # no run yet
+            self.assertEqual(state.main(["judged", "rank", "--run", "../x"]), 1)
+        run = self.make_run([job()], [row("ashby:acme:1", True)])
+        state.write_json_atomic(run / "candidates.json", [job()])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(state.main(["judged", "rank", "--run", run.name]), 0)
+            self.assertEqual(state.main(["judged", "carry", "--run", run.name]), 0)
+        self.assertEqual([json.loads(l) for l in out.getvalue().splitlines()],
+                         [{"shown": 1, "matches": 1}, {"carried": [], "read_again": [], "closed": [], "skipped": []}])
+
+
 class MarkTest(HomeCase):
     def test_creates_unknown_key(self):
         state.mark("ashby:acme:1", "saved", now=NOW)

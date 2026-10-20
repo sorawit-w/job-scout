@@ -315,12 +315,17 @@ def _judge(job, p, ctx):
     return None, row, None
 
 
+def location_flagged(flags):
+    """True when a flag says the place or remote scope is not an exact fit (rubric §2: ranks after exact)."""
+    return any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in flags)
+
+
 def _rank_key(row, p):
     m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(row.get("first_published") or ""))
     newest = -int("".join(m.groups())) if m else None  # negative, so newer dates sort first
     on_detail = any(f in (MODE_ON_DETAIL_FLAG, LOCATION_ON_DETAIL_FLAG) for f in row["flags"])  # unconfirmed fit: last
     return (row["cached"], row["state"] not in _READ_FIRST, on_detail, row["match"] != "strong",
-            any(f in LOCATION_FLAGS or f.startswith("relocation:") for f in row["flags"]),
+            location_flagged(row["flags"]),
             -_desc_hits(row, p), newest is None, newest or 0)
 
 
