@@ -7,7 +7,7 @@ today, links straight to the employer, and explains its fit with quotes from the
 - **Works in:** Claude Code, Codex, claude.ai (Pro/Max), and any agent that reads `SKILL.md`.
 - **Reads:** Greenhouse, Ashby, Lever, SmartRecruiters and Workday boards, plus USAJOBS with
   your own free key.
-- **Status:** Current release: `0.3.0`. See [Status](#status).
+- **Status:** Current release: `0.4.0`. See [Status](#status).
 
 job-scout is not affiliated with any job board or employer.
 
@@ -40,7 +40,7 @@ by people. Every shown role was open on a live check and linked to the employer
 - Optionally shows how each role fits the way you like to work (meetings, on-call, travel,
   autonomy, company stage): matches, doesn't match, or not stated, always with a quote from the
   posting. It never changes the ranking.
-- Remembers what you saved, applied to or dismissed, so the next run shows only what is new.
+- Remembers what you saved, applied to or dismissed, and what it already judged, so the next run shows one ranked list with new and changed roles marked, without reading the same postings again.
 
 ## What it doesn't do
 

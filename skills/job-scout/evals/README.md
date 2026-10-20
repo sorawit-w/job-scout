@@ -24,9 +24,12 @@ skill-creator run executes the skill with its scripts, against a replay world wh
 | E10 | Data analyst, remote US: asks pay and sponsorship; analytics roles, not data engineering | persona-data-analyst.md | none | stated-intent |
 | E11 | PM on the IC track: keeps "Product Manager" titles, never the manager track | persona-pm.md | none | stated-intent |
 | E12 | HTML report after the chat results, before `seen record`; path given | e12-report.md | none | stated-intent |
-| E13 | Rerun with nothing new still writes the report; saved/applied listed | e13-rerun-nothing-new.md | none | stated-intent |
+| E13 | Rerun with nothing new: one line above the full ranked list, judgments carried, report written | e13-rerun-nothing-new.md | none | stated-intent |
 | E14 | Work-style signals quoted, "not stated" when silent, never move a role | e14-work-style.md | none | stated-intent |
 | E15 | First confirmed brief asks the optional work-style question before searching | e15-work-style-ask.md | none | stated-intent |
+| E16 | A judged role that was cut re-enters the top N badged NEW; cached roles carried, not read | e16-judged-role-enters.md | none | stated-intent |
+| E17 | A new resume and a brief edit invalidate every cached judgment | e17-brief-edit-cache.md | none | stated-intent |
+| E18 | A carried quote that fails cite_check forces a fresh judgment | e18-carried-quote-fails.md | none | stated-intent |
 
 All persona files are in `files/`. They are synthetic people with fictional employers and no
 protected attributes. Any eval can also run live; the gate evals (E1, E7, E9–E11) stop before

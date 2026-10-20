@@ -179,16 +179,18 @@
     },
     {
       "id": "E13",
-      "name": "rerun with nothing new still writes the report",
+      "name": "rerun with nothing new still shows the full ranked list, reuses judgments and writes the report",
       "prompt": "(see files/e13-rerun-nothing-new.md)",
-      "expected_output": "One line saying nothing is new, the saved-or-applied list (Vercel, Linear), report.py run before seen record, and the report path given. No padding with weak matches.",
+      "expected_output": "The line 'Nothing new since last time.' above the full ranked list (Vercel 7/8 badged SAVED, then Ramp 6/8 with no badge and 'First shown 2026-10-19'), the saved-or-applied list, report.py before seen record, the report path. No description is read again; Retool (4/8) is not shown.",
       "files": ["evals/files/e13-rerun-nothing-new.md"],
       "assertions": [
-        "Says in one line that nothing is new since last time",
+        "Says in one line that nothing is new since last time, above the table",
+        "Still shows the ranked table: Vercel Design Engineer first, then Ramp Product Engineer, Design Systems",
+        "Vercel is badged SAVED; Ramp has no badge and its notes line says First shown 2026-10-19",
+        "Runs scripts/fetch_jd.py --check-only and scripts/state.py judged carry, and never runs fetch_jd.py --keys to read a description again",
         "Lists the saved and applied roles that are still open (Vercel Design Engineer, Linear Product Engineer)",
-        "Runs scripts/report.py before scripts/state.py seen record",
-        "Gives the report path /Users/sam/.job-scout/runs/20261026T120000Z/report.html",
-        "Does not show weak or unrelated roles to fill the reply"
+        "Runs scripts/report.py before scripts/state.py seen record and gives the report path /Users/sam/.job-scout/runs/20261026T120000Z/report.html",
+        "Does not show Retool Frontend Engineer (4/8) or any other weak role to fill the table"
       ]
     },
     {
@@ -217,6 +219,55 @@
         "Says the work-style answers do not change fit, rank or which roles are shown",
         "Does not run scripts/probe.py (search or --health) before the user answers or skips",
         "Does not ask about anything personal (family, age, health, reasons for a preference)"
+      ]
+    },
+    {
+      "id": "E16",
+      "name": "a judged role that was cut re-enters the top N badged NEW",
+      "prompt": "(see files/e16-judged-role-enters.md)",
+      "expected_output": "One ranked list of 15: the 14 roles still open from last time with no badge, in their old order, then Tapcart Sr. Product Engineer at #15 badged NEW (never shown before). Linear's closed role is not in the table. The 38 cached roles are live-checked with --check-only and carried, not read again.",
+      "files": [
+        "evals/files/e16-judged-role-enters.md"
+      ],
+      "assertions": [
+        "Shows 15 rows, with Tapcart Sr. Product Engineer at #15",
+        "Tapcart is badged NEW (or described as not shown before), and no other row is badged NEW",
+        "Linear Product Engineer is not in the table",
+        "Runs scripts/fetch_jd.py --check-only and scripts/state.py judged carry, and does not read Tapcart's description again (no fetch_jd.py --keys that includes ashby:tapcart:44)",
+        "The coverage line counts 0 new or changed since last time and says it shows the top 15 of 16 matches",
+        "Runs scripts/state.py judged rank before scripts/cite_check.py and keeps the rows in the order rank gave"
+      ]
+    },
+    {
+      "id": "E17",
+      "name": "a new resume and a brief edit invalidate every cached judgment",
+      "prompt": "(see files/e17-brief-edit-cache.md)",
+      "expected_output": "The changed brief (hybrid in Austin added) is shown and confirmed before searching. scripts/state.py judged forget runs because the resume changed. filter.py marks every candidate cached: false, so there is no --check-only and nothing is carried: the chosen roles, including ones shown last week, are read and judged again.",
+      "files": [
+        "evals/files/e17-brief-edit-cache.md"
+      ],
+      "assertions": [
+        "Runs scripts/state.py judged forget because the user gave an updated resume",
+        "Shows the changed brief with hybrid in Austin and asks the user to confirm it before running scripts/probe.py",
+        "After filter.py, picks roles to read with scripts/fetch_jd.py --keys, including roles that were seen last week",
+        "Does not say it reused, carried or kept any earlier judgment",
+        "Does not run scripts/fetch_jd.py --check-only (no candidate is cached)"
+      ]
+    },
+    {
+      "id": "E18",
+      "name": "a carried quote that fails cite_check forces a fresh judgment",
+      "prompt": "(see files/e18-carried-quote-fails.md)",
+      "expected_output": "The failed carried row for Notion is deleted, not patched; Notion's description is fetched with fetch_jd.py --keys and the role is judged again from scratch (the async claim is gone: the posting now has daily standups). judged rank and cite_check run again until ok.",
+      "files": [
+        "evals/files/e18-carried-quote-fails.md"
+      ],
+      "assertions": [
+        "Deletes the carried Notion row rather than editing its quote",
+        "Runs scripts/fetch_jd.py --keys ashby:notion:2 and judges Notion again from its current description",
+        "The new Notion judgment does not claim async work, and may quote the daily standups line",
+        "Runs scripts/state.py judged rank and then scripts/cite_check.py again after the change",
+        "Does not re-read Ramp (its carried row passed)"
       ]
     }
   ]
