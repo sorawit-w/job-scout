@@ -54,20 +54,22 @@ On claude.ai, files do not persist between chats, so `~/.job-scout/` starts empt
   it again in the chat, and skip it when the user's first message is a pasted block.
 - **A pasted block** (it starts `job-scout memory`): restore it before anything else. Save the
   `profile:` line with `python3 scripts/state.py profile save --stdin`, then run
-  `python3 scripts/state.py seen mark <key> <status>` for each role line. The search is now a
-  rerun (Phase 9). If the profile is rejected, say why and run the Phase 2 gate.
+  `python3 scripts/state.py seen mark <key> <status>` for each role line. When a line lists more
+  than one key, the first is `<key>` and the rest go in `--aliases=<key2>,<key3>`. The search is
+  now a rerun (Phase 9). If the profile is rejected, say why and run the Phase 2 gate.
 - **End of every run** (also one that stopped early), and again after feedback changes it: run
   `python3 scripts/state.py profile show` and `python3 scripts/state.py seen show`, then offer
   one code block. List every saved, applied and dismissed role; never seen or judged ones.
-  A role with no title in `seen show` came from a pasted block: copy its title and company from
-  that block.
+  Write each role's `aliases` from `seen show` after its key, comma-separated: they are the same
+  role's other postings, and without them the role can come back as new. A role with no title in
+  `seen show` came from a pasted block: copy its title and company from that block.
 
 ```
 job-scout memory — paste this into a new chat to pick up where you left off
 profile: <the profile from profile show, as JSON on one line>
-saved <key> | <title> | <company> | <link>
-applied <key> | <title> | <company> | <link>
-dismissed <key> | <title> | <company>
+saved <key>[,<alias>...] | <title> | <company> | <link>
+applied <key>[,<alias>...] | <title> | <company> | <link>
+dismissed <key>[,<alias>...] | <title> | <company>
 ```
 
 ## Phase 0 — Route check (before anything else)

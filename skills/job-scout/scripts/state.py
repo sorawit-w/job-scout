@@ -751,13 +751,15 @@ def rank(run_dir):
     return {"shown": shown, "matches": sum(1 for (_, ok), _ in keyed if ok)}
 
 
-def mark(key, status, reason=None, now=None):
-    """Set a role's status (creating the entry if record never saw it). ValueError on bad input,
-    including "judged", which only `seen record` sets."""
+def mark(key, status, reason=None, now=None, aliases=()):
+    """Set a role's status (creating the entry if record never saw it), adding any other posting keys
+    as aliases (the claude.ai paste block restores them). ValueError on bad input, including "judged",
+    which only `seen record` sets."""
     if status not in MARK_STATUSES:
         raise ValueError("status must be one of %s" % "/".join(MARK_STATUSES))
-    if not isinstance(key, str) or not _KEY_RE.match(key):
-        raise ValueError("bad job key %r (want ats:slug:job_id)" % (key,))
+    for k in [key] + list(aliases):
+        if not isinstance(k, str) or not _KEY_RE.match(k):
+            raise ValueError("bad job key %r (want ats:slug:job_id)" % (k,))
     if reason is not None and (not isinstance(reason, str) or len(reason) > MAX_REASON):
         raise ValueError("reason must be a string of at most %d characters" % MAX_REASON)
     seen = load_seen()
@@ -765,12 +767,13 @@ def mark(key, status, reason=None, now=None):
     e = seen.setdefault(target, {"first_seen": now_iso(now), "last_seen": now_iso(now), "closed_at": None,
                                  "sig": None, "aliases": []})
     e.update(status=status, reason=reason)
+    _merge_aliases(e, target, list(aliases))
     write_json_atomic(seen_path(), seen)
     return dict(e, key=target)
 
 
 def seen_summary():
-    """{"counts": {status: n}, "saved"/"applied"/"dismissed": [{key, title, company, url, closed}]} — `seen show`,
+    """{"counts": {status: n}, "saved"/"applied"/"dismissed": [{key, aliases, title, company, url, closed}]} — `seen show`,
     which also feeds the claude.ai paste block."""
     seen = load_seen()
     counts = {}
@@ -778,13 +781,14 @@ def seen_summary():
         counts[e.get("status")] = counts.get(e.get("status"), 0) + 1
     out = {"counts": counts}
     for status in ("saved", "applied", "dismissed"):
-        out[status] = [{"key": k, "title": e.get("title"), "company": e.get("company"), "url": e.get("url"),
-                        "closed": bool(e.get("closed_at"))} for k, e in seen.items() if e.get("status") == status]
+        out[status] = [{"key": k, "aliases": list(e.get("aliases") or []), "title": e.get("title"),
+                        "company": e.get("company"), "url": e.get("url"), "closed": bool(e.get("closed_at"))}
+                       for k, e in seen.items() if e.get("status") == status]
     return out
 
 
 def _seen_cli(args):
-    """seen diff|record [--run] · seen mark KEY STATUS [--reason] · seen show. Exit 0 ok, 1 bad input
+    """seen diff|record [--run] · seen mark KEY STATUS [--reason] [--aliases] · seen show. Exit 0 ok, 1 bad input
     (including an unreadable seen.json, which is left unchanged), 2 no run."""
     try:
         if args.action in ("diff", "record"):
@@ -815,7 +819,7 @@ def _seen_cli(args):
                                             "status": seen[k].get("status"), "url": seen[k].get("url")}
                                            for k in out["closed"]])
         elif args.action == "mark":
-            e = mark(args.key, args.status, args.reason)
+            e = mark(args.key, args.status, args.reason, aliases=[a for a in (args.aliases or "").split(",") if a])
             out = {"ok": True, "key": e["key"], "status": e["status"], "reason": e["reason"]}
         else:
             out = seen_summary()
@@ -828,7 +832,7 @@ def _seen_cli(args):
 
 def main(argv=None):
     """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout);
-    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] · seen show;
+    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] [--aliases K,K] · seen show;
     state.py judged carry|rank [--run latest] (reuse cached judgments; order results.json by the rubric) ·
     judged forget (drop every cached judgment, e.g. after a new resume). Exit 2 = no run."""
     import argparse
@@ -846,6 +850,7 @@ def main(argv=None):
     mark_p.add_argument("key")
     mark_p.add_argument("status")  # checked by mark(), so a bad status is exit 1, not argparse's 2
     mark_p.add_argument("--reason")
+    mark_p.add_argument("--aliases", help="other posting keys of the same role, comma-separated")
     seen_sub.add_parser("show")
     judged = sub.add_parser("judged")
     judged.add_argument("action", choices=("carry", "rank", "forget"))

@@ -795,8 +795,8 @@ class SeenCliTest(HomeCase):
         code, out = self.cli(["seen", "show"])
         self.assertEqual(code, 0)
         self.assertEqual(out["counts"], {"seen": 1, "saved": 1})
-        self.assertEqual(out["saved"], [{"key": "ashby:acme:1", "title": "Senior Frontend Engineer", "company": "Acme",
-                                         "url": None, "closed": False}])
+        self.assertEqual(out["saved"], [{"key": "ashby:acme:1", "aliases": [], "title": "Senior Frontend Engineer",
+                                         "company": "Acme", "url": None, "closed": False}])
         self.assertEqual(out["applied"], [])
 
     def test_corrupt_seen_exits_1_and_is_not_changed(self):
@@ -880,14 +880,21 @@ class SeenCliTest(HomeCase):
         self.assertEqual((code, out["counts"], out["saved"], out["dismissed"]), (0, {}, [], []))
 
     def test_claude_ai_paste_block_round_trip_keeps_a_dismissed_role_hidden(self):
-        state.record(self.make_run([job()], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
+        state.record(self.make_run([job(more=["ashby:acme:5"])], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
         self.cli(["seen", "mark", "ashby:acme:1", "dismissed"])
         code, out = self.cli(["seen", "show"])
-        self.assertEqual([(d["key"], d["title"], d["company"]) for d in out["dismissed"]],
-                         [("ashby:acme:1", "Senior Frontend Engineer", "Acme")])
+        self.assertEqual([(d["key"], d["aliases"], d["title"], d["company"]) for d in out["dismissed"]],
+                         [("ashby:acme:1", ["ashby:acme:5"], "Senior Frontend Engineer", "Acme")])
         state.seen_path().unlink()  # a new claude.ai chat: nothing persisted
-        self.cli(["seen", "mark", "ashby:acme:1", "dismissed"])  # restoring the pasted block
-        self.assertEqual(state.job_state(job(), state.load_seen()), "dismissed")
+        # restoring the pasted block; the primary posting has since closed, so only variant 5 is listed
+        self.assertEqual(self.cli(["seen", "mark", "ashby:acme:1", "dismissed", "--aliases", "ashby:acme:5"])[0], 0)
+        self.assertEqual(state.job_state(job("ashby:acme:5"), state.load_seen()), "dismissed")
+
+    def test_mark_rejects_a_bad_alias_and_writes_nothing(self):
+        code, out = self.cli(["seen", "mark", "ashby:acme:1", "saved", "--aliases", "not a key"])
+        self.assertEqual(code, 1)
+        self.assertIn("bad job key", out["error"])
+        self.assertFalse(state.seen_path().exists())
 
 
 if __name__ == "__main__":
