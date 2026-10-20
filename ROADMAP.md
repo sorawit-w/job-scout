@@ -13,7 +13,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ### Phase 3: v0.4
 
-- [~] M9 — Rerun memory: a `judged` status so screened-but-unshown roles stop coming back as new; one ranked rerun list with NEW / CHANGED / SAVED badges; cached judgments reused when the posting and the brief are unchanged (two PRs)
+- [x] M9 — Rerun memory: a `judged` status so screened-but-unshown roles stop coming back as new; one ranked rerun list with NEW / CHANGED / SAVED badges; cached judgments reused when the posting and the brief are unchanged; version 0.4.0 merged, release pending (maintainer's call)
 
 ## Follow-ups
 
@@ -31,6 +31,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 - [ ] Workday jobs carry no remote/onsite field: a "Remote … California Residents Only" role reads as onsite
 - [ ] Workday rows with no place or mode spend live-check reads (21 of 40 in the nurse run, none shown): read their detail records outside the 40-description budget, or cap them
 - [ ] claude.ai Team/Enterprise egress test
+- [ ] Report: axe `heading-order` on a role's "Check first" heading once its detail opens inline at ~1024px (found in the M9 audit; on main since M7)
+- [ ] Root README "Status" section still describes the first release
 
 ## Shipped
 
