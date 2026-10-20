@@ -19,6 +19,10 @@ All notable changes to `job-scout` are documented here. Format follows
   detail lists every signal in a new "Work style" section, and the brief shows your choices.
 - The signals never change fit, rank, or which roles are shown. To hide roles, use a dealbreaker.
 - The profile keeps only the fixed choices, never a reason given for one. Evals E14 and E15.
+- Each run keeps a copy of the brief it was searched with (`<run>/profile.json`), so a later
+  "change my work style" never relabels an older run's report. `cite_check.py` checks every shown
+  role covers each saved topic exactly once, and that a choice that allows something ("travel OK")
+  is never reported as a conflict.
 
 ## [0.2.0] — 2026-10-19
 
