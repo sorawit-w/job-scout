@@ -266,8 +266,11 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
             src = by_key.get(k) or seen.get(k)
             if isinstance(src, dict):
                 entry = seen.get(k) if isinstance(seen.get(k), dict) else {}
+                checked = jds.get(k) if isinstance(jds.get(k), dict) else {}
+                live = checked.get("job") if checked.get("status") == "open" and isinstance(checked.get("job"), dict) else {}
                 out.append({"title": str(src.get("title") or k), "company": str(src.get("company") or ""),
-                            "url": _safe_url(src.get("url")), "status": status or entry.get("status")})
+                            "url": _safe_url(live.get("url") or src.get("url")),  # the posting the live check found open
+                            "status": status or entry.get("status")})
         return out
 
     return {

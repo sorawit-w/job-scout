@@ -239,6 +239,21 @@ class ReportTest(unittest.TestCase):
         self.assertIn('href="https://jobs.example.com/still-live"', still)
         self.assertNotIn("gh:a:1", still)
 
+    def test_still_open_links_to_the_variant_the_live_check_used(self):
+        # fetch_jd found the shown posting closed and fell back to variant gh:a:2, which is open
+        grouped = job("gh:a:1", state_="saved", variants=[
+            {"key": "gh:a:1", "url": "https://jobs.example.com/closed"},
+            {"key": "gh:a:2", "url": "https://jobs.example.com/live"}])
+        make_run(self.home, [grouped], rows=None, jds={"gh:a:1": {
+            "status": "open", "variant": "gh:a:2", "job": {"url": "https://jobs.example.com/live"}}})
+        with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
+            state.write_json_atomic(state.seen_path(), {
+                "gh:a:1": {"status": "saved", "title": "Design Engineer", "company": "Vercel", "sig": ""}})
+        run([], self.home)
+        still = page(self.home).split("<h2>Saved or applied, still open</h2>")[1]
+        self.assertIn('href="https://jobs.example.com/live"', still)
+        self.assertNotIn("closed", still.split("</table>")[0])
+
     def test_live_closed_alias_keeps_its_saved_status(self):
         grouped = job("gh:a:1", state_="changed", variants=[{"key": "gh:a:1"}, {"key": "gh:a:2"}])
         make_run(self.home, [grouped], rows=None, boards={"probed": 1, "available": 1, "live_boards": ["gh:a"]},
