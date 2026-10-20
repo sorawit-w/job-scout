@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | v0.3 — work-style match shipped; launch smoke tests still open |
-| **Milestone** | none in progress; deploy-launch (M6) open until the smoke tests pass |
-| **Milestone Goal** | pick the next milestone from the ROADMAP follow-ups |
+| **Phase** | Review — rerun memory (M9) part 1, the judged status; launch smoke tests still open |
+| **Milestone** | v04-rerun-memory (M9); deploy-launch (M6) open until the smoke tests pass |
+| **Milestone Goal** | a rerun shows one ranked list with NEW / CHANGED / SAVED badges and reuses still-valid judgments |
 
 ---
 
@@ -23,8 +23,9 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
-| 2 | Choose the next milestone from the ROADMAP follow-ups | — |
+| 1 | M9 part 1: judged status — Codex review loop, then the maintainer's merge decision | — |
+| 2 | M9 part 2: full ranked rerun view — plan approval, then build | part 1 merged |
+| 3 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
 
 ---
 
