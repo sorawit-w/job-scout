@@ -789,8 +789,9 @@ _LINK_RE = re.compile(r"^https?://\S+$", re.I)
 
 
 def _one_line(v):
-    """A block field on one line with no field separator, so no title can split a line or end a heredoc."""
-    return " ".join(str(v or "").replace("|", "/").split())
+    """A block field on one line with no field separator, so no title can split a line or end a heredoc,
+    cut to what memory restore accepts."""
+    return " ".join(str(v or "").replace("|", "/").split())[:MAX_REASON].strip()
 
 
 def memory_block():
@@ -807,10 +808,11 @@ def memory_block():
         for key, e in seen.items():
             if e.get("status") != status or e.get("closed_at"):
                 continue
-            fields = [",".join([key] + list(e.get("aliases") or [])), _one_line(e.get("title")),
-                      _one_line(e.get("company"))]
+            # every field is one memory restore accepts, so a generated block never comes back skipped
+            keys = [key] + [a for a in e.get("aliases") or [] if isinstance(a, str) and _KEY_RE.match(a)]
+            fields = [",".join(keys), _one_line(e.get("title")), _one_line(e.get("company"))]
             url = e.get("url")
-            if status != "dismissed" and isinstance(url, str) and _LINK_RE.match(url):
+            if status != "dismissed" and isinstance(url, str) and len(url) <= MAX_URL and _LINK_RE.match(url):
                 fields.append(url)
             lines.append("%s %s" % (status, " | ".join(fields)))
     return "\n".join(lines)

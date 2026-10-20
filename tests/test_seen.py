@@ -956,6 +956,21 @@ class MemoryTest(HomeCase):
         self.assertFalse(state.profile_path().exists())
         self.assertEqual(state.load_seen()["workday:acme.wd1.External:R1"]["url"], long_link)
 
+    def test_every_block_memory_show_prints_restores_with_nothing_skipped(self):
+        j = job("ashby:acme:1", title="T" * 300)
+        j["company"], j["url"] = "C" * 250, "https://jobs.ashbyhq.com/acme/" + "a" * 3000
+        state.record(self.make_run([j], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
+        state.mark("ashby:acme:1", "saved")
+        seen = state.load_seen()
+        seen["ashby:acme:1"]["aliases"].append("not a key")
+        state.write_json_atomic(state.seen_path(), seen)
+        block = self.cli(["memory", "show"])[1]
+        state.seen_path().unlink()
+        code, out = self.restore(block)
+        self.assertEqual((code, out["roles"], out["skipped"]), (0, 1, []))
+        e = state.load_seen()["ashby:acme:1"]
+        self.assertEqual((e["title"], e["company"], e.get("url"), e["aliases"]), ("T" * 200, "C" * 200, None, []))
+
     def test_restore_never_overwrites_what_record_saw(self):
         state.record(self.make_run([job()], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
         self.restore("saved ashby:acme:1 | Old title | Old Co | https://old.example/1\n")
