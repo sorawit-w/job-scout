@@ -24,7 +24,8 @@
 | Priority | Task | Dependencies |
 |----------|------|--------------|
 | 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
-| 2 | Choose the next milestone from the ROADMAP follow-ups | — |
+| 2 | Review the HTML report badge redesign and the "Close but excluded" reason fix (two PRs) | — |
+| 3 | Choose the next milestone from the ROADMAP follow-ups | — |
 
 ---
 

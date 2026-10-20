@@ -17,6 +17,8 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 
 ## Follow-ups
 
+- [ ] HTML report fit column: on a top-15 list every row is fit 7–8, so the teal fit column and the "Top fit" chip separate nothing (Oct 20 run: 15 of 15). Deferred from the badge pass (2026-10-20)
+- [ ] HTML report chrome: take teal off the selected row, pressed chips and sort mark and make "Open posting" near-black, so color sits only on data and status (taste-skill variant, 2026-10-20). Deferred from the badge pass
 - [ ] Lever EU host (`api.eu.lever.co`) — not needed in v0: every sampled seed slug answered on `api.lever.co`
 - [ ] Location table gaps: cities missing from `normalize.py`'s table resolve to no country; "Lima, PE" reads PE as a Canadian province; "Porto Alegre" matches Porto (PT); "Stuttgart, DE" reads DE as Delaware
 - [ ] Region-to-country matching in filter.py: only "Americas" maps to countries today, so a DE or GB user's "Remote - Europe" role is removed by remote scope instead of kept with a flag

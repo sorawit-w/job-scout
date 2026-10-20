@@ -220,3 +220,20 @@ Observations: A paste does not carry a dismissal's reason or a role's first-show
 Task: v0.5.0 release prep
 Action: bumped VERSION, .codex-plugin/plugin.json, CHANGELOG ([Unreleased] → [0.5.0]) and README status to 0.5.0. Contents: claude.ai memory (#23/#26), weekly seed check auto-merge with seed_guard (#24), Claude Code manifests without version so updates follow the git commit (#25).
 Status: DONE (pending merge and release publish)
+
+[2026-10-20T17:20:48Z]
+Task: HTML report redesign as a playground for choosing design skills
+Action: Ran four blind arms on the Oct 20 report (impeccable, taste-skill, ui-ux-pro-max, screenwright), one sub-agent each, same brief and baseline, scratch folders only. All four converged on the same badge fix. Ported a merge into report.py: NEW filled blue pill, CHANGED blue outline, SAVED neutral outline (impeccable/screenwright); "N new to you" header pill and muted "pay not listed" (taste-skill); hanging chevron so wrapped titles and badges share one edge (all four); score rows at the gate rows' 29px (screenwright). Badge text 12px with no tracking after the taste-skill inspector failed 11px tracked caps (micro-label). Updated docs/report-design.md and CHANGELOG.
+Files: skills/job-scout/scripts/report.py, tests/test_report.py, docs/report-design.md, CHANGELOG.md, ROADMAP.md
+Commit: caacda1
+Status: DONE (branch feature/report-design-badges, not pushed, not merged)
+Notes: Deferred to ROADMAP Follow-ups: the fit column that separates nothing on an all-top-fit list; teal off the chrome. Gates: 725 tests OK (python -m unittest discover -s tests -t .) on 3.14.7 and 3.9.6; axe 0 violations at 1440/390 light and dark; taste-skill inspect --app 0 FAIL, 1 WARN (sticky pane height, same as baseline); same view renders the same bytes. Playground: report.render() rebuilt from the downloaded page reproduces it byte for byte (scratch rebuild_view.py).
+Observations: report.py _excluded_reason prints "fit 7/8, below 5" for rows cut by the top-15 limit, not by fit (seen by three of the four arms). At 768-1199px the Where column wraps titles to 4-5 lines. Combined quick-filter chips can reach 0 rows with no "clear" control. No skill's spec loader found docs/report-design.md: each looks only for a root DESIGN.md. Running `python3 -m unittest discover -s tests` without `-t .` fails to import test_adapters on main too.
+
+[2026-10-20T17:35:14Z]
+Task: Move the report design spec to a root DESIGN.md
+Action: git mv docs/report-design.md DESIGN.md (the user's choice); description now names it the repo's design-token authority, with the report as its only surface. report.py's spec comment and the CHANGELOG [Unreleased] entry point to it. Drafted a kerby swe handoff (find a spec under another name, pass its path to the design skill, one author skill per surface, no ui-ux-pro-max routing) at docs/handoffs/2026-10-20-kerby-swe-design-skills.md, left untracked for the kerby repo.
+Files: DESIGN.md (renamed), skills/job-scout/scripts/report.py, CHANGELOG.md, .kerby/STATUS.md
+Commit: d719bc6 (move); this commit (log, status)
+Status: DONE (branch feature/report-design-badges, not pushed, not merged)
+Notes: Tests OK (python -m unittest discover -s tests -t .). The user is uninstalling ui-ux-pro-max so design skills don't conflict.
