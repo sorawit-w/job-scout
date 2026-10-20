@@ -423,6 +423,17 @@ class VariantFallbackTest(unittest.TestCase):
         self.assertEqual(out["unverified"], [{"key": "ashby:acme:1", "error": "not checked: 3 more variants of this role"}])
         self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
 
+    def test_a_fallback_variant_never_borrows_the_shown_postings_description(self):
+        row = dict(self.ROW, description_text="The shown posting's own text.")
+        seen = []
+
+        def check(r, budget):  # like USAJOBS: the live record has no text, so check() falls back to the row's
+            seen.append(r.get("description_text"))
+            return {"status": "closed", "full": None, "trimmed": None, "comp": None, "error": None}, None
+        with mock.patch.object(fetch_jd, "check", check):
+            run(["--keys", "ashby:acme:1"], make_home([row]))
+        self.assertEqual(seen, ["The shown posting's own text.", None])
+
     def test_closed_only_when_every_variant_is_closed(self):
         home = make_home([self.ROW])
         with mock.patch.object(fetch_jd, "check", self.fake_check(set())):

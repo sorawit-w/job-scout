@@ -29,6 +29,7 @@ What it does NOT do:
     * Never caches errors: callers store only successful fetches.
 """
 import calendar
+import datetime
 import hashlib
 import json
 import os
@@ -713,11 +714,13 @@ def rank(run_dir):
     """Order results.json by rubric §2 — fit (fit()), then exact remote scope before flagged, then newest
     "open since" — and set show: no failed gate, total ≥ 5, within the brief's result_count. Badges
     and history never move a role. Flags and dates come from the live check when it has them.
-    A row not shown loses its work-style items (rubric §4: shown rows only).
+    A row not shown loses its work-style items (rubric §4: shown rows only). A repeated key keeps its
+    first row; an impossible date counts as unknown.
     Returns {shown, matches} (matches = rows that could be shown)."""
     import filter as jfilter  # filter imports state; ranking by its location flags needs it back, so lazily
     run_dir = Path(run_dir)
     rows = _results(run_dir)
+    rows = [r for i, r in enumerate(rows) if r.get("key") not in {x.get("key") for x in rows[:i]}]  # first wins, as in report.py
     cands = {c.get("key"): c for c in read_json(run_dir / "candidates.json", []) if isinstance(c, dict)}
     jds = read_json(run_dir / "jds.json", {})
     jds = jds if isinstance(jds, dict) else {}
@@ -728,6 +731,10 @@ def rank(run_dir):
         live, cand = live if isinstance(live, dict) else {}, cands.get(r.get("key")) or {}
         src = {f: live[f] if f in live else cand.get(f) for f in ("flags", "first_published")}
         m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", str(src.get("first_published") or ""))
+        try:
+            m = m if m and datetime.date(*map(int, m.groups())) else None
+        except ValueError:  # "2026-99-99": an impossible date is unknown, as in filter.py and report.py
+            m = None
         total = fit(r) or 0  # the four scores, as the report shows them: a stale total never passes the cutoff
         ok = eligible(r)
         return (not ok, -total, jfilter.location_flagged(src.get("flags") or []), m is None,

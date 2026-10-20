@@ -672,6 +672,18 @@ class CarryRankTest(HomeCase):
         self.assertEqual(out, {"shown": 1, "matches": 1})
         self.assertIsNone(state.fit(too_big))
 
+    def test_rank_treats_an_impossible_date_as_unknown(self):
+        cands = [dict(job("ashby:acme:1"), flags=[], first_published="2026-99-99"),
+                 dict(job("ashby:acme:2"), flags=[], first_published="2026-10-01")]
+        _, ranked = self.rank([row("ashby:acme:1", True, 7), row("ashby:acme:2", True, 7)], cands, result_count=1)
+        self.assertEqual([(r["key"], r["show"]) for r in ranked], [("ashby:acme:2", True), ("ashby:acme:1", False)])
+
+    def test_rank_keeps_one_row_per_role(self):
+        rows = [row("ashby:acme:1", True, 8), row("ashby:acme:1", True, 8), row("ashby:acme:2", True, 6)]
+        out, ranked = self.rank(rows, [job("ashby:acme:1"), job("ashby:acme:2")], result_count=2)
+        self.assertEqual([(r["key"], r["show"]) for r in ranked], [("ashby:acme:1", True), ("ashby:acme:2", True)])
+        self.assertEqual(out, {"shown": 2, "matches": 2})
+
     def test_judged_cli(self):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):

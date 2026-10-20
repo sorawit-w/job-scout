@@ -186,7 +186,10 @@ def check_group(row, budget, profile):
     the first inconclusive one (unverified); else closed — but unverified when the cap left variants
     unchecked, since one of them may still be open. Raises net.BudgetExceeded."""
     tried = []
-    for r, vkey in [(row, None)] + [(dict(dict(row, **v), key=row["key"]), v["key"]) for v in _others(row)]:
+    # a variant is its own posting: never let check() fall back to the shown posting's text for it
+    variants = [(dict(dict(row, **v), key=row["key"], description_text=v.get("description_text")), v["key"])
+                for v in _others(row)]
+    for r, vkey in [(row, None)] + variants:
         e, live = check(r, budget)
         if vkey:
             e = dict(e, variant=vkey)
