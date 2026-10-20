@@ -180,3 +180,12 @@ Commit: 58734fe
 Status: DONE (pending PR review)
 Notes: Restore uses the existing seen mark flow (it creates an entry for an unknown key), so no new file format. skill-evaluator: clean (17/17: E19 8/8, rejected-profile paste 5/5, Claude Code rerun 4/4) at 58734fe — 2026-10-20; fresh grader per test; executors on Sonnet after Opus runs stopped on API errors.
 Observations: A role restored by seen mark has no title, company or url in seen.json until a later record sees it shown; a dismissed role is never shown, so its title lives only in the pasted block. Gate: 707 tests on 3.14.7 and 3.9.6.
+
+[2026-10-20T11:20:00Z]
+Task: PR #23 review loop — Codex round 1 (aliases), merge of main
+Action: Codex P2: the paste block dropped a role's aliases, so a dismissed or applied role whose main posting closed would come back as new. state.py seen show lists aliases; seen mark --aliases merges them (each key validated, nothing written on a bad one); SKILL.md block writes key,alias,...; E19 fixture gives Acme a second posting. Tests fail on the old state.py, pass on the new. Merged origin/main (seed-check auto-merge); CHANGELOG conflict kept both entries.
+Files: skills/job-scout/{scripts/state.py,SKILL.md,references/output-format.md,evals/evals.json,evals/files/e19-claude-ai-memory.md}, tests/test_seen.py, CHANGELOG.md
+Commit: 4316ff4, 37fda05 (merge)
+Status: DONE (pending Codex round 2)
+Notes: skill-evaluator: clean (14/14: E19 8/8, rejected-profile paste with aliases 6/6) at 4316ff4 — 2026-10-20. The Claude Code rerun test (4/4 at 58734fe) was not re-run; the change touches only the claude.ai section.
+Observations: Gate after the merge: 714 tests on 3.14.7 and 3.9.6.
