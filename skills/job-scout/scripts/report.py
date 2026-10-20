@@ -301,16 +301,18 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
 # inline under their row; at >= 1200px (JS on) a sticky side pane shows the selected role instead.
 
 CSS = """
-:root{--canvas:#f7f7f8;--table:#fff;--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#e4e4e7;
---line-strong:#d4d4d8;--hover:#f4f4f5;--accent:#0f766e;--accent-soft:#e6f6f4;--accent-ink:#134e4a;--on-accent:#fff;
---ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;--new-bg:#1d4ed8;--new-ink:#fff;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--canvas:#0e0e10;--table:#161619;--ink:#f4f4f5;--muted:#a1a1aa;
---faint:#8b8b94;--line:#26262b;--line-strong:#34343a;--hover:#1d1d21;--accent:#5eead4;--accent-soft:#12302e;
---accent-ink:#ccfbf1;--on-accent:#042f2e;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--warn-bg:#2e1f05;
---warn-ink:#fbbf24;--warn-line:#a16207;--new-bg:#60a5fa;--new-ink:#0b1530;color-scheme:dark}}
-@media print{:root{--canvas:#fff;--table:#fff;--ink:#18181b;--muted:#52525b;--faint:#71717a;--line:#e4e4e7;
---line-strong:#a1a1aa;--hover:#fff;--accent:#0f766e;--accent-soft:#e6f6f4;--accent-ink:#134e4a;--on-accent:#fff;
---ok:#15803d;--warn:#a14a07;--bad:#b91c1c;--warn-bg:#fef3c7;--warn-ink:#92400e;--warn-line:#f59e0b;--new-bg:#1d4ed8;--new-ink:#fff;color-scheme:light}}
+:root{--canvas:#f4f4f2;--table:#fff;--ink:#1c1917;--muted:#57534e;--faint:#736d68;--line:#e6e5e2;
+--line-strong:#d5d3cf;--hover:#f6f5f3;--accent:#1b6c80;--accent-soft:#eef5f6;--accent-ink:#0f4a59;
+--on-accent:#fff;--ok:#46750f;--warn:#c47d00;--bad:#7f1d1d;--warn-bg:#fcf1d8;--warn-ink:#8a3f08;
+--warn-line:#e0a23a;--new-bg:#1c1917;--new-ink:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--canvas:#12110f;--table:#1a1916;--ink:#f5f4f1;--muted:#aaa49c;
+--faint:#8f8981;--line:#2b2925;--line-strong:#3d3a35;--hover:#22201d;--accent:#7fb6c4;--accent-soft:#1b2d32;
+--accent-ink:#d5ebf0;--on-accent:#0b2a32;--ok:#78b648;--warn:#f8c96a;--bad:#e5534b;--warn-bg:#221809;
+--warn-ink:#f0c37a;--warn-line:#8a6220;--new-bg:#f5f4f1;--new-ink:#1c1917;color-scheme:dark}}
+@media print{:root{--canvas:#fff;--table:#fff;--ink:#1c1917;--muted:#57534e;--faint:#736d68;--line:#e6e5e2;
+--line-strong:#a1a1aa;--hover:#fff;--accent:#1b6c80;--accent-soft:#eef5f6;--accent-ink:#0f4a59;--on-accent:#fff;
+--ok:#46750f;--warn:#c47d00;--bad:#7f1d1d;--warn-bg:#fcf1d8;--warn-ink:#8a3f08;--warn-line:#e0a23a;
+--new-bg:#1c1917;--new-ink:#fff;color-scheme:light}}
 *{box-sizing:border-box}
 html{accent-color:var(--accent);scrollbar-color:var(--line-strong) transparent}
 ::selection{background:var(--accent-soft);color:var(--ink)}
@@ -365,8 +367,8 @@ td.c-role{padding-left:34px}td.c-role .toggle{margin:0 8px 0 -22px}
 @media (prefers-reduced-motion:no-preference){.chev{transition:transform 120ms cubic-bezier(.23,1,.32,1)}}
 .tag{display:inline-block;margin:0 6px 0 0;padding:0 6px;border:1px solid var(--line-strong);border-radius:4px;font-size:12px;line-height:16px;font-weight:700;color:var(--ink);vertical-align:1px;white-space:nowrap}
 .tag-new{background:var(--new-bg);border-color:var(--new-bg);color:var(--new-ink)}.tag-changed{border-color:var(--new-bg);color:var(--new-bg)}
-.flagnote{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--warn);vertical-align:-1px;white-space:nowrap}
-.flagnote .i{width:14px;height:14px}
+.flagnote{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--muted);vertical-align:-1px;white-space:nowrap}
+.flagnote .i{width:14px;height:14px;color:var(--warn)}
 .sub{margin:2px 0 0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .s-where::before,.s-pay::before{content:" · "}
 .fit{display:inline-flex;align-items:center;gap:8px}
@@ -374,7 +376,7 @@ td.c-role{padding-left:34px}td.c-role .toggle{margin:0 8px 0 -22px}
 .segs span{width:5px;height:12px;border-radius:1.5px;background:var(--line)}
 .t-top .on{background:var(--accent)}.t-mid .on{background:var(--muted)}.t-low .on{background:var(--line-strong)}
 .fit b{font-size:13px;font-weight:600;padding:1px 6px;border-radius:4px}
-.t-top b{background:var(--accent-soft);color:var(--accent-ink)}.is-open .t-top b{background:var(--table)}
+.t-top b{color:var(--accent-ink)}
 .t-low b{color:var(--muted);font-weight:500}
 td.det-cell{padding:0}
 .detail{padding:4px 20px 20px 74px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:4px 40px}
