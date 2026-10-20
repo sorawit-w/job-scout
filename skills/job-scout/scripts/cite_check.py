@@ -84,8 +84,9 @@ def style_problem(item, jd, choices=None):
     if not (isinstance(item, dict) and isinstance(item.get("topic"), str) and item["topic"] in state.WORK_STYLE
             and item.get("verdict") in VERDICTS):
         return "style item must be {topic: %s, verdict: %s, text, quote}" % ("/".join(state.WORK_STYLE), "/".join(VERDICTS))
-    if item["verdict"] == "not_stated":
-        return None if item.get("quote") is None else "a not_stated item has no quote"
+    if item["verdict"] == "not_stated":  # fixed text, no quote: nothing unverified can ride along
+        ok = item.get("quote") is None and str(item.get("text") or "").strip().lower() == "not stated"
+        return None if ok else 'a not_stated item has text "not stated" and no quote'
     if item["verdict"] == "conflict" and (item["topic"], (choices or {}).get(item["topic"])) in PERMISSIVE:
         return "%s: %s allows it, so it never conflicts (rubric §4)" % (
             item["topic"], choices[item["topic"]])
@@ -140,8 +141,11 @@ def main(argv=None):
         jd = jds.get(key) if isinstance(key, str) else None
         lists = {f: row.get(f) if isinstance(row.get(f), list) else [] for f in ("why", "risk", "style")}
         bad = [f for f in lists if row.get(f) not in (None, []) and not isinstance(row.get(f), list)]
+        if "show" in row and not isinstance(row["show"], bool):
+            bad.append("show")  # report.py and this check must agree on which rows are shown
         if bad:  # valid JSON of the wrong shape: report it, never crash
-            failed.append({"key": key, "quote": None, "why": "%s must be a list" % " and ".join(bad)})
+            failed.append({"key": key, "quote": None, "why": "; ".join(
+                "show must be true or false" if f == "show" else "%s must be a list" % f for f in bad)})
         items, style = lists["why"] + lists["risk"], lists["style"]
         checked += len(items) + len(style)
         if not live(jd):  # one failure per row, even with no items to check

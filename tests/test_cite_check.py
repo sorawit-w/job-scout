@@ -143,6 +143,7 @@ class StyleCheckTest(unittest.TestCase):
              "not found"),
             ({"topic": "travel", "verdict": "match", "text": "x", "quote": None}, "needs a quote"),
             ({"topic": "travel", "verdict": "not_stated", "text": "x", "quote": "We like long lunches."}, "no quote"),
+            ({"topic": "travel", "verdict": "not_stated", "text": "No travel required", "quote": None}, 'text "not stated"'),
             ({"topic": "family", "verdict": "match", "text": "x", "quote": "We like long lunches."}, "style item must be"),
             ({"topic": "travel", "verdict": "maybe", "text": "x", "quote": None}, "style item must be"),
             ("travel", "style item must be")]
@@ -188,10 +189,11 @@ class StyleCheckTest(unittest.TestCase):
 
     def test_wrong_shapes_fail_without_crashing(self):
         for field, value, reason in (("style", 1, "style must be a list"), ("why", "x", "why must be a list"),
+                                     ("show", 1, "show must be true or false"),
                                      ("style", [{"topic": [], "verdict": "match", "quote": "x"}], "style item must be"),
                                      ("style", [{"topic": "travel", "verdict": ["match"]}], "style item must be")):
             payload = results(why=self.WHY)
-            payload["rows"][0].update(show=True, **{field: value})
+            payload["rows"][0].update({"show": True, field: value})
             code, out = run(payload)
             self.assertEqual(code, 1, value)
             self.assertIn(reason, " | ".join(f["why"] for f in out["failed"]), value)
