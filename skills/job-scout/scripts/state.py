@@ -313,7 +313,9 @@ def run_profile(run_dir):
 # status judged = an earlier run screened the role but never showed it (read and cut, or never read).
 # Only `seen record` sets it; first_seen is when it was first shown once a shown row promotes it to seen.
 # judgment = the last results.json row for the role plus run, judged_at, sig and jd_sig (the posting and
-# description it judged) and brief_sig; it is reused only while all three still match (cached_judgment).
+# description it judged), brief_sig and work_style (the choices its style items answer); it is reused
+# only while sig, jd_sig and brief_sig still match, its style only while work_style does (cached_judgment).
+# `judged forget` drops every judgment (a new resume changes the skills score; the profile has no resume).
 # A collapsed job's variants can close or reorder, so an entry matches a job when its key or
 # any alias equals the job's key or any variant key.
 
@@ -427,12 +429,19 @@ def cached_judgment(job, seen, profile, description, index=None):
     jd_sig: an employer can add "no sponsorship" without touching title, pay or places) and this brief
     (same brief_sig), else None, and the role is read again. description is this run's full text, or
     None before the live check: then only posting and brief are compared, and the caller must check
-    again once the text is fetched."""
+    again once the text is fetched. With other work_style choices the judgment comes back with style
+    None: a conflict under "no travel" can be a match under "some travel", so the style is written again."""
     e = _deciding_entry(job, seen, index)
     j = e.get("judgment") if e else None
     if not (isinstance(j, dict) and j.get("sig") == job_sig(job) and j.get("brief_sig") == brief_sig(profile)):
         return None
-    return j if description is None or (j.get("jd_sig") and j["jd_sig"] == jd_sig(description)) else None
+    if description is not None and not (j.get("jd_sig") and j["jd_sig"] == jd_sig(description)):
+        return None
+    return j if (j.get("work_style") or {}) == _work_style(profile) else dict(j, style=None)
+
+
+def _work_style(profile):
+    return (profile.get("work_style") if isinstance(profile, dict) else None) or {}
 
 
 def _board(key):
@@ -506,10 +515,11 @@ def _shown_url(job, row_key):
     return v.get("url") or job.get("url")
 
 
-def _judgment(row, run_dir, stamp, job, bsig, jd):
+def _judgment(row, run_dir, stamp, job, profile, jd):
     j = {f: row.get(f) for f in ("total", "scores", "gates", "show", "why", "risk", "style")}
     return dict(j, run=Path(run_dir).name, judged_at=stamp, sig=job_sig(job),
-                jd_sig=jd_sig(jd.get("full") if isinstance(jd, dict) else None), brief_sig=bsig)
+                jd_sig=jd_sig(jd.get("full") if isinstance(jd, dict) else None), brief_sig=brief_sig(profile),
+                work_style=_work_style(profile))
 
 
 def _set_posting(e, job, row_key):
@@ -544,7 +554,7 @@ def record(run_dir, now=None):
         raise FileNotFoundError("run %s has no jobs.json, or results.json is unreadable" % run_dir.name)
     stamp = now_iso(now)
     seen = load_seen()
-    bsig = brief_sig(run_profile(run_dir))
+    profile = run_profile(run_dir)
     jds = read_json(run_dir / "jds.json", {})
     jds = jds if isinstance(jds, dict) else {}
     by_key = {k: j for j in jobs for k in job_keys(j)}
@@ -580,7 +590,7 @@ def record(run_dir, now=None):
             if shown or e["status"] == "judged":
                 _set_posting(e, job, row.get("key"))
             if was_read:
-                e["judgment"] = _judgment(row, run_dir, stamp, job, bsig, jds.get(row.get("key")))
+                e["judgment"] = _judgment(row, run_dir, stamp, job, profile, jds.get(row.get("key")))
     index = seen_index(seen)
     jobs, gone = live_split(jobs, jds)  # a live-closed role closes, not reopens
     for job in jobs:  # unshown too: filter drops unchanged roles, and their variants keep moving
@@ -601,6 +611,16 @@ def record(run_dir, now=None):
         counts["pruned"] += 1
     write_json_atomic(seen_path(), seen)
     return counts
+
+
+def forget_judgments():
+    """Drop every cached judgment (statuses stay), so every role is read again; returns how many.
+    For a new resume: the skills score depends on it, and the profile does not store it."""
+    seen = load_seen()
+    n = sum(1 for e in seen.values() if e.pop("judgment", None) is not None)
+    if n:
+        write_json_atomic(seen_path(), seen)
+    return n
 
 
 def mark(key, status, reason=None, now=None):
@@ -679,7 +699,8 @@ def _seen_cli(args):
 
 def main(argv=None):
     """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout);
-    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] · seen show."""
+    state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] · seen show;
+    state.py judged forget (drop every cached judgment, e.g. after a new resume)."""
     import argparse
     import sys
     ap = argparse.ArgumentParser(prog="state.py")
@@ -696,6 +717,7 @@ def main(argv=None):
     mark_p.add_argument("status")  # checked by mark(), so a bad status is exit 1, not argparse's 2
     mark_p.add_argument("--reason")
     seen_sub.add_parser("show")
+    sub.add_parser("judged").add_argument("action", choices=("forget",))
     try:
         args = ap.parse_args(argv)
     except SystemExit as e:
@@ -708,6 +730,13 @@ def main(argv=None):
 
     if args.area == "seen":
         return _seen_cli(args)
+    if args.area == "judged":
+        try:
+            print(json.dumps({"forgot": forget_judgments()}))
+        except ValueError as e:  # unreadable seen.json, left unchanged
+            print(json.dumps({"error": str(e)}, ensure_ascii=False))
+            return 1
+        return 0
     if args.action == "show":
         p = read_json(profile_path())
         if p is None:

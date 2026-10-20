@@ -19,7 +19,11 @@ All notable changes to `job-scout` are documented here. Format follows
 - Each read role keeps its judgment (gates, scores, total, quoted reasons and risks) in seen.json,
   with the posting it judged and a fingerprint of the brief fields the rubric reads. The cached
   judgment is valid only while both are unchanged: editing the brief invalidates every one.
-  Changing your work style does not, because work style never affects fit.
+  Changing your work style keeps the gates and scores, because work style never affects fit, but
+  drops the cached work-style signals so they are written again for your new choices. A cached
+  judgment also needs the same job description: an employer can edit a posting in place.
+- `state.py judged forget` drops every cached judgment and keeps every status. A new resume can
+  change the skills score, and the profile does not store the resume.
 - A judged role becomes `seen` the first time it is shown. `seen mark` cannot set `judged`.
 - Judged roles not listed on any board for 60 days are dropped from seen.json. No other status
   is ever dropped.

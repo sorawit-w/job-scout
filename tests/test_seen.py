@@ -363,7 +363,8 @@ class JudgedTest(HomeCase):
         self.assertEqual(e["judgment"], {"total": 6, "scores": r["scores"], "gates": r["gates"], "show": False,
                                          "why": r["why"], "risk": r["risk"], "style": [], "run": run.name,
                                          "judged_at": state.now_iso(NOW), "sig": state.job_sig(j),
-                                         "jd_sig": state.jd_sig(JD), "brief_sig": state.brief_sig(BRIEF)})
+                                         "jd_sig": state.jd_sig(JD), "brief_sig": state.brief_sig(BRIEF),
+                                         "work_style": {}})
 
     def test_unread_candidate_is_judged_without_a_judgment(self):
         jobs = [job("ashby:acme:1"), job("ashby:acme:2")]
@@ -446,6 +447,29 @@ class JudgedTest(HomeCase):
         self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, ""))
         # before the live check there is no text yet: posting and brief only, and the caller checks again
         self.assertIsNotNone(state.cached_judgment(job(), seen, BRIEF, None))
+
+    def test_changed_work_style_drops_only_the_cached_style(self):
+        styled = dict(BRIEF, work_style={"travel": "none"})
+        state.write_json_atomic(state.profile_path(), styled)
+        r = dict(row("ashby:acme:1", True), style=[{"topic": "travel", "verdict": "conflict",
+                                                    "text": "Some travel", "quote": "travel up to 25% of the time"}])
+        state.record(self.run_with_jd([job()], [r]), now=NOW)
+        seen = state.load_seen()
+        self.assertEqual(state.cached_judgment(job(), seen, styled, JD)["style"], r["style"])
+        moved = state.cached_judgment(job(), seen, dict(BRIEF, work_style={"travel": "some"}), JD)
+        self.assertIsNone(moved["style"])  # a conflict under "none" may be a match under "some": write it again
+        self.assertEqual((moved["total"], moved["gates"]), (6, r["gates"]))  # work style never moves fit
+
+    def test_forget_drops_every_cached_judgment_and_keeps_statuses(self):
+        # A new resume can change the skills score, and the profile does not store the resume.
+        state.write_json_atomic(state.seen_path(), {"ashby:acme:2": entry(status="saved")})
+        state.record(self.run_with_jd([job(), job("ashby:acme:2")],
+                                      [row("ashby:acme:1", False), row("ashby:acme:2", True)]), now=NOW)
+        self.assertEqual(state.forget_judgments(), 2)
+        seen = state.load_seen()
+        self.assertEqual({k: e["status"] for k, e in seen.items()}, {"ashby:acme:1": "judged", "ashby:acme:2": "saved"})
+        self.assertFalse([k for k, e in seen.items() if "judgment" in e])
+        self.assertIsNone(state.cached_judgment(job(), seen, BRIEF, JD))
 
     def test_no_cached_judgment_when_the_judged_text_was_not_kept(self):
         state.record(self.make_run([job()], [row("ashby:acme:1", False)]), now=NOW)  # no jds.json
@@ -631,6 +655,14 @@ class SeenCliTest(HomeCase):
         self.assertEqual(code, 1)  # argparse failure is bad input, never 2 (= no run)
         self.assertIn("error", out)
         self.assertNotIn("ashby:acme:2", state.load_seen())
+
+    def test_judged_forget(self):
+        code, out = self.cli(["judged", "forget"])
+        self.assertEqual((code, out), (0, {"forgot": 0}))
+        state.seen_path().write_bytes(b"[]")
+        code, out = self.cli(["judged", "forget"])
+        self.assertEqual(code, 1)
+        self.assertEqual(state.seen_path().read_bytes(), b"[]")
 
     def test_mark_bad_status_exits_1(self):
         for status in ("loved", "judged"):  # judged is set only by `seen record`
