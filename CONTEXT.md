@@ -41,6 +41,9 @@ Where a remote role may be worked from, as a list (`["US"]`, `["US","CA"]`, `["A
 ### Near miss
 A role removed by a filter but close enough to show in the short "close but excluded" list, with the one reason it was removed — so the user can spot an over-tight filter.
 
+### Judged role
+A role an earlier run screened but never showed: read and cut (by a gate, by score or by the result count), or a candidate never read. Its `seen.json` status is `judged`, set only by `seen record`; it becomes `seen` the first time it is shown. A read one keeps its cached judgment, which is reused only while the posting and the brief are unchanged.
+
 ## Module map
 
 - `skills/job-scout/` — the installable skill (SKILL.md, references, scripts, data, evals)
