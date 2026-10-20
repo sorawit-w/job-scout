@@ -285,11 +285,12 @@ def profile_path():
     return home() / "profile.json"
 
 
-# The brief fields the rubric's gates and scores read. work_style is display only (rubric §4), and
-# title/company exclusions are applied by filter.py on every run, so neither is here.
+# The brief fields a judgment can depend on: what the rubric's gates and scores read, plus must_haves,
+# which the judging model sees in the brief. work_style is display only (rubric §4), and title/company
+# exclusions are applied by filter.py on every run, so neither is here.
 BRIEF_FIELDS = ("target_roles", "title_synonyms", "seniority", "track", "work_modes", "commute_cities", "home_base",
                 "remote_scope", "open_to_relocation", "needs_sponsorship", "base_pay_floor", "hide_no_pay",
-                "industries_prefer", "industries_exclude", "dealbreakers")
+                "industries_prefer", "industries_exclude", "must_haves", "dealbreakers")
 
 
 def brief_sig(profile):
@@ -311,8 +312,8 @@ def run_profile(run_dir):
 # snap = job_snap(): the readable fields behind sig, so `seen diff` can say what changed.
 # status judged = an earlier run screened the role but never showed it (read and cut, or never read).
 # Only `seen record` sets it; first_seen is when it was first shown once a shown row promotes it to seen.
-# judgment = the last results.json row for the role plus run, judged_at, sig (the posting it judged) and
-# brief_sig; it is reused only while both still match (cached_judgment).
+# judgment = the last results.json row for the role plus run, judged_at, sig and jd_sig (the posting and
+# description it judged) and brief_sig; it is reused only while all three still match (cached_judgment).
 # A collapsed job's variants can close or reorder, so an entry matches a job when its key or
 # any alias equals the job's key or any variant key.
 
@@ -415,14 +416,23 @@ def job_state(job, seen, index=None):
     return e.get("status") or "seen"
 
 
-def cached_judgment(job, seen, profile, index=None):
-    """The deciding entry's judgment when it was made on this posting (same sig) with this brief (same
-    brief_sig), else None: a changed posting or an edited brief means the role is read again."""
+def jd_sig(text):
+    """sha1[:12] of a job description with whitespace collapsed, or None for no text."""
+    text = re.sub(r"\s+", " ", text or "").strip()
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12] if text else None
+
+
+def cached_judgment(job, seen, profile, description, index=None):
+    """The deciding entry's judgment when it was made on this posting (same sig), this description (same
+    jd_sig: an employer can add "no sponsorship" without touching title, pay or places) and this brief
+    (same brief_sig), else None, and the role is read again. description is this run's full text, or
+    None before the live check: then only posting and brief are compared, and the caller must check
+    again once the text is fetched."""
     e = _deciding_entry(job, seen, index)
     j = e.get("judgment") if e else None
-    if isinstance(j, dict) and j.get("sig") == job_sig(job) and j.get("brief_sig") == brief_sig(profile):
-        return j
-    return None
+    if not (isinstance(j, dict) and j.get("sig") == job_sig(job) and j.get("brief_sig") == brief_sig(profile)):
+        return None
+    return j if description is None or (j.get("jd_sig") and j["jd_sig"] == jd_sig(description)) else None
 
 
 def _board(key):
@@ -496,9 +506,10 @@ def _shown_url(job, row_key):
     return v.get("url") or job.get("url")
 
 
-def _judgment(row, run_dir, stamp, job, bsig):
+def _judgment(row, run_dir, stamp, job, bsig, jd):
     j = {f: row.get(f) for f in ("total", "scores", "gates", "show", "why", "risk", "style")}
-    return dict(j, run=Path(run_dir).name, judged_at=stamp, sig=job_sig(job), brief_sig=bsig)
+    return dict(j, run=Path(run_dir).name, judged_at=stamp, sig=job_sig(job),
+                jd_sig=jd_sig(jd.get("full") if isinstance(jd, dict) else None), brief_sig=bsig)
 
 
 def _set_posting(e, job, row_key):
@@ -534,6 +545,8 @@ def record(run_dir, now=None):
     stamp = now_iso(now)
     seen = load_seen()
     bsig = brief_sig(run_profile(run_dir))
+    jds = read_json(run_dir / "jds.json", {})
+    jds = jds if isinstance(jds, dict) else {}
     by_key = {k: j for j in jobs for k in job_keys(j)}
     counts = {"inserted": 0, "updated": 0, "judged": 0, "missing": 0, "closed": 0, "reopened": 0, "pruned": 0}
     rows = [r for r in results.get("rows") or [] if isinstance(r, dict)]
@@ -567,9 +580,9 @@ def record(run_dir, now=None):
             if shown or e["status"] == "judged":
                 _set_posting(e, job, row.get("key"))
             if was_read:
-                e["judgment"] = _judgment(row, run_dir, stamp, job, bsig)
+                e["judgment"] = _judgment(row, run_dir, stamp, job, bsig, jds.get(row.get("key")))
     index = seen_index(seen)
-    jobs, gone = live_split(jobs, read_json(run_dir / "jds.json", {}))  # a live-closed role closes, not reopens
+    jobs, gone = live_split(jobs, jds)  # a live-closed role closes, not reopens
     for job in jobs:  # unshown too: filter drops unchanged roles, and their variants keep moving
         keys = job_keys(job)
         for key in _matches(job, index):
