@@ -24,9 +24,8 @@
 | Priority | Task | Dependencies |
 |----------|------|--------------|
 | 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
-| 2 | Review the HTML report badge redesign and the "Close but excluded" reason fix (two local branches, not pushed) | — |
-| 3 | Apply the kerby swe design-rule handoff in the kerby repo (`docs/handoffs/2026-10-20-kerby-swe-design-skills.md`, untracked) | kerby's own gates |
-| 4 | Choose the next milestone from the ROADMAP follow-ups | — |
+| 2 | Review the HTML report badge redesign and the "Close but excluded" reason fix (two PRs) | — |
+| 3 | Choose the next milestone from the ROADMAP follow-ups | — |
 
 ---
 
