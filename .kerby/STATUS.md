@@ -13,9 +13,9 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | v0.3 — work-style match in review; launch smoke tests still open |
-| **Milestone** | v03-work-style (M8); deploy-launch (M6) open until the smoke tests pass |
-| **Milestone Goal** | optional fixed-choice work style; quoted match / conflict / not-stated signals per role; display only |
+| **Phase** | v0.3 — work-style match shipped; launch smoke tests still open |
+| **Milestone** | none in progress; deploy-launch (M6) open until the smoke tests pass |
+| **Milestone Goal** | pick the next milestone from the ROADMAP follow-ups |
 
 ---
 
@@ -23,9 +23,8 @@
 
 | Priority | Task | Dependencies |
 |----------|------|--------------|
-| 1 | M8 PR — Codex review findings fixed, squash-merged | skill-evaluator recorded (E4, E14, E15, N8, N9: 24/24) |
-| 2 | Publishing the work-style release (maintainer's call after merge) | M8 merged |
-| 3 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | release published |
+| 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
+| 2 | Choose the next milestone from the ROADMAP follow-ups | — |
 
 ---
 

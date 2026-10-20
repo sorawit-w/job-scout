@@ -9,7 +9,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done · `[!]` blocked (with rea
 ### Phase 2: v0.2
 
 - [x] M7 — HTML report: self-contained report.html per run (Signal theme, sort/filter, copy-a-reply, score grid); released as v0.2.0
-- [~] M8 — Work-style match: optional fixed-choice questions, quoted match / conflict / not-stated signals per role, display only
+- [x] M8 — Work-style match: optional fixed-choice questions, quoted match / conflict / not-stated signals per role, display only; released as v0.3.0
 
 ## Follow-ups
 
