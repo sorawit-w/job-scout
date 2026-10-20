@@ -245,3 +245,11 @@ Files: DESIGN.md (renamed), skills/job-scout/scripts/report.py, CHANGELOG.md, .k
 Commit: d719bc6 (move); this commit (log, status)
 Status: DONE (branch feature/report-design-badges, not pushed, not merged)
 Notes: Tests OK (python -m unittest discover -s tests -t .). The user is uninstalling ui-ux-pro-max so design skills don't conflict.
+
+[2026-10-20T17:58:16Z]
+Task: v0.5.1 release prep
+Action: bumped VERSION, .codex-plugin/plugin.json, CHANGELOG ([Unreleased] → [0.5.1]) and README status to 0.5.1. Contents: HTML report badges and the spec move to DESIGN.md (#29), the "Close but excluded" reason fix (#30).
+Files: skills/job-scout/VERSION, .codex-plugin/plugin.json, CHANGELOG.md, README.md
+Commit: release commit on bump/0.5.1
+Status: DONE (pending merge of the release PR, then tag v0.5.1 and the GitHub release with dist/job-scout-0.5.1.zip)
+Notes: Suite OK on 3.14.7 and 3.9.6; check-skill-compat version parity OK at 0.5.1; zip builds (30 files, 352 KB).
