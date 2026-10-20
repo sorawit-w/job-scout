@@ -141,3 +141,11 @@ Commit: 95ef494, 0c5ae65
 Status: DONE (pending PR review)
 Notes: 651 tests pass on 3.14.7 and 3.9.6; compat ok. PR 2 grades 7: plan approval needed before building.
 Observations: day1 replay's 4 unread candidates are all on the KoBold board, which answers 503 on day2, so day2 shows no judged candidates.
+
+Task: M9 PR 1 Codex review loop (judged status)
+Action: 4 Codex rounds, 5 findings, each verified against the code and fixed with a failing-first test: must_haves joins BRIEF_FIELDS; judgment.jd_sig fingerprints the live check (description, whitespace collapsed, plus live pay, title, places, work mode, remote scope; Greenhouse pay exists only on the live check); judgment.work_style snapshot, cached_judgment returns style None when the choices differ; state.py judged forget (forget_judgments) for a new resume. cached_judgment(job, seen, profile, live): live = this run's jds.json entry, None = pre-check before the live check. skill-evaluator (stated intent, fresh graders): E13 5/5, T3 judged-only rerun 5/5, E5 7/8 + 1 unclear (rubric layer: "ends with the feedback prompt") at 98fdd82; SKILL.md unchanged since.
+Files: skills/job-scout/scripts/state.py, tests/test_seen.py, tests/test_rerun_world.py, CHANGELOG.md, evals/files/seen-after-feedback.json
+Commit: 8229272, 67a1ff9, 1774c23
+Status: DONE — Codex clean at 1774c23; CI green; 657 tests on 3.14 and 3.9.
+Notes: Waiting on the maintainer's merge decision. PR 2 plan approved (script ranks results, fetch_jd check-only flag); it must add the `judged forget` instruction to Phase 1/9 (promised in review). docs/m9-pr2-plan.md is uncommitted and moves to the PR 2 branch.
+Observations: the protect-git hook blocks any command line that contains both a push and a short force-style flag of another tool; run pushes on their own.
