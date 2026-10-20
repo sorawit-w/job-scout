@@ -171,3 +171,48 @@ Files: skills/job-scout/scripts/report.py, tests/test_report.py, docs/report-des
 Commit: 8aed215 (heading fix), a3cc875 (README; release target)
 Status: DONE — release published.
 Notes: Codex clean on the heading fix (second run; the first failed on Codex's side). The README PR merged on CI alone, as the maintainer asked.
+
+[2026-10-20T08:38:03Z]
+Task: claude.ai memory — notice once, paste block keeps dismissed roles and restores them
+Action: SKILL.md "claude.ai: memory between chats" section (first-reply notice once, skipped when the first message is a pasted block; restore a pasted block with profile save --stdin + seen mark per role; end-of-run block lists saved/applied/dismissed with keys, never seen/judged; titles for restored roles copied from the pasted block). Phase 2 and Phase 9 point to it; output-format §6 updated. state.py seen show lists dismissed roles. README "Where job-scout remembers" table; PRIVACY line; CHANGELOG Unreleased. Eval E19 + fixture; one round-trip test.
+Files: skills/job-scout/{SKILL.md,references/output-format.md,scripts/state.py,evals/evals.json,evals/README.md,evals/files/e19-claude-ai-memory.md}, tests/test_seen.py, README.md, PRIVACY.md, CHANGELOG.md
+Commit: 58734fe
+Status: DONE (pending PR review)
+Notes: Restore uses the existing seen mark flow (it creates an entry for an unknown key), so no new file format. skill-evaluator: clean (17/17: E19 8/8, rejected-profile paste 5/5, Claude Code rerun 4/4) at 58734fe — 2026-10-20; fresh grader per test; executors on Sonnet after Opus runs stopped on API errors.
+Observations: A role restored by seen mark has no title, company or url in seen.json until a later record sees it shown; a dismissed role is never shown, so its title lives only in the pasted block. Gate: 707 tests on 3.14.7 and 3.9.6.
+
+[2026-10-20T08:47:49Z]
+Task: PR #23 review loop — Codex round 1 (aliases), merge of main
+Action: Codex P2: the paste block dropped a role's aliases, so a dismissed or applied role whose main posting closed would come back as new. state.py seen show lists aliases; seen mark --aliases merges them (each key validated, nothing written on a bad one); SKILL.md block writes key,alias,...; E19 fixture gives Acme a second posting. Tests fail on the old state.py, pass on the new. Merged origin/main (seed-check auto-merge); CHANGELOG conflict kept both entries.
+Files: skills/job-scout/{scripts/state.py,SKILL.md,references/output-format.md,evals/evals.json,evals/files/e19-claude-ai-memory.md}, tests/test_seen.py, CHANGELOG.md
+Commit: 4316ff4, 37fda05 (merge)
+Status: DONE (pending Codex round 2)
+Notes: skill-evaluator: clean (14/14: E19 8/8, rejected-profile paste with aliases 6/6) at 4316ff4 — 2026-10-20. The Claude Code rerun test (4/4 at 58734fe) was not re-run; the change touches only the claude.ai section.
+Observations: Gate after the merge: 714 tests on 3.14.7 and 3.9.6.
+
+[2026-10-20T08:55:34Z]
+Task: PR #23 review loop — Codex round 2 (link lost after a paste)
+Action: Same failure class as round 1 (restore drops posting data), so re-audited the whole restore path instead of patching one field. seen mark takes --title/--company/--url (fill only missing fields; url must be http(s); 200-char cap) and the restore passes them, so the next block comes from seen show alone (the "copy from the pasted block" rule is gone). Closed roles are left out of the block, since a restored role has no closed_at and would be reported closed again in every chat.
+Files: skills/job-scout/{scripts/state.py,SKILL.md,references/output-format.md,evals/evals.json,evals/files/e19-claude-ai-memory.md}, tests/test_seen.py, README.md, PRIVACY.md, CHANGELOG.md
+Commit: 7aa0c9d
+Status: DONE (pending Codex round 3)
+Notes: skill-evaluator: clean (19/19: E19 8/8, rejected-profile paste 6/6, closed role left out 5/5) at 7aa0c9d — 2026-10-20. Leaving closed roles out of the block is my call, flagged in the PR for the maintainer.
+Observations: Not carried across a paste: a dismissal's reason and a role's first-shown date. When a pasted brief is rejected, the block offered before the user confirms has no profile: line. Gate: 715 tests on 3.14.7 and 3.9.6.
+
+[2026-10-20T09:18:58Z]
+Task: PR #23 review loop — Codex round 3 (shell interpolation P1, overlapping keys, link length)
+Action: Third same-class round on the restore, so escalated to the maintainer, who chose new commands. state.py memory show prints the block (open saved/applied/dismissed, titles folded to one line without "|"); memory restore reads it on stdin and writes the profile and all valid roles in one step (own keys first, then aliases; fill-only fields; MAX_URL 2048; bad lines in skipped). SKILL.md feeds restore through a quoted heredoc <<'JOB_SCOUT_END' and refuses a block holding that line. The seen mark/show additions from earlier rounds were reverted to main. Link-length fix 2bf3847 shipped first (superseded by the rewrite).
+Files: skills/job-scout/{scripts/state.py,SKILL.md,references/output-format.md,evals/evals.json,evals/files/e19-claude-ai-memory.md}, tests/test_seen.py, CHANGELOG.md
+Commit: 2bf3847, 70382a1
+Status: DONE (pending Codex round 4)
+Notes: skill-evaluator: clean (21/21: E19 8/8, rejected-profile paste 5/5, block after feedback 4/4, hostile JOB_SCOUT_END block 4/4) at 70382a1 — 2026-10-20. End-to-end heredoc check with $(…) and backticks in fields: nothing ran, round trip exact.
+Observations: Gate 719 tests on 3.14.7 and 3.9.6. The kerby protect-git hook blocked a compound command because gh api's -f flag sat next to git push; split commands work.
+
+[2026-10-20T09:31:23Z]
+Task: PR #23 — Codex round 4 and merge (claude.ai memory)
+Action: Codex P2: memory show could print a title or company over 200 characters that memory restore rejects, so the role came back as new. memory show now prints only what restore accepts (titles and companies cut to 200, links over 2048 and malformed aliases left out); a show-then-restore test with long fields fails on the old state.py. Codex round 5 clean at c939c5d; CI green. The maintainer approved the squash-merge.
+Files: skills/job-scout/scripts/state.py, tests/test_seen.py
+Commit: c939c5d (fix), ba3fb28 (squash merge on main)
+Status: DONE — merged.
+Notes: skill-evaluator: clean (21/21) at 70382a1 — 2026-10-20; the skill text did not change after that pass (c939c5d touches only state.py and tests). Release not cut; CHANGELOG lists the change under Unreleased. The feature branch is left on the remote.
+Observations: A paste does not carry a dismissal's reason or a role's first-shown date (a restored role's is the restore date). Seen-only roles show as NEW again after a paste. When a pasted brief is rejected, the block offered before the user confirms has no profile: line. Gate on main: 720 tests on 3.14.7 and 3.9.6.

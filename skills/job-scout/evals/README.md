@@ -30,6 +30,7 @@ skill-creator run executes the skill with its scripts, against a replay world wh
 | E16 | A judged role that was cut re-enters the top N badged NEW; cached roles carried, not read | e16-judged-role-enters.md | none | stated-intent |
 | E17 | A new resume and a brief edit invalidate every cached judgment | e17-brief-edit-cache.md | none | stated-intent |
 | E18 | A carried quote that fails cite_check forces a fresh judgment | e18-carried-quote-fails.md | none | stated-intent |
+| E19 | claude.ai: no-memory notice said once; the paste block keeps saved and dismissed roles and restores them | e19-claude-ai-memory.md | none | stated-intent |
 
 All persona files are in `files/`. They are synthetic people with fictional employers and no
 protected attributes. Any eval can also run live; the gate evals (E1, E7, E9–E11) stop before

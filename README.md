@@ -134,8 +134,8 @@ npx skills add sorawit-w/job-scout
 [Releases](https://github.com/sorawit-w/job-scout/releases) page, then upload it under
 Settings → Capabilities → Skills. Code execution must be on, and its domain allowlist must allow
 the job boards ("All domains" works). On Team or Enterprise plans an admin may need to add the
-hosts listed in [PRIVACY.md](PRIVACY.md). Files don't persist between claude.ai conversations,
-so the skill offers your brief as a block to paste next time.
+hosts listed in [PRIVACY.md](PRIVACY.md). Files don't persist between claude.ai conversations;
+see [Where job-scout remembers](#where-job-scout-remembers).
 
 **Updating:** the company list is refreshed every week. In Claude Code, run
 `/plugin marketplace update job-scout`, or turn on auto-update for the job-scout marketplace
@@ -145,6 +145,13 @@ claude.ai, upload the newest zip from the Releases page.
 **Optional, US federal jobs:** request a free key at
 <https://developer.usajobs.gov/apirequest/>, then set `JOB_SCOUT_USAJOBS_KEY` and
 `JOB_SCOUT_USAJOBS_EMAIL` in your environment. Never paste the key into a chat.
+
+## Where job-scout remembers
+
+| Where you run it | What it remembers between chats |
+|---|---|
+| Claude Code, Codex | Everything, in `~/.job-scout/`: your brief, the roles you have seen, saved, applied to or dismissed, and the newest 3 runs. |
+| claude.ai | Nothing persists between chats. At the end of a run the skill gives you a block with your brief and your saved, applied and dismissed roles that are still open. Paste it into your next chat to pick up where you left off. Roles you only saw are not in it, so they can show as new again. |
 
 ## Coverage limits
 

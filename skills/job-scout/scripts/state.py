@@ -782,6 +782,105 @@ def seen_summary():
     return out
 
 
+MEMORY_HEADER = "job-scout memory — paste this into a new chat to pick up where you left off"
+MEMORY_STATUSES = ("saved", "applied", "dismissed")  # seen and judged roles are never carried: the list gets too long
+MAX_URL = 2048  # employer links (Workday paths) run long; a restore must never reject a real one
+_LINK_RE = re.compile(r"^https?://\S+$", re.I)
+
+
+def _one_line(v):
+    """A block field on one line with no field separator, so no title can split a line or end a heredoc,
+    cut to what memory restore accepts."""
+    return " ".join(str(v or "").replace("|", "/").split())[:MAX_REASON].strip()
+
+
+def memory_block():
+    """The claude.ai paste block (`memory show`): the profile, then every saved, applied and dismissed
+    role that is not closed, as `<status> <key>[,<alias>...] | <title> | <company> [| <link>]`.
+    Closed roles are left out: restored without closed_at, they would be reported closed in every chat.
+    shortcut: a key holding a comma would split on restore; no board's job ids use one today."""
+    lines = [MEMORY_HEADER]
+    profile = read_json(profile_path())
+    if isinstance(profile, dict):
+        lines.append("profile: " + json.dumps(profile, ensure_ascii=False))
+    seen = load_seen()
+    for status in MEMORY_STATUSES:
+        for key, e in seen.items():
+            if e.get("status") != status or e.get("closed_at"):
+                continue
+            # every field is one memory restore accepts, so a generated block never comes back skipped
+            keys = [key] + [a for a in e.get("aliases") or [] if isinstance(a, str) and _KEY_RE.match(a)]
+            fields = [",".join(keys), _one_line(e.get("title")), _one_line(e.get("company"))]
+            url = e.get("url")
+            if status != "dismissed" and isinstance(url, str) and len(url) <= MAX_URL and _LINK_RE.match(url):
+                fields.append(url)
+            lines.append("%s %s" % (status, " | ".join(fields)))
+    return "\n".join(lines)
+
+
+def _memory_role(line):
+    """(status, keys, title, company, url) from one role line of a pasted block; ValueError says what is wrong."""
+    status, _, rest = line.partition(" ")
+    if status not in MEMORY_STATUSES:
+        raise ValueError("a role line starts with %s" % "/".join(MEMORY_STATUSES))
+    parts = [p.strip() for p in rest.split("|", 3)]
+    if len(parts) < 3:
+        raise ValueError("want <key>[,<alias>...] | <title> | <company> [| <link>]")
+    keys = [k.strip() for k in parts[0].split(",") if k.strip()]
+    for k in keys or [parts[0]]:
+        if not _KEY_RE.match(k):
+            raise ValueError("bad job key %r (want ats:slug:job_id)" % (k,))
+    for name, v in (("title", parts[1]), ("company", parts[2])):
+        if len(v) > MAX_REASON:
+            raise ValueError("%s is longer than %d characters" % (name, MAX_REASON))
+    url = parts[3] if len(parts) > 3 and parts[3] else None
+    if url is not None and not (len(url) <= MAX_URL and _LINK_RE.match(url)):
+        raise ValueError("the link must be an http(s) address of at most %d characters" % MAX_URL)
+    return status, keys, parts[1] or None, parts[2] or None, url
+
+
+def memory_restore(text, now=None):
+    """Restore a pasted block (`memory restore`, on stdin) in one step: the profile if it is valid, and
+    every valid role line. Each line's own key gets its entry before any alias is merged, so two
+    overlapping roles stay two entries with their own statuses. Title/company/link fill only fields an
+    entry lacks. Returns {"profile": saved|rejected|missing, "profile_errors", "roles", "skipped"}."""
+    profile, profile_errors, roles, skipped = None, [], [], []
+    state = "missing"
+    for n, raw in enumerate(text.splitlines(), 1):
+        line = raw.strip()
+        if not line or line.startswith("```") or line.startswith("job-scout memory"):
+            continue
+        if line.startswith("profile:"):
+            try:
+                profile = json.loads(line[len("profile:"):])
+                profile_errors = validate_profile(profile)
+            except ValueError as e:
+                profile_errors = ["invalid JSON: %s" % e]
+            state = "rejected" if profile_errors else "saved"
+            continue
+        try:
+            roles.append(_memory_role(line))
+        except ValueError as e:
+            skipped.append({"line": n, "error": str(e)})
+    seen = load_seen()  # an unreadable seen.json raises here, before anything is written
+    index = seen_index(seen)  # resolved before this block adds any alias
+    placed = []
+    for status, keys, title, company, url in roles:
+        target = index.get(keys[0], keys[0])
+        e = seen.setdefault(target, {"first_seen": now_iso(now), "last_seen": now_iso(now), "closed_at": None,
+                                     "sig": None, "aliases": []})
+        e["status"] = status
+        e.update((f, v) for f, v in (("title", title), ("company", company), ("url", url)) if v and not e.get(f))
+        placed.append((e, target, keys[1:]))
+    for e, target, aliases in placed:
+        _merge_aliases(e, target, aliases)
+    if roles:
+        write_json_atomic(seen_path(), seen)
+    if state == "saved":
+        write_json_atomic(profile_path(), profile)
+    return {"profile": state, "profile_errors": profile_errors, "roles": len(roles), "skipped": skipped}
+
+
 def _seen_cli(args):
     """seen diff|record [--run] · seen mark KEY STATUS [--reason] · seen show. Exit 0 ok, 1 bad input
     (including an unreadable seen.json, which is left unchanged), 2 no run."""
@@ -829,7 +928,9 @@ def main(argv=None):
     """CLI: state.py profile validate|save --stdin|show  (JSON on stdin/stdout);
     state.py seen diff|record [--run latest] · seen mark KEY STATUS [--reason TEXT] · seen show;
     state.py judged carry|rank [--run latest] (reuse cached judgments; order results.json by the rubric) ·
-    judged forget (drop every cached judgment, e.g. after a new resume). Exit 2 = no run."""
+    judged forget (drop every cached judgment, e.g. after a new resume);
+    state.py memory show (print the claude.ai paste block) · memory restore (the pasted block on stdin;
+    exit 1 when the profile or a role line was rejected — the rest is still restored). Exit 2 = no run."""
     import argparse
     import sys
     ap = argparse.ArgumentParser(prog="state.py")
@@ -846,6 +947,8 @@ def main(argv=None):
     mark_p.add_argument("status")  # checked by mark(), so a bad status is exit 1, not argparse's 2
     mark_p.add_argument("--reason")
     seen_sub.add_parser("show")
+    memory = sub.add_parser("memory")  # the claude.ai paste block
+    memory.add_argument("action", choices=("show", "restore"))
     judged = sub.add_parser("judged")
     judged.add_argument("action", choices=("carry", "rank", "forget"))
     judged.add_argument("--run", default="latest")
@@ -861,6 +964,17 @@ def main(argv=None):
 
     if args.area == "seen":
         return _seen_cli(args)
+    if args.area == "memory":
+        try:
+            if args.action == "show":
+                print(memory_block())
+                return 0
+            out = memory_restore(sys.stdin.read())
+        except ValueError as e:  # unreadable seen.json, left unchanged
+            print(json.dumps({"error": str(e)}, ensure_ascii=False))
+            return 1
+        print(json.dumps(out, ensure_ascii=False))
+        return 0 if out["profile"] != "rejected" and not out["skipped"] else 1
     if args.area == "judged":
         try:
             if args.action == "forget":

@@ -270,6 +270,25 @@
         "Runs scripts/state.py judged rank and then scripts/cite_check.py again after the change",
         "Does not re-read Ramp (its carried row passed)"
       ]
+    },
+    {
+      "id": "E19",
+      "name": "claude.ai: the no-memory notice once, and a paste block that restores saved and dismissed roles",
+      "prompt": "(see files/e19-claude-ai-memory.md)",
+      "expected_output": "Chat 1's first reply says once that this chat can't keep search history and suggests Claude Code or Codex, or pasting the end-of-run block; later replies do not repeat it. Each memory block is the output of state.py memory show, unchanged, in one code block. Chat 2 restores the pasted block with one state.py memory restore command fed by a quoted heredoc, before any search and without the notice, then runs as a rerun and ends with memory show's block.",
+      "files": [
+        "evals/files/e19-claude-ai-memory.md"
+      ],
+      "assertions": [
+        "Chat 1's first reply says, in one or two sentences, that this chat can't keep search history, and suggests Claude Code or Codex for an ongoing search or pasting the end-of-run block",
+        "No later reply in chat 1 repeats that notice",
+        "After the feedback, runs scripts/state.py memory show and offers its output unchanged as one code block (it includes the saved Linear line and the dismissed lever:acme:3c,lever:acme:3d line)",
+        "No memory block lists ashby:vercel:7 or ashby:ramp:12, and no block is written by hand instead of from memory show",
+        "Chat 2 does not repeat the notice",
+        "Chat 2, before any search, runs scripts/state.py memory restore once with the pasted block in a quoted heredoc (<<'JOB_SCOUT_END'), and never puts a pasted title, company or link into any other command",
+        "Chat 2 runs the search as a rerun without asking the brief questions again",
+        "Chat 2 ends by running scripts/state.py memory show and offering its output as one code block"
+      ]
     }
   ]
 }

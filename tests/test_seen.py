@@ -880,5 +880,117 @@ class SeenCliTest(HomeCase):
         self.assertEqual((code, out["counts"], out["saved"]), (0, {}, []))
 
 
+class MemoryTest(HomeCase):
+    """The claude.ai paste block: memory show prints it, memory restore reads it back in one step."""
+
+    PROFILE = {"schema": 1, "target_roles": ["Senior Frontend Engineer"], "work_modes": ["remote"],
+               "remote_scope": ["US"], "needs_sponsorship": "no", "base_pay_floor": None}
+
+    def cli(self, argv, stdin=""):
+        out = io.StringIO()
+        with mock.patch("sys.stdin", io.StringIO(stdin)), contextlib.redirect_stdout(out):
+            code = state.main(argv)
+        return code, out.getvalue()
+
+    def restore(self, text):
+        code, out = self.cli(["memory", "restore"], text)
+        return code, json.loads(out)
+
+    def setup_history(self):
+        state.write_json_atomic(state.profile_path(), self.PROFILE)
+        shown = job("ashby:acme:1", more=["ashby:acme:5"])
+        shown["url"] = "https://jobs.ashbyhq.com/acme/1"
+        jobs = [shown, job("ashby:acme:2", title="Staff Engineer | Platform\nTeam"), job("ashby:acme:3"),
+                job("ashby:acme:4")]
+        state.record(self.make_run(jobs, [{"key": j["key"], "show": True} for j in jobs]), now=NOW)
+        state.mark("ashby:acme:1", "applied")
+        state.mark("ashby:acme:2", "dismissed", reason="too senior")
+        state.mark("ashby:acme:4", "saved")
+        seen = state.load_seen()
+        seen["ashby:acme:4"]["closed_at"] = state.now_iso(NOW)  # a closed saved role
+        state.write_json_atomic(state.seen_path(), seen)
+
+    def test_block_lists_open_saved_applied_and_dismissed_roles_only(self):
+        self.setup_history()
+        code, block = self.cli(["memory", "show"])
+        self.assertEqual(code, 0)
+        self.assertEqual(block.splitlines(), [
+            state.MEMORY_HEADER,
+            "profile: " + json.dumps(self.PROFILE),
+            "applied ashby:acme:1,ashby:acme:5 | Senior Frontend Engineer | Acme | https://jobs.ashbyhq.com/acme/1",
+            "dismissed ashby:acme:2 | Staff Engineer / Platform Team | Acme"])  # seen (3) and closed (4) left out
+
+    def test_round_trip_in_a_new_chat_gives_the_same_block_and_hides_the_role(self):
+        self.setup_history()
+        block = self.cli(["memory", "show"])[1]
+        state.seen_path().unlink()  # a new claude.ai chat: nothing persisted
+        state.profile_path().unlink()
+        code, out = self.restore("```\n" + block + "```\n")
+        self.assertEqual((code, out), (0, {"profile": "saved", "profile_errors": [], "roles": 2, "skipped": []}))
+        self.assertEqual(state.read_json(state.profile_path()), self.PROFILE)
+        self.assertEqual(self.cli(["memory", "show"])[1], block)
+        # the main posting has since closed, so only variant 5 is listed: still applied, never new
+        self.assertEqual(state.job_state(job("ashby:acme:5"), state.load_seen()), "applied")
+
+    def test_overlapping_lines_keep_their_own_entries_and_statuses(self):
+        code, out = self.restore("saved ashby:acme:1,ashby:acme:2 | A | Acme | https://jobs.ashbyhq.com/acme/1\n"
+                                 "dismissed ashby:acme:2,ashby:acme:1 | A | Acme\n")
+        self.assertEqual((code, out["roles"]), (0, 2))
+        seen = state.load_seen()
+        self.assertEqual({k: (e["status"], e["aliases"]) for k, e in seen.items()},
+                         {"ashby:acme:1": ("saved", ["ashby:acme:2"]), "ashby:acme:2": ("dismissed", ["ashby:acme:1"])})
+        self.assertEqual(state.job_state(job("ashby:acme:1", more=["ashby:acme:2"]), seen), "saved")
+
+    def test_bad_lines_are_reported_and_the_rest_is_restored(self):
+        long_link = "https://acme.wd1.myworkdayjobs.com/External/job/" + "a" * 300
+        code, out = self.restore(
+            "profile: " + json.dumps(dict(self.PROFILE, remote_scope=["United States"])) + "\n"
+            "saved workday:acme.wd1.External:R1 | Engineer | Acme | " + long_link + "\n"
+            "saved not-a-key | Engineer | Acme\n"
+            "applied ashby:acme:9 | Engineer | Acme | javascript:alert(1)\n"
+            "liked ashby:acme:8 | Engineer | Acme\n"
+            "dismissed ashby:acme:7 | Engineer\n")
+        self.assertEqual(code, 1)
+        self.assertEqual((out["profile"], out["roles"], [s["line"] for s in out["skipped"]]), ("rejected", 1, [3, 4, 5, 6]))
+        self.assertIn("remote_scope", out["profile_errors"][0])
+        self.assertFalse(state.profile_path().exists())
+        self.assertEqual(state.load_seen()["workday:acme.wd1.External:R1"]["url"], long_link)
+
+    def test_every_block_memory_show_prints_restores_with_nothing_skipped(self):
+        j = job("ashby:acme:1", title="T" * 300)
+        j["company"], j["url"] = "C" * 250, "https://jobs.ashbyhq.com/acme/" + "a" * 3000
+        state.record(self.make_run([j], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
+        state.mark("ashby:acme:1", "saved")
+        seen = state.load_seen()
+        seen["ashby:acme:1"]["aliases"].append("not a key")
+        state.write_json_atomic(state.seen_path(), seen)
+        block = self.cli(["memory", "show"])[1]
+        state.seen_path().unlink()
+        code, out = self.restore(block)
+        self.assertEqual((code, out["roles"], out["skipped"]), (0, 1, []))
+        e = state.load_seen()["ashby:acme:1"]
+        self.assertEqual((e["title"], e["company"], e.get("url"), e["aliases"]), ("T" * 200, "C" * 200, None, []))
+
+    def test_restore_never_overwrites_what_record_saw(self):
+        state.record(self.make_run([job()], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
+        self.restore("saved ashby:acme:1 | Old title | Old Co | https://old.example/1\n")
+        e = state.load_seen()["ashby:acme:1"]
+        self.assertEqual((e["status"], e["title"], e["company"]), ("saved", "Senior Frontend Engineer", "Acme"))
+        self.assertEqual(e["url"], "https://old.example/1")  # record had no link for this job, so the pasted one fills it
+
+    def test_shell_text_in_a_field_is_kept_as_plain_text(self):
+        code, out = self.restore("saved ashby:acme:1 | $(touch pwned) `id` | Acme\n")
+        self.assertEqual(code, 0)
+        self.assertEqual(state.load_seen()["ashby:acme:1"]["title"], "$(touch pwned) `id`")
+
+    def test_unreadable_seen_json_is_left_unchanged(self):
+        state.seen_path().parent.mkdir(parents=True, exist_ok=True)
+        state.seen_path().write_bytes(b"[]")
+        code, out = self.cli(["memory", "restore"], "saved ashby:acme:1 | A | Acme\n")
+        self.assertEqual(code, 1)
+        self.assertIn("error", json.loads(out))
+        self.assertEqual(state.seen_path().read_bytes(), b"[]")
+
+
 if __name__ == "__main__":
     unittest.main()
