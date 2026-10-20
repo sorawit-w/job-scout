@@ -39,6 +39,9 @@ what it already judged instead of reading the same postings again.
   rerun, filter.py keeps them as candidates with state `judged`, not `new`.
 - `seen diff` no longer reports `new`: it counted every listed role, even ones the brief rules
   out. The per-candidate `state` from filter.py is the count of new roles.
+- In the report, a role's detail opened inline (below 1200px wide) left its title out of the
+  heading outline, so screen readers jumped from the page heading to "Check first". The title now
+  stays in the outline; nothing changes on screen.
 
 ### Added
 - Each read role keeps its judgment (gates, scores, total, quoted reasons and risks) in seen.json,
