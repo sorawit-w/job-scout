@@ -159,6 +159,44 @@ def _fail(message):
     return 2
 
 
+def _dropped(fresh, removed_by):
+    """Why an open posting is not shown, or None when it still fits the brief."""
+    if removed_by:
+        return "changed since the search: now removed by %s" % removed_by
+    if set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
+        return "location or work mode still unknown after the live check"
+    return None
+
+
+def check_group(row, budget, profile):
+    """(entry, live job, row checked, fresh row, dropped reason) for one candidate. When its shown posting
+    is closed, its other variants are checked in turn (a grouped role is closed only when every variant
+    is, as in state.live_split): the first open one that still fits the brief wins ("variant" names it);
+    else the first open one, dropped; else unverified if any check was inconclusive; else closed.
+    Raises net.BudgetExceeded."""
+    entry, live = check(row, budget)
+    tried = [(entry, live, row)]
+    if entry["status"] == "closed":
+        for v in row.get("variants") or []:
+            if isinstance(v, dict) and v.get("key") not in (None, row["key"]):
+                vrow = dict(dict(row, **v), key=row["key"])
+                e, l = check(vrow, budget)
+                tried.append((dict(e, variant=v["key"]), l, vrow))
+    first_open = None
+    for e, l, r in tried:
+        if e["status"] == "open":
+            fresh, removed_by = refilter(r, l, profile)
+            dropped = _dropped(fresh, removed_by)
+            if not dropped:
+                return e, l, r, fresh, None
+            first_open = first_open or (e, l, r, fresh, dropped)
+    if first_open:
+        return first_open
+    unsure = next((t for t in tried if t[0]["status"] not in ("open", "closed")), None)
+    e, l, r = unsure or tried[0]
+    return e, l, r, None, None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Live-check shortlisted jobs and fetch their descriptions.")
     ap.add_argument("--run", default="latest")
@@ -205,14 +243,7 @@ def main(argv=None):
     # shortcut: sequential, so jobs on one Ashby board share its cached list; use a pool if 60 is too slow.
     for i, row in enumerate(selected):
         try:
-            entry, live = check(row, budget)
-            # A grouped role is closed only when every variant is (state.live_split): try the others.
-            others = [v for v in row.get("variants") or [] if isinstance(v, dict) and v.get("key") not in (None, row["key"])]
-            for v in others if entry["status"] == "closed" else ():
-                other, other_live = check(dict(row, **v), budget)
-                if other["status"] == "open":
-                    entry, live, row = dict(other, variant=v["key"]), other_live, dict(dict(row, **v), key=row["key"])
-                    break
+            entry, live, row, fresh, dropped = check_group(row, budget, profile)
         except net.BudgetExceeded:
             capped = True
             unverified += [{"key": r["key"], "error": "not checked: request budget used up"} for r in selected[i:]]
@@ -220,13 +251,7 @@ def main(argv=None):
         jds[row["key"]] = entry
         if entry["status"] == "open":
             # The posting may have moved or changed since the board was probed: show live fields and
-            # re-apply the brief, so a role now outside it is not shown as a fit.
-            fresh, removed_by = refilter(row, live, profile)
-            dropped = None
-            if removed_by:
-                dropped = "changed since the search: now removed by %s" % removed_by
-            elif set(fresh.get("flags") or []) & {jfilter.MODE_ON_DETAIL_FLAG, jfilter.LOCATION_ON_DETAIL_FLAG}:
-                dropped = "location or work mode still unknown after the live check"
+            # re-apply the brief (check_group did), so a role now outside it is not shown as a fit.
             if dropped:
                 entry["dropped"] = dropped  # status stays "open": the posting is open, it just no longer fits
                 unverified.append({"key": row["key"], "error": dropped})

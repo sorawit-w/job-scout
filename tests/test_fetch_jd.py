@@ -340,13 +340,15 @@ class VariantFallbackTest(unittest.TestCase):
                         {"key": "ashby:acme:2", "ats": "ashby", "slug": "acme", "job_id": "2",
                          "url": "https://jobs.ashbyhq.com/acme/2"}]}
 
-    def fake_check(self, open_ids):
+    def fake_check(self, open_ids, unsure=(), scope=None):
         def check(row, budget):
+            if row["job_id"] in unsure:
+                return {"status": "unverified", "full": None, "trimmed": None, "comp": None, "error": "timeout"}, None
             if row["job_id"] not in open_ids:
                 return {"status": "closed", "full": None, "trimmed": None, "comp": None, "error": None}, None
             job = {"job_id": row["job_id"], "title": "Engineer", "url": row["url"], "locations": ["Remote - US"],
-                   "remote": True, "remote_scope": ["US"], "workplace": "remote", "comp": None,
-                   "description_text": "Build things."}
+                   "remote": True, "remote_scope": (scope or {}).get(row["job_id"], ["US"]), "workplace": "remote",
+                   "comp": None, "description_text": "Build things."}
             return {"status": "open", "full": "Build things.", "trimmed": "Build things.", "comp": None,
                     "error": None}, job
         return check
@@ -360,6 +362,26 @@ class VariantFallbackTest(unittest.TestCase):
             self.assertEqual([(j["key"], j["url"]) for j in out["jobs"]], [("ashby:acme:1", "https://jobs.ashbyhq.com/acme/2")])
             entry = read_jds(home)["ashby:acme:1"]
             self.assertEqual((entry["status"], entry["variant"]), ("open", "ashby:acme:2"))
+
+    def test_an_open_variant_outside_the_brief_does_not_stop_the_search(self):
+        row = dict(self.ROW, variants=self.ROW["variants"] + [
+            {"key": "ashby:acme:3", "ats": "ashby", "slug": "acme", "job_id": "3", "url": "https://jobs.ashbyhq.com/acme/3"}])
+        home = make_home([row])
+        with open(os.path.join(home, "profile.json"), "w", encoding="utf-8") as f:
+            json.dump({"schema": 1, "target_roles": ["Engineer"], "work_modes": ["remote"], "remote_scope": ["US"],
+                       "needs_sponsorship": "no", "base_pay_floor": None}, f)
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"2", "3"}, scope={"2": ["GB"]})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual([(j["key"], j["url"]) for j in out["jobs"]], [("ashby:acme:1", "https://jobs.ashbyhq.com/acme/3")])
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["variant"], "ashby:acme:3")
+
+    def test_an_unverified_variant_keeps_the_role_unverified_not_closed(self):
+        home = make_home([self.ROW])
+        with mock.patch.object(fetch_jd, "check", self.fake_check(set(), unsure={"2"})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual((out["closed"], out["jobs"]), ([], []))
+        self.assertEqual([u["key"] for u in out["unverified"]], ["ashby:acme:1"])
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
 
     def test_closed_only_when_every_variant_is_closed(self):
         home = make_home([self.ROW])
