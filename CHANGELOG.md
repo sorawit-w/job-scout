@@ -3,6 +3,13 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [Unreleased]
+
+### Fixed
+- **HTML report, "Close but excluded".** A role cut only by the number of roles shown said
+  "fit 7/8, below 5", which contradicts itself. It now says "fit 7/8, not in the top 15". A role
+  with a gate never answered says "not all gates checked". "Below 5" is kept for fit under 5.
+
 ## [0.5.0] — 2026-10-20
 
 **claude.ai memory and fresher data.** claude.ai users can carry their history into the next chat,

@@ -166,12 +166,19 @@ def _short_date(iso, run_year):
 _fit = state.fit  # Fit N/8: the sum of the four scores, the same number judged rank sorts by
 
 
-def _excluded_reason(row):
+def _excluded_reason(row, shown):
+    """Why a judged row is not shown, in rank()'s terms: a failed gate, fit under 5, a gate never
+    answered, or an eligible row past the result_count cut (shown = how many roles made it)."""
     gates = row.get("gates") if isinstance(row.get("gates"), dict) else {}
     failed = [g for g in GATES if gates.get(g) == "fail"]
     if failed:
         return "%s gate failed" % failed[0]
-    return "fit %s/8, below 5" % _fit(row) if _fit(row) is not None else "not a fit"
+    f = _fit(row)
+    if f is None:
+        return "not a fit"
+    if state.eligible(row):
+        return "fit %d/8, not in the top %d" % (f, shown)
+    return "fit %d/8, %s" % (f, "below 5" if f < 5 else "not all gates checked")
 
 
 BADGES = ("NEW", "CHANGED", "SAVED")
@@ -210,7 +217,7 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
                 "company": str(job.get("company") or "")}
         matches += state.eligible(row)  # what judged rank counts
         if not row.get("show"):
-            excluded.append(dict(base, reason=_excluded_reason(row)))
+            excluded.append(dict(base, row=row))  # reason set below, once the shown count is known
             continue
         cand = cands.get(key) or {}
         scores = row.get("scores") if isinstance(row.get("scores"), dict) else {}
@@ -240,6 +247,8 @@ def build_view(files, profile, seen, run_id, probed_ok=(), rerun=None):
     for r in roles:  # no exchange rates offline: other currencies sort after the main one, like unknown pay
         if r["pay_cur"] != main_cur or not main_cur:  # an unstated currency sorts last too
             r["pay_sort"] = None
+    for x in excluded:
+        x["reason"] = _excluded_reason(x.pop("row"), len(roles))
     summary = files.get("filter") if isinstance(files.get("filter"), dict) else {}
     for nm in summary.get("near_misses") or []:
         if isinstance(nm, dict) and nm.get("key") not in used:

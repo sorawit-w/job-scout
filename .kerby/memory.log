@@ -220,3 +220,11 @@ Observations: A paste does not carry a dismissal's reason or a role's first-show
 Task: v0.5.0 release prep
 Action: bumped VERSION, .codex-plugin/plugin.json, CHANGELOG ([Unreleased] → [0.5.0]) and README status to 0.5.0. Contents: claude.ai memory (#23/#26), weekly seed check auto-merge with seed_guard (#24), Claude Code manifests without version so updates follow the git commit (#25).
 Status: DONE (pending merge and release publish)
+
+[2026-10-20T17:33:31Z]
+Task: Fix the false "fit N/8, below 5" reason in the HTML report's "Close but excluded" list
+Action: Root cause: state.rank sets show = eligible and shown < result_count, but report._excluded_reason only knew "gate failed" and "below 5", so an eligible row cut by the count (and a fit-5+ row with an unanswered gate) read "below 5". _excluded_reason now takes the shown count and returns "fit N/8, not in the top R" for eligible rows, "not all gates checked" for a fit-5+ row with a missing gate, and "below 5" only under 5. Reasons are set after the loop, once the shown count is known. New test failed first (reproduced), then passed.
+Files: skills/job-scout/scripts/report.py, tests/test_report.py, docs/report-design.md, CHANGELOG.md
+Commit: (this commit)
+Status: DONE (branch fix/excluded-reason from main, not pushed, not merged)
+Notes: Gates: python -m unittest discover -s tests -t . OK on 3.14.7 and 3.9.6. The badge branch (feature/report-design-badges) moves docs/report-design.md to DESIGN.md and adds its own CHANGELOG [Unreleased] section, so merging both needs a small CHANGELOG merge; git carries the spec edit across the rename.
