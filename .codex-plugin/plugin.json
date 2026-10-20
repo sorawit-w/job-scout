@@ -1,6 +1,6 @@
 {
   "name": "job-scout",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "job-scout — finds open jobs that fit your resume by reading employer job boards directly (Greenhouse, Ashby, Lever, SmartRecruiters, Workday; USAJOBS with your own free key), after you confirm a short search brief. Returns about 15 roles checked open today, linked straight to the employer, with fit reasons quoted from each job description. Best for tech and startup roles.",
   "author": {
     "name": "sorawit-w",
