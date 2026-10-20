@@ -660,7 +660,7 @@ def gates_complete(row):
 def eligible(row):
     """Rubric §2: could be shown — all four gates answered, none failed, fit 5 or more. Fails closed."""
     f = fit(row)
-    return f is not None and f >= 5 and gates_complete(row) and "fail" not in row["gates"].values()
+    return f is not None and f >= 5 and gates_complete(row) and "fail" not in (row["gates"][g] for g in GATES)
 
 
 def _results(run_dir):

@@ -182,9 +182,10 @@ def check_group(row, budget, profile):
     """(entry, live job, row checked, fresh row, dropped reason) for one candidate. A grouped role is a
     set of postings (state.live_split closes it only when every one is gone): check the shown posting,
     then its other variants in turn, until one is open and still fits the brief. That one wins
-    ("variant" names it when it is not the shown one). Failing that: the first open one, dropped; else
-    the first inconclusive one (unverified); else closed — but unverified when the cap left variants
-    unchecked, since one of them may still be open. Raises net.BudgetExceeded."""
+    ("variant" names it when it is not the shown one). Otherwise the role is dropped or closed only
+    when every posting answered conclusively: any inconclusive check, or variants the cap left
+    unchecked, make it unverified; else the first open one, dropped; else closed.
+    Raises net.BudgetExceeded."""
     tried = []
     # a variant is its own posting: never let check() fall back to the shown posting's text for it
     variants = [(dict(dict(row, **v), key=row["key"], description_text=v.get("description_text")), v["key"])
@@ -200,13 +201,14 @@ def check_group(row, budget, profile):
             if not dropped:
                 return e, live, r, fresh, None
         tried.append((e, live, r, fresh, dropped))
-    found = (next((t for t in tried if t[0]["status"] == "open"), None)
-             or next((t for t in tried if t[0]["status"] != "closed"), None))
+    unsure = next((t for t in tried if t[0]["status"] not in ("open", "closed")), None)
+    if unsure:
+        return unsure
     unchecked = len(_all_others(row)) - len(_others(row))
-    if found or not unchecked:
-        return found or tried[0]
-    e, live, r, _, _ = tried[0]
-    return dict(e, status="unverified", error="not checked: %d more variants of this role" % unchecked), live, r, None, None
+    if unchecked:
+        e, live, r, _, _ = tried[0]
+        return dict(e, status="unverified", error="not checked: %d more variants of this role" % unchecked), live, r, None, None
+    return next((t for t in tried if t[0]["status"] == "open"), tried[0])
 
 
 def main(argv=None):

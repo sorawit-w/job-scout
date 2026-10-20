@@ -434,6 +434,13 @@ class VariantFallbackTest(unittest.TestCase):
             run(["--keys", "ashby:acme:1"], make_home([row]))
         self.assertEqual(seen, ["The shown posting's own text.", None])
 
+    def test_an_inconclusive_variant_beats_an_open_one_that_no_longer_fits(self):
+        home = self.brief_home(self.ROW)  # the shown posting moved to GB; the other one timed out
+        with mock.patch.object(fetch_jd, "check", self.fake_check({"1"}, unsure={"2"}, scope={"1": ["GB"]})):
+            code, out = run(["--keys", "ashby:acme:1"], home)
+        self.assertEqual((out["jobs"], [u["key"] for u in out["unverified"]]), ([], ["ashby:acme:1"]))
+        self.assertEqual(read_jds(home)["ashby:acme:1"]["status"], "unverified")
+
     def test_closed_only_when_every_variant_is_closed(self):
         home = make_home([self.ROW])
         with mock.patch.object(fetch_jd, "check", self.fake_check(set())):

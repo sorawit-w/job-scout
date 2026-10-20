@@ -672,6 +672,11 @@ class CarryRankTest(HomeCase):
         self.assertEqual(out, {"shown": 1, "matches": 1})
         self.assertIsNone(state.fit(too_big))
 
+    def test_an_extra_gate_never_hides_a_role(self):
+        extra = dict(row("ashby:acme:1", True, 8), gates=dict(row("x", True)["gates"], work_style="fail"))
+        out, ranked = self.rank([extra], [job("ashby:acme:1")])
+        self.assertEqual((ranked[0]["show"], out["matches"]), (True, 1))
+
     def test_rank_treats_an_impossible_date_as_unknown(self):
         cands = [dict(job("ashby:acme:1"), flags=[], first_published="2026-99-99"),
                  dict(job("ashby:acme:2"), flags=[], first_published="2026-10-01")]
