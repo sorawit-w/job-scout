@@ -40,7 +40,8 @@ by people. Every shown role was open on a live check and linked to the employer
 - Optionally shows how each role fits the way you like to work (meetings, on-call, travel,
   autonomy, company stage): matches, doesn't match, or not stated, always with a quote from the
   posting. It never changes the ranking.
-- Remembers what you saved, applied to or dismissed, and what it already judged, so the next run shows one ranked list with new and changed roles marked, without reading the same postings again.
+- Remembers what you saved, applied to or dismissed, and what it already judged, so the next run
+  shows one ranked list with new and changed roles marked, without reading the same postings again.
 
 ## What it doesn't do
 
@@ -169,7 +170,11 @@ requires them. There is no telemetry. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Status
 
-First release, `0.1.0`: every milestone in [`ROADMAP.md`](ROADMAP.md) is done. Planned next: more hiring tools (iCIMS, Taleo,
+Current release, `0.4.0`: rerun memory. A rerun shows one ranked list with new, changed and saved
+roles marked, and reuses what it already judged instead of reading the same postings again.
+Earlier releases added the HTML report (`0.2.0`) and work-style match (`0.3.0`); see
+[CHANGELOG.md](CHANGELOG.md). Milestones M1–M9 in [`ROADMAP.md`](ROADMAP.md) are done, except
+the launch milestone's install smoke tests. Planned next: more hiring tools (iCIMS, Taleo,
 Phenom), job connectors as a way to discover employers, and board order by distance from home.
 Spec: [`docs/HANDOFF.md`](docs/HANDOFF.md).
 
