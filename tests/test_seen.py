@@ -877,7 +877,17 @@ class SeenCliTest(HomeCase):
 
     def test_show_empty(self):
         code, out = self.cli(["seen", "show"])
-        self.assertEqual((code, out["counts"], out["saved"]), (0, {}, []))
+        self.assertEqual((code, out["counts"], out["saved"], out["dismissed"]), (0, {}, [], []))
+
+    def test_claude_ai_paste_block_round_trip_keeps_a_dismissed_role_hidden(self):
+        state.record(self.make_run([job()], [{"key": "ashby:acme:1", "show": True}]), now=NOW)
+        self.cli(["seen", "mark", "ashby:acme:1", "dismissed"])
+        code, out = self.cli(["seen", "show"])
+        self.assertEqual([(d["key"], d["title"], d["company"]) for d in out["dismissed"]],
+                         [("ashby:acme:1", "Senior Frontend Engineer", "Acme")])
+        state.seen_path().unlink()  # a new claude.ai chat: nothing persisted
+        self.cli(["seen", "mark", "ashby:acme:1", "dismissed"])  # restoring the pasted block
+        self.assertEqual(state.job_state(job(), state.load_seen()), "dismissed")
 
 
 if __name__ == "__main__":

@@ -39,8 +39,8 @@ Everything lives in `~/.job-scout/` (or the folder in `JOB_SCOUT_HOME`):
 
 Your resume file is never copied into `~/.job-scout/`. To delete everything, delete the folder.
 
-On claude.ai, files don't persist between conversations. The skill offers your brief and saved
-roles as a block you can paste next time.
+On claude.ai, files don't persist between conversations. The skill offers your brief and your
+saved, applied and dismissed roles as a block you can paste next time.
 
 ## USAJOBS key
 

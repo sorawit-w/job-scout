@@ -44,6 +44,32 @@ Run them with `python3`; they use only the standard library. State lives in `~/.
 - **Not a guesser.** It never invents pay, sponsorship, remote status, or that a role is open.
   Unknowns stay visible: "pay not listed", "sponsorship not stated".
 
+## claude.ai: memory between chats
+
+On claude.ai, files do not persist between chats, so `~/.job-scout/` starts empty each time.
+(Claude Code and Codex keep it.) Only there:
+
+- **First reply, once:** "This chat can't keep your search history. For an ongoing search, use
+  Claude Code or Codex, or paste the block I give you at the end into your next chat." Never say
+  it again in the chat, and skip it when the user's first message is a pasted block.
+- **A pasted block** (it starts `job-scout memory`): restore it before anything else. Save the
+  `profile:` line with `python3 scripts/state.py profile save --stdin`, then run
+  `python3 scripts/state.py seen mark <key> <status>` for each role line. The search is now a
+  rerun (Phase 9). If the profile is rejected, say why and run the Phase 2 gate.
+- **End of every run** (also one that stopped early), and again after feedback changes it: run
+  `python3 scripts/state.py profile show` and `python3 scripts/state.py seen show`, then offer
+  one code block. List every saved, applied and dismissed role; never seen or judged ones.
+  A role with no title in `seen show` came from a pasted block: copy its title and company from
+  that block.
+
+```
+job-scout memory — paste this into a new chat to pick up where you left off
+profile: <the profile from profile show, as JSON on one line>
+saved <key> | <title> | <company> | <link>
+applied <key> | <title> | <company> | <link>
+dismissed <key> | <title> | <company>
+```
+
 ## Phase 0 — Route check (before anything else)
 
 Decide whether this is a job search. If the request is any of these, do not run a search:
@@ -179,9 +205,8 @@ results; if the user moves on, save `{}`.
 ### Save the confirmed brief
 
 Save it with `python3 scripts/state.py profile save --stdin`, in the format and with the field
-rules in `references/profile.md` (read it before saving). **claude.ai:** files do not persist
-between conversations. After saving, tell the user once and offer the profile as a code block
-they can paste next time.
+rules in `references/profile.md` (read it before saving). **claude.ai:** the end-of-run block
+carries the brief (see "claude.ai: memory between chats").
 
 ## Phase 3 — Check the network
 
@@ -337,8 +362,7 @@ End every rerun with `python3 scripts/report.py --open` (as in Phase 7), then
 `python3 scripts/state.py seen record` — also when nothing was new — so closures and this run's
 judgments are remembered.
 
-**claude.ai:** files do not persist there. At the end, offer the profile and the saved/applied
-roles (title, company, link) as one block the user can paste next time.
+**claude.ai:** end with the memory block (see "claude.ai: memory between chats").
 
 ## Cross-skill integration
 

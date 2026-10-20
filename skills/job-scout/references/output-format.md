@@ -83,8 +83,9 @@ I'll remember them next time and mark what's new.
 
 ## 6. claude.ai only
 
-Files don't persist between conversations there. Offer the saved profile and the saved/applied
-roles (title, company, link) as one code block the user can paste next time.
+Files don't persist between conversations there. End with the memory block in SKILL.md
+("claude.ai: memory between chats"): the profile plus every saved, applied and dismissed role,
+each with its key, as one code block the user can paste next time. Seen roles are left out.
 
 ## 7. The HTML report
 

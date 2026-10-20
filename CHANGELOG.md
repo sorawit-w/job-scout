@@ -3,6 +3,16 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [Unreleased]
+
+### Changed
+- **claude.ai memory.** On claude.ai the skill says once, in its first reply, that the chat can't
+  keep search history, and suggests Claude Code or Codex or the paste block. The end-of-run block
+  now also lists dismissed roles, and every role in it carries its key, so pasting it into a new
+  chat restores saved, applied and dismissed roles (with `seen mark`) as well as the brief. Seen
+  roles stay out of it. `state.py seen show` now lists dismissed roles too.
+- README: a "Where job-scout remembers" table for Claude Code, Codex and claude.ai.
+
 ## [0.4.0] — 2026-10-19
 
 **Rerun memory (M9).** A rerun shows one ranked list with new and changed roles marked, and reuses

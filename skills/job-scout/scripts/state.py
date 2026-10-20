@@ -770,13 +770,14 @@ def mark(key, status, reason=None, now=None):
 
 
 def seen_summary():
-    """{"counts": {status: n}, "saved"/"applied": [{key, title, company, url, closed}]} — `seen show`."""
+    """{"counts": {status: n}, "saved"/"applied"/"dismissed": [{key, title, company, url, closed}]} — `seen show`,
+    which also feeds the claude.ai paste block."""
     seen = load_seen()
     counts = {}
     for e in seen.values():
         counts[e.get("status")] = counts.get(e.get("status"), 0) + 1
     out = {"counts": counts}
-    for status in ("saved", "applied"):
+    for status in ("saved", "applied", "dismissed"):
         out[status] = [{"key": k, "title": e.get("title"), "company": e.get("company"), "url": e.get("url"),
                         "closed": bool(e.get("closed_at"))} for k, e in seen.items() if e.get("status") == status]
     return out
