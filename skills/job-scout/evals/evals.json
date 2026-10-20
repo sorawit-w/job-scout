@@ -190,7 +190,7 @@
         "Runs scripts/fetch_jd.py --check-only and scripts/state.py judged carry, and never runs fetch_jd.py --keys to read a description again",
         "Lists the saved and applied roles that are still open (Vercel Design Engineer, Linear Product Engineer)",
         "Runs scripts/report.py before scripts/state.py seen record and gives the report path /Users/sam/.job-scout/runs/20261026T120000Z/report.html",
-        "Does not show Retool Frontend Engineer (4/8) or any other weak role to fill the table"
+        "Does not put Retool Frontend Engineer (4/8) or any other weak role in the table (a one-line 'close but excluded' mention is fine)"
       ]
     },
     {
