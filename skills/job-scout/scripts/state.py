@@ -398,7 +398,7 @@ def _strength(e):
     return _STRENGTH.index(e.get("status")) if e.get("status") in _STRENGTH else len(_STRENGTH)
 
 
-def _deciding_entry(job, seen, index=None):
+def deciding_entry(job, seen, index=None):
     """The matching entry with the strongest status (saved > applied > dismissed > seen > judged), or None."""
     keys = _matches(job, seen_index(seen) if index is None else index)
     return min((seen[k] for k in keys), key=_strength) if keys else None
@@ -408,7 +408,7 @@ def job_state(job, seen, index=None):
     """new | changed | seen | saved | applied | dismissed | judged for one collapsed job; with several
     matching entries, the strongest status (saved > applied > dismissed > seen > judged) decides.
     A judged role whose posting changed is new: the user never saw either version."""
-    e = _deciding_entry(job, seen, index)
+    e = deciding_entry(job, seen, index)
     if e is None:
         return "new"
     if e.get("status") == "judged":
@@ -439,7 +439,7 @@ def cached_judgment(job, seen, profile, live, index=None):
     again. live is this run's jds.json entry for the job, or None before the live check: then only
     posting and brief are compared, and the caller must check again once the live check has run. With other work_style choices the judgment comes back with style
     None: a conflict under "no travel" can be a match under "some travel", so the style is written again."""
-    e = _deciding_entry(job, seen, index)
+    e = deciding_entry(job, seen, index)
     j = e.get("judgment") if e else None
     if not (isinstance(j, dict) and j.get("sig") == job_sig(job) and j.get("brief_sig") == brief_sig(profile)):
         return None
@@ -688,7 +688,7 @@ def _seen_cli(args):
                 out = diff(open_jobs, probed_ok_boards(run), seen, gone)
                 index, by_key = seen_index(seen), {j.get("key"): j for j in open_jobs}  # promoted keys too
                 out = dict(out, counts={k: len(v) for k, v in out.items()},
-                           changed_details=[{"key": k, "before": _deciding_entry(by_key[k], seen, index).get("snap"),
+                           changed_details=[{"key": k, "before": deciding_entry(by_key[k], seen, index).get("snap"),
                                              "after": job_snap(by_key[k])} for k in out["changed"]],
                            closed_details=[{"key": k, "title": seen[k].get("title"), "company": seen[k].get("company"),
                                             "status": seen[k].get("status"), "url": seen[k].get("url")}

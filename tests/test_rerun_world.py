@@ -20,6 +20,7 @@ Usage:
 What it does NOT do: judge fit or check the LLM steps. If day1 or day2 changes, update the
 job ids here and in worlds/day2/README.md.
 """
+import collections
 import contextlib
 import csv
 import io
@@ -227,10 +228,13 @@ class RerunDay2Test(unittest.TestCase):
     def test_rerun_filter_leads_with_new_then_changed(self):
         code, out = self.filter
         self.assertEqual(code, 0)
-        # day1's unread (judged) candidates are all on the KoBold board, which errors on day2
-        self.assertEqual([(c["key"], c["state"]) for c in out["candidates"]], [(NEW, "new"), (CHANGED, "changed")])
+        # one list: the role seen last week stays (after the roles to read); day1's unread (judged)
+        # candidates are all on the KoBold board, which errors on day2
+        self.assertEqual([(c["key"], c["state"], c["badges"]) for c in out["candidates"]],
+                         [(NEW, "new", ["NEW"]), (CHANGED, "changed", ["CHANGED"]), (SEEN_SAME, "seen", [])])
+        self.assertEqual(out["candidates"][1]["changes"], ['title: "%s" → "%s"' % CHANGED_TITLES])
+        self.assertIsNotNone(out["candidates"][2]["first_shown"])
         removed = out["counts"]["removed"]
-        self.assertEqual(removed["already_seen"], 1)  # SEEN_SAME
         self.assertEqual(removed["dismissed_or_applied"], 2)  # APPLIED, DISMISSED
         self.assertEqual(sum(removed.values()) + out["counts"]["candidates"], out["counts"]["input"])
 
@@ -242,7 +246,6 @@ class RerunDay2Test(unittest.TestCase):
         self.assertEqual(states.get(DISMISSED), "dismissed")
         self.assertEqual(states.get(SEEN_SAME), "seen")
         self.assertEqual(states.get(NEW), "new")
-        self.assertEqual(out["counts"]["removed"]["already_seen"], 0)
         self.assertEqual(out["counts"]["removed"]["dismissed_or_applied"], 0)
 
     def test_new_and_changed_jobs_are_open_with_live_fields(self):
@@ -336,9 +339,8 @@ class Rerun20261019Test(unittest.TestCase):
         self.assertEqual(code, 0)
         states = {c["key"]: c["state"] for c in out["candidates"]}
         self.assertEqual([k for k, v in states.items() if v == "new"], [PASSPORT])
-        self.assertEqual(len(states), 88)  # 87 screened before + Passport; the 15 shown are already seen
-        self.assertEqual(set(states.values()), {"new", "judged"})
-        self.assertEqual(out["counts"]["removed"]["already_seen"], 15)
+        self.assertEqual(len(states), 103)  # one list: 15 shown before + 87 screened before + Passport
+        self.assertEqual(collections.Counter(states.values()), {"judged": 87, "seen": 15, "new": 1})
 
     def test_editing_the_brief_invalidates_every_cached_judgment(self):
         jobs = {j["key"]: j for j in world_1019()[2]}
