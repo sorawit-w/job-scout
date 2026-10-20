@@ -17,7 +17,7 @@ what it already judged instead of reading the same postings again.
   back); applied roles keep their "still open" list.
 - The rerun coverage line reads "Checked N of M company job boards: K new or changed since last
   time · showing top R of J matches." With nothing new, the full list still shows, under one line:
-  "Nothing new since last time."
+  "No new or changed postings since last time."
 - The report has the same order and badges, a "New only" filter, and "first shown" and "what
   changed" in each role's details.
 

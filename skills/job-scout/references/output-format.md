@@ -63,8 +63,9 @@ One line each, one reason each, so the user can spot a filter that's too tight.
 
 ## 4. When nothing matches
 
-On a rerun with nothing new, still show the full ranked list, under one line: "Nothing new since
-last time." With no rows to show at all, say that line, then the saved and applied roles still
+On a rerun with nothing new, still show the full ranked list, under one line: "No new or changed
+postings since last time." (A `NEW` row in it is new to the user, not a new posting.) With no
+rows to show at all, say that line, then the saved and applied roles still
 open (SKILL.md Phase 9), instead of the explanation below.
 
 Say so plainly and name the filter that removed the most jobs, using filter.py's

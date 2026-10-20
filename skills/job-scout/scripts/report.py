@@ -665,7 +665,7 @@ def render(view):
         parts.append('<p class="meta">%s</p>' % "".join("<span>%s</span>" % _e(m) for m in meta))
     parts.append('<p class="coverage">%s</p></header>' % coverage)
     if roles and view["rerun"] and not cov.get("moved"):  # nothing new: the full list still shows, under one line
-        parts.append('<p class="nothing-new">Nothing new since last time.</p>')
+        parts.append('<p class="nothing-new">No new or changed postings since last time.</p>')
     if roles:
         def th(key, label, cls, sort=True, current=False):
             if not sort:
@@ -696,7 +696,7 @@ def render(view):
     else:
         top = view["top_removed"]
         if view["rerun"] and not view["coverage"]["moved"]:  # no new or changed candidates, whatever else was removed
-            msg = "Nothing new since last time."
+            msg = "No new or changed postings since last time."
         elif top:
             msg = "No roles matched your brief. Most jobs were removed by %s (%s of %s)." % (
                 _e(top["reason"]), _e(top["n"]), _e(top["of"]))

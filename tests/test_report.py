@@ -183,7 +183,7 @@ class ReportTest(unittest.TestCase):
                            "url": "https://jobs.example.com/gone", "sig": ""}})
         run([], self.home)
         html = page(self.home)
-        self.assertIn("Nothing new since last time.", html)
+        self.assertIn("No new or changed postings since last time.", html)
         self.assertIn("Checked 1 of 1 company job boards: 0 new or changed since last time.", html)
         self.assertNotIn("open today", html)
         self.assertIn("Saved or applied, still open", html)
@@ -269,7 +269,7 @@ class ReportTest(unittest.TestCase):
         with mock.patch.dict(os.environ, {"JOB_SCOUT_HOME": self.home}):
             state.write_json_atomic(state.seen_path(), {"gh:a:1": {"status": "seen", "title": "Old", "sig": ""}})
         run([], self.home)
-        self.assertIn("Nothing new since last time.", page(self.home))
+        self.assertIn("No new or changed postings since last time.", page(self.home))
 
     def test_other_currencies_sort_after_the_main_one(self):
         usd = [job("gh:a:%d" % i, comp={"min": 150000 + i, "max": None, "currency": "USD", "interval": "year"})
@@ -385,8 +385,8 @@ class ReportTest(unittest.TestCase):
 
     def test_nothing_new_still_shows_the_full_list_under_one_line(self):
         html = self.rerun_view([job("gh:a:1", state_="seen", badges=[], first_shown="2026-10-01")], [row("gh:a:1")])
-        self.assertIn('<p class="nothing-new">Nothing new since last time.</p>', html)
-        self.assertLess(html.index("Nothing new since last time."), html.index('<table class="roles">'))
+        self.assertIn('<p class="nothing-new">No new or changed postings since last time.</p>', html)
+        self.assertLess(html.index("No new or changed postings since last time."), html.index('<table class="roles">'))
         self.assertIn("1 matching role", html)
         self.assertNotIn('data-quick="new"', html)  # no chip with nothing to show
 

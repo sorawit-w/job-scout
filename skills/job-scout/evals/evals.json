@@ -181,7 +181,7 @@
       "id": "E13",
       "name": "rerun with nothing new still shows the full ranked list, reuses judgments and writes the report",
       "prompt": "(see files/e13-rerun-nothing-new.md)",
-      "expected_output": "The line 'Nothing new since last time.' above the full ranked list (Vercel 7/8 badged SAVED, then Ramp 6/8 with no badge and 'First shown 2026-10-19'), the saved-or-applied list, report.py before seen record, the report path. No description is read again; Retool (4/8) is not shown.",
+      "expected_output": "The line 'No new or changed postings since last time.' above the full ranked list (Vercel 7/8 badged SAVED, then Ramp 6/8 with no badge and 'First shown 2026-10-19'), the saved-or-applied list, report.py before seen record, the report path. No description is read again; Retool (4/8) is not shown.",
       "files": ["evals/files/e13-rerun-nothing-new.md"],
       "assertions": [
         "Says in one line that nothing is new since last time, above the table",
@@ -233,6 +233,7 @@
         "Shows 15 rows, with Tapcart Sr. Product Engineer at #15",
         "Tapcart is badged NEW (or described as not shown before), and no other row is badged NEW",
         "Linear Product Engineer is not in the table",
+        "Says in one line that there are no new or changed postings since last time, and still badges Tapcart NEW (new to the user) without contradicting that line",
         "Runs scripts/fetch_jd.py --check-only and scripts/state.py judged carry, and does not read Tapcart's description again (no fetch_jd.py --keys that includes ashby:tapcart:44)",
         "The coverage line counts 0 new or changed since last time and says it shows the top 15 of 16 matches",
         "Runs scripts/state.py judged rank before scripts/cite_check.py and keeps the rows in the order rank gave"

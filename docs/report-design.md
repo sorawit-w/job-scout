@@ -99,7 +99,8 @@ titles 600, secondary text muted, column headers 12px/500 faint.
 2. One muted meta line: date, then the brief fields, split by 1px vertical rules.
 3. Coverage: "Checked P of A company job boards and read K open roles in full." On a rerun:
    "Checked P of A company job boards: K new or changed since last time · showing top R of J matches."
-   With nothing new, one bold line, "Nothing new since last time.", sits above the full list.
+   With no new or changed posting, one bold line, "No new or changed postings since last time.", sits above
+   the full list (a NEW row in it is new to the user, not a new posting).
 
 ### Toolbar (JS on, roles present)
 Quick-filter chips (`aria-pressed` buttons, shown only when their count is above zero):

@@ -320,7 +320,9 @@ come from each candidate's `badges` and never move a role:
 - No badge — shown before and unchanged: its notes line says `First shown <first_shown>`.
 
 Open with the rerun coverage line (`references/output-format.md` §1). With no `new` or
-`changed` candidate, still show the full list, under one line: "Nothing new since last time."
+`changed` candidate, still show the full list, under one line: "No new or changed postings since
+last time." A `NEW` badge in that list still means new to the user: a role an earlier run screened
+but never showed.
 
 After the table:
 
