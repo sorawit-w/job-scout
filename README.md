@@ -7,7 +7,7 @@ today, links straight to the employer, and explains its fit with quotes from the
 - **Works in:** Claude Code, Codex, claude.ai (Pro/Max), and any agent that reads `SKILL.md`.
 - **Reads:** Greenhouse, Ashby, Lever, SmartRecruiters and Workday boards, plus USAJOBS with
   your own free key.
-- **Status:** Current release: `0.5.1`. See [Status](#status).
+- **Status:** Current release: `0.5.2`. See [Status](#status).
 
 job-scout is not affiliated with any job board or employer.
 
@@ -184,11 +184,11 @@ requires them. There is no telemetry. Details: [PRIVACY.md](PRIVACY.md).
 
 ## Status
 
-Current release, `0.5.1`: a clearer HTML report. NEW, CHANGED and SAVED roles carry real badges,
-the header says how many roles are new to you, and "Close but excluded" says why each role was
-left out. Earlier releases added the HTML report (`0.2.0`), work-style match (`0.3.0`), rerun
-memory (`0.4.0`), and claude.ai memory with the weekly company list in installed copies
-(`0.5.0`); see
+Current release, `0.5.2`: new HTML report colors. Warm stone grays and a petrol accent replace
+teal, and the status colors stay easy to tell apart for color-blind readers. Earlier releases
+added the HTML report (`0.2.0`), work-style match (`0.3.0`), rerun memory (`0.4.0`), claude.ai
+memory with the weekly company list in installed copies (`0.5.0`), and real badges and true
+"Close but excluded" reasons in the report (`0.5.1`); see
 [CHANGELOG.md](CHANGELOG.md). Milestones M1–M9 in [`ROADMAP.md`](ROADMAP.md) are done, except
 the launch milestone's install smoke tests. Planned next: more hiring tools (iCIMS, Taleo,
 Phenom), job connectors as a way to discover employers, and board order by distance from home.
