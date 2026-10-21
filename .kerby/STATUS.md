@@ -13,7 +13,7 @@
 
 | Field | Value |
 |-------|-------|
-| **Phase** | claude.ai memory, the seed-check auto-merge and commit-based Claude Code updates are released; launch smoke tests still open |
+| **Phase** | claude.ai memory, the seed-check auto-merge, commit-based Claude Code updates and the HTML report redesign (badges, true excluded reasons, Stone & petrol colors) are released; launch smoke tests still open |
 | **Milestone** | none in progress; deploy-launch (M6) open until the smoke tests pass |
 | **Milestone Goal** | pick the next milestone from the ROADMAP follow-ups |
 
@@ -24,8 +24,7 @@
 | Priority | Task | Dependencies |
 |----------|------|--------------|
 | 1 | Maintainer: install smoke tests on Claude Code, Codex, npx and claude.ai (DEVELOPER_TODO) | latest release published |
-| 2 | Review the HTML report badge redesign and the "Close but excluded" reason fix (two PRs) | — |
-| 3 | Choose the next milestone from the ROADMAP follow-ups | — |
+| 2 | Choose the next milestone from the ROADMAP follow-ups (two report items are there: the fit column, and the accent on the page frame) | — |
 
 ---
 

@@ -262,3 +262,11 @@ Commit: 3600e9a
 Status: DONE (branch claude/report-theme-options-ad2e13, PR open, not merged)
 Notes: Options were authored with impeccable colorize, sourced read-only from taste-skill draw.mjs --app --kind report (framed-sheet petrol #1b6c80 for C), and checked with the dataviz palette validator. Comparison page and scripts: side-session notes folder theme-options/compare.html. The real render is byte-identical to the approved C preview in all 5 screenshots.
 Observations: Suite 726 tests OK on 3.14.7 and 3.9.6. axe 0 violations at 1440/390, light/dark. taste-skill inspect --app 0 FAIL, 1 WARN (ragged-row, layout, also on the old theme). Validator: light CVD 8.1 PASS, normal 15.3 PASS; dark CVD 6.4 WARN (red vs green, deutan), normal 16.3 PASS; chroma/lightness-band FAILs on the ink NEW slot, low-chroma petrol and text-carrying status colors. The kerby protect-git hook read the main checkout's branch for a cd+heredoc commit command; git -C <worktree> commit worked.
+
+[2026-10-21T00:45:43Z]
+Task: v0.5.2 release prep and STATUS fix
+Action: bumped VERSION, .codex-plugin/plugin.json, CHANGELOG ([Unreleased] → [0.5.2]) and README status to 0.5.2. Contents: the Stone & petrol palette with re-stepped status colors (#32). STATUS: the report redesign joins the released list, and the stale "review two PRs" row is gone.
+Files: skills/job-scout/VERSION, .codex-plugin/plugin.json, CHANGELOG.md, README.md, .kerby/STATUS.md
+Commit: release commit on bump/0.5.2
+Status: DONE (pending merge of the release PR, then tag v0.5.2 and the GitHub release with dist/job-scout-0.5.2.zip)
+Notes: Suite OK on 3.14.7 and 3.9.6; version parity OK at 0.5.2; zip builds (30 files, 352 KB).

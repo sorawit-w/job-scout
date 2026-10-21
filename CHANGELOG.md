@@ -3,7 +3,10 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
-## [Unreleased]
+## [0.5.2] — 2026-10-20
+
+**New report colors.** The HTML report moves from teal to warm stone and petrol, and its status
+colors stay apart for color-blind readers.
 
 ### Changed
 - **HTML report colors ("Stone & petrol").** The page uses warm stone grays and a deeper petrol
