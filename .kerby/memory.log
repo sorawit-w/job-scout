@@ -253,3 +253,12 @@ Files: skills/job-scout/VERSION, .codex-plugin/plugin.json, CHANGELOG.md, README
 Commit: release commit on bump/0.5.1
 Status: DONE (pending merge of the release PR, then tag v0.5.1 and the GitHub release with dist/job-scout-0.5.1.zip)
 Notes: Suite OK on 3.14.7 and 3.9.6; check-skill-compat version parity OK at 0.5.1; zip builds (30 files, 352 KB).
+
+[2026-10-20T19:01:10Z]
+Task: HTML report palette — option C "Stone & petrol" (the user's pick of three)
+Action: put C's light, dark and print tokens into report.CSS (every token role kept) plus two color-only rule tweaks that were part of option C as shown: the flag note is muted text with an amber icon, and the top-fit number has no tinted pill. Re-stepped ok/warn/bad by lightness. Updated DESIGN.md (renamed "Stone & petrol", tokens, Colors prose, v4 line) and CHANGELOG [Unreleased].
+Files: skills/job-scout/scripts/report.py, DESIGN.md, CHANGELOG.md
+Commit: 3600e9a
+Status: DONE (branch claude/report-theme-options-ad2e13, PR open, not merged)
+Notes: Options were authored with impeccable colorize, sourced read-only from taste-skill draw.mjs --app --kind report (framed-sheet petrol #1b6c80 for C), and checked with the dataviz palette validator. Comparison page and scripts: side-session notes folder theme-options/compare.html. The real render is byte-identical to the approved C preview in all 5 screenshots.
+Observations: Suite 726 tests OK on 3.14.7 and 3.9.6. axe 0 violations at 1440/390, light/dark. taste-skill inspect --app 0 FAIL, 1 WARN (ragged-row, layout, also on the old theme). Validator: light CVD 8.1 PASS, normal 15.3 PASS; dark CVD 6.4 WARN (red vs green, deutan), normal 16.3 PASS; chroma/lightness-band FAILs on the ink NEW slot, low-chroma petrol and text-carrying status colors. The kerby protect-git hook read the main checkout's branch for a cd+heredoc commit command; git -C <worktree> commit worked.

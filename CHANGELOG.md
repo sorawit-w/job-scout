@@ -3,6 +3,18 @@
 All notable changes to `job-scout` are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/); versioning is semver.
 
+## [Unreleased]
+
+### Changed
+- **HTML report colors ("Stone & petrol").** The page uses warm stone grays and a deeper petrol
+  accent in place of teal; in dark mode the accent is a soft petrol instead of a near-neon teal.
+  NEW, CHANGED and "N new to you" are ink instead of blue, so they no longer compete with the
+  accent on the same row. The top-fit number drops its tinted pill, and "N flags" is muted text
+  beside an amber icon, so flags on most rows no longer read as texture.
+- **Status colors are easier to tell apart.** The amber "check" color and the red "failed" color
+  were almost the same for readers with red-green color blindness. Green, amber and red are now
+  set at different lightness, so they stay apart; every status still shows its icon and its word.
+
 ## [0.5.1] — 2026-10-20
 
 **Clearer HTML report.** New roles stand out at a glance, and the "Close but excluded" list says
